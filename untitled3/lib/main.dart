@@ -1,0 +1,84 @@
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Login Demo',
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        useMaterial3: true,
+      ),
+      home: const LoginPage(),
+    );
+  }
+}
+
+class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
+
+  @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  final _usernameController = TextEditingController();
+  final _passwordController = TextEditingController();
+
+  String _message = '';
+
+  void _login() {
+    String username = _usernameController.text;
+    String password = _passwordController.text;
+
+    setState(() {
+      if (username == 'admin' && password == '1234') {
+        _message = '로그인 성공!';
+      } else {
+        _message = '아이디 또는 비밀번호가 잘못되었습니다.';
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('로그인 페이지'), centerTitle: true),
+      body: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            TextField(
+              controller: _usernameController,
+              decoration: const InputDecoration(
+                labelText: '아이디',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _passwordController,
+              decoration: const InputDecoration(
+                labelText: '비밀번호',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            ElevatedButton(onPressed: _login, child: const Text('로그인')),
+
+            const SizedBox(height: 16),
+            Text(_message, style: const TextStyle(color: Colors.red)),
+          ],
+        ),
+      ),
+    );
+  }
+}
