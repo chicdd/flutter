@@ -143,9 +143,10 @@ class _SecurityInfoState extends State<SecurityInfo> {
                 child: ElevatedButton(
                   onPressed: () {},
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
+                    backgroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
+                      side: BorderSide(color: Colors.black54, width: 1),
                     ),
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     textStyle: TextStyle(
@@ -154,7 +155,17 @@ class _SecurityInfoState extends State<SecurityInfo> {
                     ),
                     shadowColor: Colors.transparent,
                   ),
-                  child: const Text('관제실 통화'),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.phone, color: Colors.black54),
+                      SizedBox(width: 12),
+                      Text(
+                        "관제실 통화",
+                        style: TextStyle(fontSize: 16, color: Colors.black54),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),

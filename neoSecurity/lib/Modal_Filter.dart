@@ -12,7 +12,8 @@ class ModalFilter extends StatefulWidget {
 class _ModalFilterState extends State<ModalFilter> {
   String _selectedOption1 = '전체기간'; // 라디오 버튼 선택 상태
   String _selectedOption2 = '최신순'; // 라디오 버튼 선택 상태
-  DateTime firstDay = DateTime.now(); // 초기 날짜
+  DateTime startDate = DateTime.now().subtract(Duration(days: 7)); // 시작 날짜
+  DateTime endDate = DateTime.now(); // 종료 날짜
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -83,14 +84,14 @@ class _ModalFilterState extends State<ModalFilter> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       GestureDetector(
-                        onTap: _showCupertinoDatePicker,
+                        onTap: dateStart,
                         child: Padding(
                           padding: const EdgeInsets.symmetric(
                             vertical: 8,
                             horizontal: 30,
                           ),
                           child: Text(
-                            '${firstDay.year}-${firstDay.month.toString().padLeft(2, '0')}-${firstDay.day.toString().padLeft(2, '0')}',
+                            '${startDate.year}-${startDate.month.toString().padLeft(2, '0')}-${startDate.day.toString().padLeft(2, '0')}',
                             style: const TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.w300,
@@ -104,14 +105,14 @@ class _ModalFilterState extends State<ModalFilter> {
                       ),
                       Text('-'),
                       GestureDetector(
-                        onTap: _showCupertinoDatePicker,
+                        onTap: dateEnd,
                         child: Padding(
                           padding: const EdgeInsets.symmetric(
                             vertical: 8,
                             horizontal: 30,
                           ),
                           child: Text(
-                            '${firstDay.year}-${firstDay.month.toString().padLeft(2, '0')}-${firstDay.day.toString().padLeft(2, '0')}',
+                            '${endDate.year}-${endDate.month.toString().padLeft(2, '0')}-${endDate.day.toString().padLeft(2, '0')}',
                             style: const TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.w300,
@@ -307,7 +308,7 @@ class _ModalFilterState extends State<ModalFilter> {
     );
   }
 
-  void _showCupertinoDatePicker() {
+  void dateStart() {
     showCupertinoDialog(
       context: context,
       builder: (context) {
@@ -318,11 +319,37 @@ class _ModalFilterState extends State<ModalFilter> {
             height: 300,
             child: CupertinoDatePicker(
               mode: CupertinoDatePickerMode.date,
-              initialDateTime: firstDay,
+              initialDateTime: startDate,
               maximumDate: DateTime.now(),
               onDateTimeChanged: (date) {
                 setState(() {
-                  firstDay = date;
+                  startDate = date;
+                });
+              },
+            ),
+          ),
+        );
+      },
+      barrierDismissible: true,
+    );
+  }
+
+  void dateEnd() {
+    showCupertinoDialog(
+      context: context,
+      builder: (context) {
+        return Align(
+          alignment: Alignment.bottomCenter,
+          child: Container(
+            color: Colors.white,
+            height: 300,
+            child: CupertinoDatePicker(
+              mode: CupertinoDatePickerMode.date,
+              initialDateTime: endDate,
+              maximumDate: DateTime.now(),
+              onDateTimeChanged: (date) {
+                setState(() {
+                  endDate = date;
                 });
               },
             ),
