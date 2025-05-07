@@ -1,7 +1,7 @@
-// modal_content.dart
+// Modal_Customer.dart
 import 'package:flutter/material.dart';
 
-Widget buildModalContent(BuildContext context) {
+Widget modalCustomer(BuildContext context) {
   return Padding(
     padding: EdgeInsets.only(
       bottom: MediaQuery.of(context).viewInsets.bottom,
