@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:untitled1/Modal_Customer.dart';
+import 'package:neosecurity/Modal_Customer.dart';
 
 class SecurityInfo extends StatefulWidget {
   const SecurityInfo({super.key});

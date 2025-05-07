@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:untitled1/Cus_Info.dart';
-import 'package:untitled1/Security_Info.dart';
-import 'package:untitled1/Setting.dart';
-import 'package:untitled1/Sign_Info.dart';
+import 'package:neosecurity/Cus_Info.dart';
+import 'package:neosecurity/Security_Info.dart';
+import 'package:neosecurity/Setting.dart';
+import 'package:neosecurity/Sign_Info.dart';
 
 void main() {
   runApp(const MyApp());
