@@ -1,0 +1,82 @@
+import 'package:flutter/material.dart';
+import 'package:neosecurity/globals.dart' as globals;
+
+class BillList extends StatefulWidget {
+  const BillList({super.key});
+
+  @override
+  State<BillList> createState() => _BillListState();
+}
+
+class _BillListState extends State<BillList> {
+  late int Index;
+  late String title;
+  void _onItemSelected(int selectInt) {
+    setState(() {});
+    Navigator.pop(context, selectInt);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+        top: 20,
+        left: 16,
+        right: 16,
+      ),
+      child: SizedBox(
+        height: MediaQuery.of(context).size.height * 0.85,
+        child: Column(
+          children: [
+            // 헤더
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  '계산서 종류 선택',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ],
+            ),
+            const SizedBox(height: 30),
+            // 버튼 목록
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: List.generate(globals.billClassList.length, (index) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6.0),
+                  child: TextButton(
+                    onPressed: () {
+                      _onItemSelected(index);
+                    },
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 16,
+                        horizontal: 10,
+                      ),
+                      foregroundColor: Colors.black,
+                      backgroundColor: Colors.transparent,
+                      alignment: Alignment.centerLeft,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Text(
+                      globals.billClassList[index],
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                  ),
+                );
+              }),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

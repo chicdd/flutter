@@ -1,37 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:neosecurity/Cus_Info.dart';
-import 'package:neosecurity/Security_Info.dart';
-import 'package:neosecurity/Setting.dart';
-import 'package:neosecurity/Sign_Info.dart';
+import 'Select/Cus_Select.dart';
+import 'Album.dart';
 
-void main() {
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Login Demo',
-      theme: ThemeData(useMaterial3: false),
-      home: const Home(),
-      localizationsDelegates: const [
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        // 실 기기에서 아래를 주석 처리하고 이 부분을 넣어야 한다.
-        GlobalCupertinoLocalizations.delegate,
-        // DefaultCupertinoLocalizations.delegate,
-      ],
-      supportedLocales: const [
-        Locale('ko', 'KR'), // Korean
-        Locale('en', 'US'), // English
-      ],
-    );
-  }
-}
+import 'RestAPI.dart';
+import 'globals.dart' as globals;
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -41,66 +13,192 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  int _selectedIndex = 0;
-
-  final List<Widget> _pages = [
-    SecurityInfo(),
-    CusInfo(),
-    SignInfo(),
-    Setting(),
-  ];
-
-  // 탭 변경 함수
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
+  String _selectedOption = '경계'; // 기본 선택값
+  List<Map<String, String>> signalList = globals.signalList;
+  void initState() {
+    super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xffefefef),
-      body: _pages[_selectedIndex],
+      appBar: AppBar(
+        title: const Text(
+          '시큐리티 정보',
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700),
+        ),
+        backgroundColor: Colors.transparent,
+        automaticallyImplyLeading: false,
+        shadowColor: Colors.transparent,
+      ),
+      backgroundColor: const Color(0xfff7f7f7),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            children: [
+              CusSelect(
+                title: "거래처명",
+                onPressed: () {
+                  setState(() {});
+                },
+              ),
 
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed, // 명시적으로 고정형 지정
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-        backgroundColor: Color(0xffffffff), // 배경색 회색으로 맞춤
-        selectedItemColor: Colors.black, // 선택된 아이템 색
-        unselectedItemColor: Colors.black54, // 비선택 아이템 색
-        items: const [
-          BottomNavigationBarItem(
-            icon: Padding(
-              padding: EdgeInsets.only(top: 8.0), // 높이를 조절하는 패딩
-              child: Icon(Icons.home_filled),
-            ),
-            label: '홈',
+              const SizedBox(height: 20),
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black12,
+                      blurRadius: 8,
+                      offset: Offset(0, 4),
+                    ),
+                  ],
+                ),
+
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(15), // 원하는 radius 값
+                      child: Image.asset("image/경계3.jpg"),
+                    ),
+
+                    const SizedBox(height: 20),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 0.0),
+                      child: Row(
+                        children: [
+                          command('경계'),
+                          const SizedBox(width: 10),
+                          command('해제'),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 10),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 0.0),
+                      child: Row(
+                        children: [
+                          command('문열림'),
+                          const SizedBox(width: 10),
+                          command('문닫힘'),
+                        ],
+                      ),
+                    ),
+
+                    if (globals.centerPhone != null &&
+                        globals.centerPhone !=
+                            '') //고객센터 전화번호를 불러오기 성공했다면 고객센터 전화 버튼을 불러온다.
+                      Row(children: [const SizedBox(height: 20)]),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          PhoneCall(globals.centerPhone);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Color(0xff2196f3),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          textStyle: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          shadowColor: Colors.transparent,
+                        ),
+                        child: const Text('원격요청'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // const SizedBox(height: 30),
+
+              // Padding(
+              //   padding: const EdgeInsets.symmetric(horizontal: 20),
+              //   child: SizedBox(
+              //     width: double.infinity,
+              //     child: ElevatedButton(
+              //       onPressed: () {},
+              //       style: ElevatedButton.styleFrom(
+              //         backgroundColor: Colors.white,
+              //         shape: RoundedRectangleBorder(
+              //           borderRadius: BorderRadius.circular(12),
+              //         ),
+              //         padding: const EdgeInsets.symmetric(vertical: 16),
+              //         textStyle: TextStyle(
+              //           fontSize: 16,
+              //           fontWeight: FontWeight.w500,
+              //         ),
+              //         shadowColor: Colors.transparent,
+              //       ),
+              //       child: Row(
+              //         mainAxisAlignment: MainAxisAlignment.center,
+              //         children: [
+              //           Icon(Icons.phone, color: Colors.black54),
+              //           SizedBox(width: 12),
+              //           Text(
+              //             "관제실 통화",
+              //             style: TextStyle(fontSize: 16, color: Colors.black54),
+              //           ),
+              //         ],
+              //       ),
+              //     ),
+              //   ),
+              // ),
+            ],
           ),
-          BottomNavigationBarItem(
-            icon: Padding(
-              padding: EdgeInsets.only(top: 8.0),
-              child: Icon(Icons.person),
-            ),
-            label: '고객정보',
-          ),
-          BottomNavigationBarItem(
-            icon: Padding(
-              padding: EdgeInsets.only(top: 8.0),
-              child: Icon(Icons.list_alt),
-            ),
-            label: '신호정보',
-          ),
-          BottomNavigationBarItem(
-            icon: Padding(
-              padding: EdgeInsets.only(top: 8.0),
-              child: Icon(Icons.settings),
-            ),
-            label: '설정',
-          ),
-        ],
+        ),
       ),
     );
+  }
+
+  //라디오버튼
+  Widget command(String value) {
+    final bool isSelected = _selectedOption == value;
+
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          setState(() {
+            _selectedOption = value;
+          });
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          decoration: BoxDecoration(
+            color: isSelected ? Color(0xff2196f3) : Color(0xffefefef),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          alignment: Alignment.center,
+          child: Text(
+            value,
+            style: TextStyle(
+              color: isSelected ? Colors.white : Colors.black54,
+              fontWeight: FontWeight.w500,
+              fontSize: 16,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  //전화걸기 이벤트
+  void PhoneCall(String phoneNumber) async {
+    final Uri url = Uri(scheme: 'tel', path: phoneNumber);
+    // if (await canLaunchUrl(url)) {
+    //   await launchUrl(url);
+    // } else {
+    //   throw '전화를 걸 수 없습니다: $phoneNumber';
+    // }
   }
 }

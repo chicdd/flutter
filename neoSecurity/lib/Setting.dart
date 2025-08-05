@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:neosecurity/Modal_Customer.dart';
-import 'package:neosecurity/Modal_Filter.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:neosecurity/Modal/Modal_Customer_List.dart';
+import 'package:neosecurity/Modal/Modal_Sign_Filter.dart';
+import 'package:neosecurity/Login.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class Setting extends StatefulWidget {
   const Setting({super.key});
@@ -18,11 +22,11 @@ class _SettingState extends State<Setting> {
           '설정',
           style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.transparent,
         automaticallyImplyLeading: false,
         shadowColor: Colors.transparent,
       ),
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xfff7f7f7),
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -31,77 +35,183 @@ class _SettingState extends State<Setting> {
               child: Column(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(10),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(12),
                     ),
-
+                    alignment: Alignment.center,
                     child: Column(
-                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              '전화번호',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 8,
+                          ),
+                          child: SizedBox(
+                            width: double.infinity,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Row(
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 4),
+                                      child: Icon(
+                                        Icons.content_paste_outlined,
+                                        color: Colors.black,
+                                      ),
+                                    ),
+                                    SizedBox(width: 12),
+                                    Text(
+                                      "공지사항",
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        color: Colors.black,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 4),
+                                  child: Icon(
+                                    Icons.arrow_forward_ios_outlined,
+                                    size: 24,
+                                    color: Colors.black54,
+                                  ),
+                                ),
+                              ],
                             ),
-
-                            Text(
-                              '010-5710-8861',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
-
-                        const SizedBox(height: 40),
-
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              '앱버전',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
+                        const SizedBox(height: 25),
+                        // Divider(thickness: 1, height: 1, color: Color(0xffdfdfdf)),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 8,
+                          ),
+                          child: SizedBox(
+                            width: double.infinity,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Row(
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 4),
+                                      child: Icon(
+                                        Icons.support_agent_outlined,
+                                        color: Colors.black,
+                                      ),
+                                    ),
+                                    SizedBox(width: 12),
+                                    Text(
+                                      "기술지원 앱 설치",
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        color: Colors.black,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 4),
+                                  child: Icon(
+                                    Icons.arrow_forward_ios_outlined,
+                                    size: 24,
+                                    color: Colors.black54,
+                                  ),
+                                ),
+                              ],
                             ),
-
-                            Text('1.0.04', style: TextStyle(fontSize: 16)),
-                          ],
+                          ),
                         ),
 
                         const SizedBox(height: 50),
 
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              Navigator.pop(context);
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Color(0xff2196f3),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              textStyle: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                              ),
-                              shadowColor: Colors.transparent,
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 8,
+                          ),
+                          child: SizedBox(
+                            width: double.infinity,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  '전화번호',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+
+                                Text(
+                                  '010-5710-8861',
+                                  style: TextStyle(fontSize: 18),
+                                ),
+                              ],
                             ),
-                            child: const Text('로그아웃'),
+                          ),
+                        ),
+
+                        const SizedBox(height: 25),
+
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 8,
+                          ),
+                          child: SizedBox(
+                            width: double.infinity,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  '앱버전',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+
+                                Text('1.0.04', style: TextStyle(fontSize: 18)),
+                              ],
+                            ),
                           ),
                         ),
                       ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const Login(),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Color(0xff2196f3),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        textStyle: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        shadowColor: Colors.transparent,
+                      ),
+                      child: const Text('로그아웃'),
                     ),
                   ),
                 ],
@@ -111,5 +221,16 @@ class _SettingState extends State<Setting> {
         ),
       ),
     );
+  }
+}
+
+Future<void> fetchUsers() async {
+  final response = await http.get(Uri.parse('http://localhost:3000/users'));
+
+  if (response.statusCode == 200) {
+    final List users = jsonDecode(response.body);
+    print(users);
+  } else {
+    throw Exception('Failed to load users');
   }
 }
