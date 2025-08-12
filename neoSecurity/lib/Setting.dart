@@ -1,16 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:neosecurity/Modal/Modal_Customer_List.dart';
 import 'package:neosecurity/Modal/Modal_Sign_Filter.dart';
 import 'package:neosecurity/Login.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+import 'globals.dart' as globals;
+
 class Setting extends StatefulWidget {
   const Setting({super.key});
 
   @override
   State<Setting> createState() => _SettingState();
+}
+
+//초기화작업
+void logout(BuildContext context) async {
+  const storage = FlutterSecureStorage();
+  await storage.delete(key: 'token');
+  print('토큰 삭제됨');
+  Navigator.push(context, MaterialPageRoute(builder: (_) => const Login()));
+  globals.selectInt = 0;
 }
 
 class _SettingState extends State<Setting> {
@@ -149,7 +161,7 @@ class _SettingState extends State<Setting> {
                                 ),
 
                                 Text(
-                                  '010-5710-8861',
+                                  formatPhoneNumber(globals.phoneCode),
                                   style: TextStyle(fontSize: 18),
                                 ),
                               ],
@@ -192,12 +204,7 @@ class _SettingState extends State<Setting> {
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const Login(),
-                          ),
-                        );
+                        logout(context);
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Color(0xff2196f3),
@@ -233,4 +240,22 @@ Future<void> fetchUsers() async {
   } else {
     throw Exception('Failed to load users');
   }
+}
+
+String formatPhoneNumber(String input) {
+  // 숫자만 남기기
+  final digits = input.replaceAll(RegExp(r'\D'), '');
+
+  // 11자리일 경우 (휴대폰 번호)
+  if (digits.length == 11) {
+    return '${digits.substring(0, 3)}-${digits.substring(3, 7)}-${digits.substring(7)}';
+  }
+
+  // 10자리일 경우 (일부 지역번호 포함 번호 등)
+  if (digits.length == 10) {
+    return '${digits.substring(0, 3)}-${digits.substring(3, 6)}-${digits.substring(6)}';
+  }
+
+  // 형식이 맞지 않을 경우 그대로 반환
+  return input;
 }

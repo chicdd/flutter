@@ -106,7 +106,6 @@ class _ClaimInfoState extends State<ClaimInfo> {
             child: Column(
               children: [
                 CusSelect(
-                  title: "거래처명",
                   onPressed: () {
                     showModalBottomSheet(
                       context: context,

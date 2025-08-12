@@ -7,16 +7,17 @@ import 'package:xml/xml.dart';
 String syscode = "62083651";
 //발송전화번호
 String sendPhone = "16669112";
-String monnum = "KJ5897-00";
+String monnum = "";
 String yongnum = "202300002";
+String state = "";
 String certNumber = "";
 String message = "";
-String phoneCode = "01057108861";
+String phoneCode = "";
 String centerPhone = "";
 DateTime day_start = DateTime.now().subtract(Duration(days: 7));
 DateTime day_end = DateTime.now();
 String mi_check = "";
-
+int isfirst = 1; //Home에 최초 접속했을 때만 고객리스트, 회사정보 등 불러오기위해 두번째 접속부터 불러오지않기위함.
 int tabSecurityIndex = 0; //하단 바 화면 인덱스
 int tabERPIndex = 0; //하단 바 화면 인덱스
 int cusIndex = 0; //거래처 선택 인덱스
@@ -93,6 +94,19 @@ class BasicInfo {
   BasicInfo({required this.customer, required this.date});
 }
 
+final Map<String, String> stateMatchingModel = {
+  '경계': '해제',
+  '해제': '경계',
+  '문열림': '문닫힘',
+  '문닫힘': '문열림',
+};
+
+final Map<String, String> remoteModel = {
+  '해제': '0',
+  '경계': '1',
+  // '문열림': '문닫힘',
+  // '문닫힘': '문열림',
+};
 // class UserInfo {
 //   final String name;
 //   final String phone;
@@ -114,6 +128,8 @@ List<Map<String, String>> billList = [];
 List<Customer> customerList = [];
 List<Manager> managerList = [];
 List<Map<String, String>> cusList = [];
+Map<String, String> selectCusList = {};
+Map<String, String> stateList = {};
 //유저내역
 //List<Map<String, String>> userList = [];
 //신호내역

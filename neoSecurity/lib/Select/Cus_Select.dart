@@ -1,18 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:neosecurity/Home.dart';
 import 'package:neosecurity/Modal/Modal_Customer_List.dart';
-import 'package:neosecurity/globals.dart' as globals;
+import 'package:neosecurity/functions.dart';
+import 'package:neosecurity/globals.dart';
 
 class CusSelect extends StatefulWidget {
-  final String title;
   final VoidCallback onPressed;
-
-  const CusSelect({super.key, required this.title, required this.onPressed});
+  final title;
+  const CusSelect({super.key, this.title, required this.onPressed});
   @override
   State<CusSelect> createState() => _CusSelectState();
 }
 
 class _CusSelectState extends State<CusSelect> {
-  String title = globals.cusList[0];
+  String title =
+      cusList.isNotEmpty ? cusList[selectInt]['name'] ?? '값 없음' : '값 없음';
 
   void onPressed() async {
     final result = await showModalBottomSheet(
@@ -25,10 +27,15 @@ class _CusSelectState extends State<CusSelect> {
       builder: (context) => const CustomerList(),
     );
 
-    if (result != null && result is String) {
+    if (result != null) {
       setState(() {
-        title = result;
+        title = result['name']!;
+        selectCusList = result;
+        selectInt = cusList.indexOf(result);
+        //관제고객 상태 업데이트
       });
+      await getState();
+      widget.onPressed();
     }
   }
 

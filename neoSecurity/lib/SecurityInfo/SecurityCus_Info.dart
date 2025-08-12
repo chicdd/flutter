@@ -63,7 +63,6 @@ class _SecurityCusInfoState extends State<SecurityCusInfo> {
         child: Column(
           children: [
             CusSelect(
-              title: "거래처명",
               onPressed: () {
                 setState(() {});
               },

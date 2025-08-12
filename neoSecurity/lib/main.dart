@@ -1,42 +1,36 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:neosecurity/AuthGate.dart';
 import 'package:neosecurity/ERPInfo/ERP_Home.dart';
 import 'package:neosecurity/SecurityInfo/Security_Home.dart';
 import 'package:neosecurity/Home.dart';
 import 'package:neosecurity/Setting.dart';
 import 'package:neosecurity/SecurityInfo/Sign_Info.dart';
 import 'dart:io';
-
+import 'Login.dart';
 import 'RestAPI.dart';
-import 'globals.dart' as globals;
+import 'functions.dart';
+import 'globals.dart';
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   HttpOverrides.global = MyHttpOverrides();
-  getCenterPhone(); //고객센터 전화번호 불러오기.
+  checkAuth();
+  await getCenterPhone(); //고객센터 전화번호 불러오기.
+  await getCustomer();
   runApp(const MyApp());
 }
 
-Future<void> getCenterPhone() async {
-  globals.centerPhone = await RestApiService().smartSettingRequest(
-    globals.syscode,
-    globals.phoneCode,
-  );
-  print('globals.centerPhone${globals.centerPhone}');
-}
-
-Future<void> getCustomer() async {
-  try {
-    globals.cusList = await RestApiService().customerRequest(
-      globals.syscode,
-      globals.phoneCode,
-    );
-
-    print("globals.cusList: ${globals.cusList}");
-  } catch (e) {
-    print("API 호출 오류: $e");
-  }
-  print('계산서api 호출됨');
+//토큰 확인
+Future<void> checkAuth() async {
+  const storage = FlutterSecureStorage();
+  final token = await storage.read(key: 'token');
+  print('토큰읽기');
+  phoneCode = token!; //토큰을 휴대폰번호로 넣기
+  print('phoneCode' + phoneCode);
+  // 인증되었으면 그대로 진행
 }
 
 class MyApp extends StatelessWidget {
@@ -47,7 +41,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Login Demo',
       theme: ThemeData(useMaterial3: false),
-      home: const Main(),
+      home: const AuthGate(),
       // 한글 Locale 설정
       locale: const Locale('ko', 'KR'),
       localizationsDelegates: const [
@@ -76,6 +70,8 @@ class Main extends StatefulWidget {
 
 class _MainState extends State<Main> {
   int _selectedIndex = 0;
+  final List<Widget> _pages = [Home(), SecurityHome(), ErpHome(), Setting()];
+
   // 탭 변경 함수
   void _onItemTapped(int index) {
     setState(() {
@@ -84,8 +80,33 @@ class _MainState extends State<Main> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _checkAuth();
+  }
+
+  Future<void> _checkAuth() async {
+    const storage = FlutterSecureStorage();
+    final token = await storage.read(key: 'token');
+    print('토큰읽기');
+    phoneCode = token!; //토큰을 휴대폰번호로 넣기
+    if (token == null || token.isEmpty) {
+      print('토큰없음');
+      // 인증 실패 → 로그인 페이지로 이동
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const Login()),
+        );
+      });
+    } else {
+      print('토큰있음');
+    }
+    // 인증되었으면 그대로 진행
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final List<Widget> _pages = [Home(), SecurityHome(), ErpHome(), Setting()];
     return Scaffold(
       backgroundColor: const Color(0xffefefef),
       body: _pages[_selectedIndex],

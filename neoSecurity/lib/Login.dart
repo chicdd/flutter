@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:neosecurity/Main.dart';
 import 'package:neosecurity/randomNumCreate.dart';
 
 import 'RestAPI.dart';
-import 'globals.dart' as globals;
+import 'functions.dart';
+import 'globals.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -16,21 +18,6 @@ class _LoginState extends State<Login> {
   final _phoneCode = TextEditingController();
   final _password = TextEditingController();
   final String _smsMessage = "[인증번호:${random4Number()}] 인증번호를 입력해주세요.(한세시큐리티)";
-
-  String _message = '';
-
-  void _login() {
-    String phoneCode = _phoneCode.text;
-    String password = _password.text;
-
-    setState(() {
-      if (phoneCode == 'admin' && password == '1234') {
-        _message = '로그인 성공!';
-      } else {
-        _message = '아이디 또는 비밀번호가 잘못되었습니다.';
-      }
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -69,6 +56,11 @@ class _LoginState extends State<Login> {
                     //   _smsMessage,
                     // );
                     print(random4Number());
+                    phoneCode = _phoneCode.text;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      //하단 인증번호가 발송되었음 표시
+                      const SnackBar(content: Text('인증번호가 발송되었습니다.')),
+                    );
                   },
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
@@ -94,17 +86,37 @@ class _LoginState extends State<Login> {
               child: ElevatedButton(
                 onPressed: () {
                   String inputCode = _password.text;
-                  if (inputCode == globals.certNumber) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const Main()),
-                    );
-                  } else {
+
+                  if (inputCode != certNumber) {
+                    //인증번호 검증
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('인증번호가 일치하지 않습니다.')),
                     );
+                  } else {
+                    //관제고객인지 체크
+                    () async {
+                      bool isConfirmed = await RestApiService().isUserConfirm(
+                        syscode,
+                        phoneCode,
+                      );
+
+                      if (!isConfirmed) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('등록된 관제고객이 아닙니다.')),
+                        );
+                      } else {
+                        //검증 모두 통과하면
+                        saveToken(phoneCode); //휴대폰번호를 토큰으로 휴대폰에 저장
+                        await getCustomer();
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const Main(),
+                          ), //Main으로 위젯 넘기기
+                        );
+                      }
+                    }();
                   }
-                  print("certNumber : " + globals.certNumber);
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Color(0xff2196f3),
@@ -121,12 +133,14 @@ class _LoginState extends State<Login> {
                 child: const Text('로그인'),
               ),
             ),
-
-            const SizedBox(height: 16),
-            Text(_message, style: const TextStyle(color: Colors.red)),
           ],
         ),
       ),
     );
   }
+}
+
+void saveToken(String token) async {
+  const storage = FlutterSecureStorage();
+  await storage.write(key: 'token', value: token);
 }

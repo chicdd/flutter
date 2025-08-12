@@ -1,6 +1,6 @@
 // Modal_Customer_List.dart
 import 'package:flutter/material.dart';
-import 'package:neosecurity/globals.dart' as globals;
+import 'package:neosecurity/globals.dart';
 
 //거래처 선택
 class CustomerList extends StatefulWidget {
@@ -13,13 +13,11 @@ class CustomerList extends StatefulWidget {
 class _CustomerListState extends State<CustomerList> {
   late int Index;
   late String title;
-
-  void _onItemSelected(int selectInt, String selectCus) {
-    setState(() {});
-    Index = selectInt;
-    title = selectCus;
-    globals.cusIndex = selectInt;
-  }
+  List<Map<String, String>> cusInfo = [];
+  // void _onItemSelected(int selectInt, String cusInfo) {
+  //   setState(() {});
+  //   cusInfo = selectCus;
+  // }
 
   Widget build(BuildContext context) {
     return Padding(
@@ -78,14 +76,14 @@ class _CustomerListState extends State<CustomerList> {
               child: SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: List.generate(globals.cusList.length, (index) {
+                  children: List.generate(cusList.length, (index) {
                     return Padding(
                       padding: const EdgeInsets.symmetric(vertical: 6.0),
                       child: TextButton(
                         onPressed: () {
-                          _onItemSelected(index, globals.cusList[index]);
-                          Navigator.pop(context, globals.cusList[index]);
-                          print(globals.cusList[index]);
+                          Navigator.pop(context, cusList[index]!);
+                          print(cusList[index]!);
+                          monnum = cusList[index]['monnum'] ?? '';
                         },
                         style: TextButton.styleFrom(
                           padding: const EdgeInsets.symmetric(
@@ -100,7 +98,7 @@ class _CustomerListState extends State<CustomerList> {
                           ),
                         ),
                         child: Text(
-                          globals.cusList[index],
+                          cusList[index]['name']!,
                           style: const TextStyle(fontSize: 16),
                         ),
                       ),

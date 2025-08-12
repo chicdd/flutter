@@ -51,7 +51,6 @@ class _ERPCusInfoState extends State<ERPCusInfo> {
         child: Column(
           children: [
             CusSelect(
-              title: "거래처명",
               onPressed: () {
                 setState(() {});
               },

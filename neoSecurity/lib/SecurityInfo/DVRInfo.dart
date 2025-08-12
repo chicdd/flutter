@@ -49,7 +49,6 @@ class _DvrInfostate extends State<DvrInfo> {
             child: Column(
               children: [
                 CusSelect(
-                  title: "거래처명",
                   onPressed: () {
                     setState(() {});
                   },

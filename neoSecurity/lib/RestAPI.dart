@@ -312,6 +312,7 @@ class RestApiService {
     }
   }
 
+  //관제고객리스트 불러오기
   Future<List<Map<String, String>>> customerRequest(
     String syscode,
     String phonecode,
@@ -324,21 +325,20 @@ class RestApiService {
       "$baseUrl/$page?syscode=$syscode&phonecode=$phonecode",
     );
     final response = await http.get(url);
-    print(url);
     if (response.statusCode == 200) {
       final document = XmlDocument.parse(response.body);
       final elements = document.findAllElements('리턴관제마스터');
 
       List<Map<String, String>> cusList =
           elements.map((element) {
-            final monum = element.getElement('관제관리번호')?.innerText.trim() ?? '';
+            final monnum = element.getElement('관제관리번호')?.innerText.trim() ?? '';
             final date = element.getElement('개통일자')?.innerText.trim() ?? '';
             final line = element.getElement('사용회선종류')?.innerText.trim() ?? '';
             final name = element.getElement('관제상호')?.innerText.trim() ?? '';
             final isremote =
                 element.getElement('원격경계여부')?.innerText.trim() ?? '';
             return {
-              'monum': monum,
+              'monnum': monnum,
               'date': date,
               'line': line,
               'name': name,
@@ -368,6 +368,102 @@ class RestApiService {
 
       final centerPhone = result.getElement('고객센터전화번호')?.innerText.trim() ?? '';
       return centerPhone;
+    } else {
+      throw Exception('API 호출 실패: ${response.statusCode}');
+    }
+  }
+
+  //관제고객현재상태 불러오기
+  Future<Map<String, String>> currentStateRequest(
+    String syscode,
+    String monnum,
+    String phonecode,
+  ) async {
+    final String baseUrl =
+        "http://neodecisions.com/androidwebservice/WebPage/ServiceCustomerTest.asmx";
+    final String page = "moncuststatesearch";
+
+    final url = Uri.parse(
+      "$baseUrl/$page?syscode=$syscode&monnum=$monnum&phonecode=$phonecode",
+    );
+
+    final response = await http.get(url);
+    print(url);
+    if (response.statusCode == 200) {
+      final document = XmlDocument.parse(response.body);
+      final elements = document.findAllElements('리턴상태마스터');
+
+      // 요소가 있을 경우 첫 번째 값만 Map으로 추출
+      if (elements.isNotEmpty) {
+        final element = elements.first;
+        final state = element.getElement('현재상태')?.innerText.trim() ?? '';
+        final useline = element.getElement('사용회선종류')?.innerText.trim() ?? '';
+        final remoteDeviceCode =
+            element.getElement('자동원격기기코드')?.innerText.trim() ?? '';
+
+        return {
+          'state': state,
+          'useline': useline,
+          'remoteDeviceCode': remoteDeviceCode,
+        };
+      } else {
+        // 빈 결과 처리
+        return {'state': '', 'useline': '', 'remoteDeviceCode': ''};
+      }
+    } else {
+      throw Exception('API 호출 실패: ${response.statusCode}');
+    }
+  }
+
+  //원격요청
+  Future<String> remoteRequest(
+    String syscode,
+    String monnum,
+    String state,
+    String requestreason,
+    String phonecode,
+  ) async {
+    final String baseUrl =
+        "http://neodecisions.com/androidwebservice/WebPage/ServiceCustomerTest.asmx";
+    final String page = "remoterequest";
+
+    final url = Uri.parse(
+      "$baseUrl/$page?syscode=$syscode&monnum=$monnum&state=$state&requestreason=$requestreason&phonecode=$phonecode",
+    );
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      final document = XmlDocument.parse(response.body);
+      final result = document.findAllElements('리턴스마트설정마스터').first;
+
+      final centerPhone = result.getElement('고객센터전화번호')?.innerText.trim() ?? '';
+      return centerPhone;
+    } else {
+      throw Exception('API 호출 실패: ${response.statusCode}');
+    }
+  }
+
+  //관제고객이 맞는지 확인
+  Future<bool> isUserConfirm(String syscode, String phonecode) async {
+    final String baseUrl =
+        "http://neodecisions.com/androidwebservice/WebPage/ServiceCustomerTest.asmx";
+    final String page = "mon_custlist_V1";
+
+    final url = Uri.parse(
+      "$baseUrl/$page?syscode=$syscode&phonecode=$phonecode",
+    );
+    final response = await http.get(url);
+    print(url);
+
+    if (response.statusCode == 200) {
+      final document = XmlDocument.parse(response.body);
+
+      // ✅ <NewDataSet xmlns=""> 태그가 존재하는지 여부 확인 후 true / false 반환
+      final newDataSetExists = document
+          .findAllElements('NewDataSet')
+          .any((element) => element.getAttribute('xmlns') == '');
+
+      return newDataSetExists;
     } else {
       throw Exception('API 호출 실패: ${response.statusCode}');
     }
