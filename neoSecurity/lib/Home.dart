@@ -75,10 +75,14 @@ class _HomeState extends State<Home> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          '시큐리티 정보',
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700),
+        title: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: const Text(
+            '시큐리티 정보',
+            style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700),
+          ),
         ),
+        centerTitle: false,
         backgroundColor: Colors.transparent,
         automaticallyImplyLeading: false,
         shadowColor: Colors.transparent,

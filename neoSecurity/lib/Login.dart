@@ -55,7 +55,7 @@ class _LoginState extends State<Login> {
                       _phoneCode.text,
                       _smsMessage,
                     );
-                    print(random4Number());
+                    //print(random4Number());
                     phoneCode = _phoneCode.text;
                     ScaffoldMessenger.of(context).showSnackBar(
                       //하단 인증번호가 발송되었음 표시
