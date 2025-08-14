@@ -49,12 +49,12 @@ class _LoginState extends State<Login> {
                     //랜덤4자리숫자생성
 
                     // 인증번호 발송 로직
-                    // RestApiService().sendSMS(
-                    //   globals.syscode,
-                    //   globals.sendPhone,
-                    //   _phoneCode.text,
-                    //   _smsMessage,
-                    // );
+                    RestApiService().sendSMS(
+                      syscode,
+                      sendPhone,
+                      _phoneCode.text,
+                      _smsMessage,
+                    );
                     print(random4Number());
                     phoneCode = _phoneCode.text;
                     ScaffoldMessenger.of(context).showSnackBar(
