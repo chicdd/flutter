@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:neosecurity/Modal/Modal_Customer_List.dart';
 import 'package:neosecurity/Modal/Modal_Sign_Filter.dart';
-import 'package:neosecurity/globals.dart' as globals;
+import 'package:neosecurity/globals.dart';
 import '../RestAPI.dart';
 import '../Select/Cus_Select.dart';
 
@@ -17,24 +17,22 @@ class _DvrInfostate extends State<DvrInfo> {
   @override
   void initState() {
     super.initState();
-    if (dvrList.isEmpty) {
-      fetchDvr();
-    }
+    fetchDvr();
   }
 
   void fetchDvr() async {
     try {
       dvrList = await RestApiService().dvrListRequest(
-        globals.syscode,
-        globals.monnum,
-        globals.phoneCode,
+        syscode,
+        monnum,
+        phoneCode,
       );
 
       setState(() {});
     } catch (e) {
       print("API 호출 오류: $e");
     }
-    globals.dvrList = dvrList;
+    dvrList = dvrList;
   }
 
   @override

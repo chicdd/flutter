@@ -3,20 +3,18 @@ library globals;
 
 import 'package:xml/xml.dart';
 
-//개통코드
-String syscode = "62083651";
-//발송전화번호
-String sendPhone = "16669112";
-String monnum = "";
-String yongnum = "202300002";
-String state = "";
-String certNumber = "";
-String message = "";
-String phoneCode = "";
-String centerPhone = "";
-DateTime day_start = DateTime.now().subtract(Duration(days: 7));
-DateTime day_end = DateTime.now();
-String mi_check = "";
+String syscode = "62083651"; //개통코드
+String sendPhone = "16669112"; //발송전화번호
+String monnum = ""; //관제관리번호
+String yongnum = ""; //영업관리번호
+String state = ""; //고객 경계상태
+String certNumber = ""; //인증번호
+String message = ""; //인증발송메세지
+String phoneCode = ""; //휴대폰번호
+String centerPhone = ""; //고객센터전화번호
+DateTime day_start = DateTime.now().subtract(Duration(days: 7)); //조회시작날짜
+DateTime day_end = DateTime.now(); //조회끝날짜
+String mi_check = ""; //청구구분
 int isfirst = 1; //Home에 최초 접속했을 때만 고객리스트, 회사정보 등 불러오기위해 두번째 접속부터 불러오지않기위함.
 int tabSecurityIndex = 0; //하단 바 화면 인덱스
 int tabERPIndex = 0; //하단 바 화면 인덱스
@@ -104,8 +102,8 @@ final Map<String, String> stateMatchingModel = {
 final Map<String, String> remoteModel = {
   '해제': '0',
   '경계': '1',
-  // '문열림': '문닫힘',
-  // '문닫힘': '문열림',
+  '문열림': '7',
+  '문닫힘': '8',
 };
 // class UserInfo {
 //   final String name;
@@ -116,6 +114,7 @@ final Map<String, String> remoteModel = {
 
 String defaultSelectText = "거래처선택";
 int selectInt = 0;
+int erpselectInt = 0;
 
 //-관제업체들 저장되는 리스트-
 List<String> secuBasicList = [];
@@ -128,14 +127,16 @@ List<Map<String, String>> billList = [];
 List<Customer> customerList = [];
 List<Manager> managerList = [];
 List<Map<String, String>> cusList = [];
+List<Map<String, String>> erpList = [];
 Map<String, String> selectCusList = {};
+Map<String, String> selectErpList = {};
 Map<String, String> stateList = {};
 //유저내역
 //List<Map<String, String>> userList = [];
 //신호내역
 // List<Map<String, String>> signalList = [];
 
-List<String> signList = [];
+final List<String> signList = ['전체신호', '경계', '해제', '문열림'];
 
 final List<String> billClassList = ['전체', '월정료', '공사비', '위약금'];
 final List<String> depositList = [
@@ -153,6 +154,7 @@ final List<String> salesList = [
   'CCTV공사비',
   '해지철거비',
   '보증금',
+  '해약정산비',
 ]; //매출종류
 final List<String> claimClassList = ['전체', '미납', '수금']; //청구구분
 

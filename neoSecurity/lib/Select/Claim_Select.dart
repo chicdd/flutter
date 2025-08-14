@@ -4,6 +4,7 @@ import 'package:neosecurity/Modal/Modal_Customer_List.dart';
 import 'package:neosecurity/Modal/Modal_Signal_List.dart';
 import 'package:neosecurity/globals.dart' as globals;
 
+//청구내역 필터의 모달 내 청구구분 셀렉트
 class ClaimSelect extends StatefulWidget {
   final String claim;
   final Function(int) onPressed;

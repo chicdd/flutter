@@ -4,7 +4,8 @@ import 'package:neosecurity/Modal/Modal_Customer_List.dart';
 import 'package:neosecurity/Modal/Modal_Sign_Filter.dart';
 import 'package:neosecurity/Modal/Modal_page_List.dart';
 import 'package:neosecurity/Select/Deposit_Select.dart';
-import 'package:neosecurity/globals.dart' as globals;
+import 'package:neosecurity/Select/ERP_Select.dart';
+import 'package:neosecurity/globals.dart';
 import '../RestAPI.dart';
 import '../Select/Cus_Select.dart';
 import '../functions.dart';
@@ -16,13 +17,12 @@ class ClaimInfo extends StatefulWidget {
 }
 
 class _ClaimInfoState extends State<ClaimInfo> {
-  String filterPeriod = globals.periodList[globals.claimPeriodIndex];
-  String filterSortOrder = globals.sortOrderList[globals.claimSortOrderIndex];
-  String filterDepositClass = globals.depositList[globals.depositClassIndex];
-  String filterSalesClass = globals.salesList[globals.salesClassIndex];
-  String filterClaimClass = globals.claimClassList[globals.claimClassIndex];
+  String filterPeriod = periodList[claimPeriodIndex];
+  String filterSortOrder = sortOrderList[claimSortOrderIndex];
+  String filterDepositClass = depositList[depositClassIndex];
+  String filterSalesClass = salesList[salesClassIndex];
+  String filterClaimClass = claimClassList[claimClassIndex];
 
-  List<Map<String, String>> claimList = globals.claimList;
   @override
   void onPressed() async {
     final result = await showModalBottomSheet(
@@ -37,11 +37,11 @@ class _ClaimInfoState extends State<ClaimInfo> {
     print(result);
     if (result != null) {
       setState(() {});
-      filterPeriod = globals.periodList[result[0]];
-      filterSortOrder = globals.sortOrderList[result[1]];
-      filterDepositClass = globals.depositList[result[2]];
-      filterSalesClass = globals.salesList[result[3]];
-      filterClaimClass = globals.claimClassList[result[4]];
+      filterPeriod = periodList[result[0]];
+      filterSortOrder = sortOrderList[result[1]];
+      filterDepositClass = depositList[result[2]];
+      filterSalesClass = salesList[result[3]];
+      filterClaimClass = claimClassList[result[4]];
       fetchClaim();
     }
   }
@@ -49,18 +49,16 @@ class _ClaimInfoState extends State<ClaimInfo> {
   @override
   void initState() {
     super.initState();
-    if (claimList.isEmpty) {
-      fetchClaim();
-    }
+    fetchClaim();
   }
 
   Future<void> fetchClaim() async {
     try {
       claimList = await RestApiService().claimListRequest(
-        globals.syscode,
-        globals.yongnum,
-        mi_checkChanger(globals.claimClassIndex),
-        globals.phoneCode,
+        syscode,
+        yongnum,
+        mi_checkChanger(claimClassIndex),
+        phoneCode,
       );
       if (filterSortOrder == '과거순') {
         //역순정렬
@@ -85,12 +83,11 @@ class _ClaimInfoState extends State<ClaimInfo> {
 
       setState(() {});
 
-      print("globals.claimList: $claimList");
+      print("claimList: $claimList");
     } catch (e) {
       print("API 호출 오류: $e");
     }
     print('청구api 호출됨');
-    globals.claimList = claimList;
   }
 
   @override
@@ -105,19 +102,11 @@ class _ClaimInfoState extends State<ClaimInfo> {
             padding: const EdgeInsets.all(20),
             child: Column(
               children: [
-                CusSelect(
+                ERPSelect(
                   onPressed: () {
-                    showModalBottomSheet(
-                      context: context,
-                      shape: const RoundedRectangleBorder(
-                        borderRadius: BorderRadius.vertical(
-                          top: Radius.circular(20),
-                        ),
-                      ),
-                      backgroundColor: Colors.white,
-                      isScrollControlled: true,
-                      builder: (BuildContext context) => CustomerList(),
-                    );
+                    setState(() {
+                      fetchClaim();
+                    });
                   },
                 ),
                 SizedBox(height: 20),

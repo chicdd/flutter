@@ -4,6 +4,7 @@ import 'package:neosecurity/Modal/Modal_Customer_List.dart';
 import 'package:neosecurity/Modal/Modal_Signal_List.dart';
 import 'package:neosecurity/globals.dart' as globals;
 
+//계산서내역 필터의 모달 내 계산서종류 셀렉트
 class BillSelect extends StatefulWidget {
   final String bill;
   final Function(int) onPressed;

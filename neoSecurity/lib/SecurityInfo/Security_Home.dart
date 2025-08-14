@@ -3,7 +3,9 @@ import 'package:neosecurity/SecurityInfo/SecurityCus_Info.dart';
 import 'package:neosecurity/SecurityInfo/DvrInfo.dart';
 import 'package:neosecurity/SecurityInfo/Sign_Info.dart';
 import 'package:neosecurity/Modal/Modal_page_List.dart';
-import 'package:neosecurity/globals.dart' as globals;
+import 'package:neosecurity/globals.dart';
+
+import '../functions.dart';
 
 class SecurityHome extends StatefulWidget {
   const SecurityHome({super.key});
@@ -14,15 +16,15 @@ class SecurityHome extends StatefulWidget {
 class SecurityHomeState extends State<SecurityHome> {
   late int _Index = 0;
   late String title = '타이틀 없음';
-  List<String> itemList = globals.securityPageList;
   final List<Widget> _pages = [SecurityCusInfo(), SignInfo(), DvrInfo()];
 
   void _onItemSelected(int index, String newTitle) {
     setState(() {
+      print('index$index');
       _Index = index;
       title = newTitle;
     });
-    globals.tabSecurityIndex = index;
+    tabSecurityIndex = index;
   }
 
   // void _setTitle(String newTitle) {
@@ -34,8 +36,8 @@ class SecurityHomeState extends State<SecurityHome> {
   @override
   void initState() {
     super.initState();
-    _Index = globals.tabSecurityIndex;
-    title = itemList[_Index];
+    _Index = tabSecurityIndex;
+    title = securityPageList[_Index];
   }
 
   @override
@@ -58,7 +60,7 @@ class SecurityHomeState extends State<SecurityHome> {
                   builder:
                       (context) => pageList(
                         context: context,
-                        itemList: itemList,
+                        itemList: securityPageList,
                         onItemSelected: _onItemSelected,
                       ),
                 );

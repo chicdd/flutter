@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:neosecurity/Modal/Modal_Customer_List.dart';
+import 'package:neosecurity/Select/ERP_Select.dart';
 import '../Modal/Modal_page_List.dart';
 import '../RestAPI.dart';
 import '../Select/Cus_Select.dart';
-import 'package:neosecurity/globals.dart' as globals;
+import 'package:neosecurity/globals.dart';
 
 class ERPCusInfo extends StatefulWidget {
   const ERPCusInfo({super.key});
@@ -13,33 +14,27 @@ class ERPCusInfo extends StatefulWidget {
 }
 
 class _ERPCusInfoState extends State<ERPCusInfo> {
-  List<String> erpCusInfoList = globals.erpCusInfoList;
   @override
   void initState() {
     super.initState();
-    if (erpCusInfoList.isEmpty) {
-      fetchErpCusInfo();
-    }
+    fetchErpCusInfo();
   }
 
-  void fetchErpCusInfo() async {
+  Future<void> fetchErpCusInfo() async {
     try {
       List<String> result = await RestApiService().erpCusInfoRequest(
-        globals.syscode,
-        globals.yongnum,
-        globals.phoneCode,
+        syscode,
+        yongnum,
+        phoneCode,
       );
 
-      setState(() {
-        erpCusInfoList = result;
-      });
-
-      print("globals.signalList: ${erpCusInfoList}");
+      setState(() {});
+      erpCusInfoList = result;
+      print("erpCusInfoList: ${erpCusInfoList}");
     } catch (e) {
       print("API 호출 오류: $e");
     }
     print('api호출함');
-    globals.erpCusInfoList = erpCusInfoList;
   }
 
   @override
@@ -50,9 +45,11 @@ class _ERPCusInfoState extends State<ERPCusInfo> {
         padding: const EdgeInsets.all(20.0),
         child: Column(
           children: [
-            CusSelect(
+            ERPSelect(
               onPressed: () {
-                setState(() {});
+                setState(() {
+                  fetchErpCusInfo();
+                });
               },
             ),
 

@@ -1,21 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:neosecurity/Modal/Modal_Sales_List.dart';
-import 'package:neosecurity/Modal/Modal_Customer_List.dart';
-import 'package:neosecurity/Modal/Modal_Signal_List.dart';
-import 'package:neosecurity/globals.dart' as globals;
+import 'package:neosecurity/Modal/Modal_ERP_List.dart';
+import 'package:neosecurity/functions.dart';
+import 'package:neosecurity/globals.dart';
 
-//청구내역 필터의 모달 내 매출종류 셀렉트
-class SalesSelect extends StatefulWidget {
-  final String sales;
-  final Function(int) onPressed;
-
-  const SalesSelect({super.key, required this.sales, required this.onPressed});
+class ERPSelect extends StatefulWidget {
+  final VoidCallback onPressed;
+  final title;
+  const ERPSelect({super.key, this.title, required this.onPressed});
   @override
-  State<SalesSelect> createState() => _SalesSelectState();
+  State<ERPSelect> createState() => _ERPSelectState();
 }
 
-class _SalesSelectState extends State<SalesSelect> {
-  String sales = globals.salesList[globals.salesIndex]; //신호 드롭다운 처음 상태
+class _ERPSelectState extends State<ERPSelect> {
+  String title =
+      erpList.isNotEmpty ? erpList[erpselectInt]['name'] ?? '값 없음' : '값 없음';
 
   void onPressed() async {
     final result = await showModalBottomSheet(
@@ -25,16 +23,19 @@ class _SalesSelectState extends State<SalesSelect> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       backgroundColor: Colors.white,
-      builder: (context) => const SalesList(),
+      builder: (context) => const ERPList(),
     );
 
-    if (result != null && result is int) {
+    if (result != null) {
       setState(() {
-        sales = globals.salesList[result];
+        title = result['name']!;
         print(result);
-        widget.onPressed(result); // 부모에 전달
-        //Navigator.pop(context, result);
+        selectErpList = result;
+        erpselectInt = erpList.indexOf(result);
+        print(erpselectInt);
+        //영업고객 상태 업데이트
       });
+      widget.onPressed();
     }
   }
 
@@ -49,10 +50,6 @@ class _SalesSelectState extends State<SalesSelect> {
           foregroundColor: Colors.black,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
-            side: const BorderSide(
-              color: Colors.black12, // 테두리 색상
-              width: 1.0, // 테두리 두께
-            ),
           ),
           elevation: 0,
           shadowColor: Colors.transparent,
@@ -62,7 +59,7 @@ class _SalesSelectState extends State<SalesSelect> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              sales,
+              title,
               style: const TextStyle(
                 color: Colors.black,
                 fontWeight: FontWeight.w700,

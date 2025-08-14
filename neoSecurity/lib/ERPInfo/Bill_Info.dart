@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:neosecurity/Modal/Modal_Bill_Filter.dart';
 import 'package:neosecurity/Modal/Modal_Customer_List.dart';
-import 'package:neosecurity/globals.dart' as globals;
+import 'package:neosecurity/Select/ERP_Select.dart';
+import 'package:neosecurity/globals.dart';
 import '../RestAPI.dart';
 import '../Select/Cus_Select.dart';
 import '../functions.dart';
@@ -13,10 +14,9 @@ class BillInfo extends StatefulWidget {
 }
 
 class _BillInfoState extends State<BillInfo> {
-  String filterPeriod = globals.periodList[globals.billPeriodIndex];
-  String filterSortOrder = globals.sortOrderList[globals.billSortOrderIndex];
-  String filterClass = globals.billClassList[globals.billClassIndex];
-  List<Map<String, String>> billList = globals.billList;
+  String filterPeriod = periodList[billPeriodIndex];
+  String filterSortOrder = sortOrderList[billSortOrderIndex];
+  String filterClass = billClassList[billClassIndex];
   @override
   void onPressed() async {
     final result = await showModalBottomSheet(
@@ -31,9 +31,9 @@ class _BillInfoState extends State<BillInfo> {
     print(result);
     if (result != null && result is List<int>) {
       setState(() {});
-      filterPeriod = globals.periodList[result[0]];
-      filterSortOrder = globals.sortOrderList[result[1]];
-      filterClass = globals.billClassList[result[2]];
+      filterPeriod = periodList[result[0]];
+      filterSortOrder = sortOrderList[result[1]];
+      filterClass = billClassList[result[2]];
       fetchBill();
     }
   }
@@ -41,17 +41,15 @@ class _BillInfoState extends State<BillInfo> {
   @override
   void initState() {
     super.initState();
-    if (billList.isEmpty) {
-      fetchBill();
-    }
+    fetchBill();
   }
 
   Future<void> fetchBill() async {
     try {
       billList = await RestApiService().billListRequest(
-        globals.syscode,
-        globals.yongnum,
-        globals.phoneCode,
+        syscode,
+        yongnum,
+        phoneCode,
       );
 
       if (filterSortOrder == '과거순') {
@@ -67,12 +65,11 @@ class _BillInfoState extends State<BillInfo> {
 
       setState(() {});
 
-      print("globals.billList: $billList");
+      print("billList: $billList");
     } catch (e) {
       print("API 호출 오류: $e");
     }
     print('계산서api 호출됨');
-    globals.billList = billList;
   }
 
   @override
@@ -86,19 +83,11 @@ class _BillInfoState extends State<BillInfo> {
             padding: const EdgeInsets.all(20),
             child: Column(
               children: [
-                CusSelect(
+                ERPSelect(
                   onPressed: () {
-                    showModalBottomSheet(
-                      context: context,
-                      shape: const RoundedRectangleBorder(
-                        borderRadius: BorderRadius.vertical(
-                          top: Radius.circular(20),
-                        ),
-                      ),
-                      backgroundColor: Colors.white,
-                      isScrollControlled: true,
-                      builder: (BuildContext context) => CustomerList(),
-                    );
+                    setState(() {
+                      fetchBill();
+                    });
                   },
                 ),
                 const SizedBox(height: 20),

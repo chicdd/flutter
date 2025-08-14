@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:neosecurity/Home.dart';
 import 'package:neosecurity/Modal/Modal_Customer_List.dart';
 import 'package:neosecurity/functions.dart';
 import 'package:neosecurity/globals.dart';
@@ -30,6 +29,7 @@ class _CusSelectState extends State<CusSelect> {
     if (result != null) {
       setState(() {
         title = result['name']!;
+        print(result);
         selectCusList = result;
         selectInt = cusList.indexOf(result);
         //관제고객 상태 업데이트

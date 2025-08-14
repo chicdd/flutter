@@ -3,7 +3,7 @@ import 'package:neosecurity/Modal/Modal_Customer_List.dart';
 import '../Modal/Modal_page_List.dart';
 import '../RestAPI.dart';
 import '../Select/Cus_Select.dart';
-import 'package:neosecurity/globals.dart' as globals;
+import 'package:neosecurity/globals.dart';
 
 class SecurityCusInfo extends StatefulWidget {
   const SecurityCusInfo({super.key});
@@ -13,23 +13,18 @@ class SecurityCusInfo extends StatefulWidget {
 }
 
 class _SecurityCusInfoState extends State<SecurityCusInfo> {
-  List<String> secuBasicList = globals.secuBasicList;
-  List<Map<String, String>> userList = globals.userList;
-
   void initState() {
     super.initState();
-    if (secuBasicList.isEmpty && userList.isEmpty) {
-      fetchSecuBasic();
-      fetchUserList();
-    }
+    fetchSecuBasic();
+    fetchUserList();
   }
 
-  void fetchSecuBasic() async {
+  Future<void> fetchSecuBasic() async {
     try {
       List<String> result = await RestApiService().secuBasicRequest(
-        globals.syscode,
-        globals.monnum,
-        globals.phoneCode,
+        syscode,
+        monnum,
+        phoneCode,
       );
 
       setState(() {
@@ -41,17 +36,15 @@ class _SecurityCusInfoState extends State<SecurityCusInfo> {
       print("API 호출 오류: $e");
     }
     print('api호출함');
-    globals.secuBasicList = secuBasicList;
   }
 
-  void fetchUserList() async {
+  Future<void> fetchUserList() async {
     userList = await RestApiService().userListRequest(
-      globals.syscode,
-      globals.monnum,
-      globals.phoneCode,
+      syscode,
+      monnum,
+      phoneCode,
     );
     setState(() {});
-    globals.userList = userList;
   }
 
   @override
@@ -64,7 +57,10 @@ class _SecurityCusInfoState extends State<SecurityCusInfo> {
           children: [
             CusSelect(
               onPressed: () {
-                setState(() {});
+                setState(() {
+                  fetchSecuBasic();
+                  fetchUserList();
+                });
               },
             ),
 

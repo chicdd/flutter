@@ -18,8 +18,9 @@ class _HomeState extends State<Home> {
 
   void initState() {
     super.initState();
+
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      //await getCustomer();
+      await getCustomer();
       await getState();
       setState(() {
         _selectedOption = UiChanger(stateList['state'].toString());
@@ -152,13 +153,19 @@ class _HomeState extends State<Home> {
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: () {
-                          receiveRemote();
-                          // if (receiveRemote() == "1") {
-                          //   ScaffoldMessenger.of(context).showSnackBar(
-                          //     const SnackBar(content: Text('원격요청되었습니다.')),
-                          //   );
-                          // } //원격 요청
+                        onPressed: () async {
+                          String result = await receiveRemote();
+                          if (result == "1") {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('원격요청되었습니다.')),
+                            );
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('원격오류. 관리자에게 문의하세요.'),
+                              ),
+                            );
+                          }
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Color(0xff2196f3),
@@ -179,43 +186,38 @@ class _HomeState extends State<Home> {
                 ),
               ),
 
-              const SizedBox(height: 30),
+              const SizedBox(height: 20),
               if (centerPhone != null &&
                   centerPhone != '') //고객센터 전화번호를 불러오기 성공했다면 고객센터 전화 버튼을 불러온다.
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        PhoneCall(centerPhone);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        textStyle: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                        ),
-                        shadowColor: Colors.transparent,
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      PhoneCall(centerPhone);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.phone, color: Colors.black54),
-                          SizedBox(width: 12),
-                          Text(
-                            "관제실 통화",
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.black54,
-                            ),
-                          ),
-                        ],
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      textStyle: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
                       ),
+                      shadowColor: Colors.black38,
+                      elevation: 4,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.phone, color: Colors.black54),
+                        SizedBox(width: 12),
+                        Text(
+                          "관제실 통화",
+                          style: TextStyle(fontSize: 16, color: Colors.black54),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -235,6 +237,7 @@ class _HomeState extends State<Home> {
         onTap: () {
           setState(() {
             _selectedOption = value;
+            state = value;
           });
         },
         child: Container(

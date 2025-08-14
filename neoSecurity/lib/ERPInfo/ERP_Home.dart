@@ -5,6 +5,8 @@ import 'package:neosecurity/ERPInfo/ERPCus_Info.dart';
 import 'package:neosecurity/Modal/Modal_page_List.dart';
 import 'package:neosecurity/globals.dart' as globals;
 
+import '../functions.dart';
+
 class ErpHome extends StatefulWidget {
   const ErpHome({super.key});
   @override
@@ -34,6 +36,7 @@ class ErpHomeState extends State<ErpHome> {
   @override
   void initState() {
     super.initState();
+
     _Index = globals.tabERPIndex;
     title = itemList[_Index];
   }

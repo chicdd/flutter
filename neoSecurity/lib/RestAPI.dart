@@ -114,6 +114,7 @@ class RestApiService {
     final url = Uri.parse(
       "$baseUrl/$page?syscode=$syscode&monnum=$monnum&day_start=$day_start&day_end=$day_end&phonecode=$phonecode",
     );
+    print(url);
     final response = await http.get(url);
     if (response.statusCode == 200) {
       final document = XmlDocument.parse(response.body);
@@ -174,6 +175,37 @@ class RestApiService {
     }
   }
 
+  //영업고객리스트 불러오기
+  Future<List<Map<String, String>>> erpCusListRequest(
+    String syscode,
+    String phonecode,
+  ) async {
+    final String baseUrl =
+        "http://neodecisions.com/androidwebservice/WebPage/ServiceCustomerTest.asmx";
+    final String page = "yong_custlist_V1";
+
+    final url = Uri.parse(
+      "$baseUrl/$page?syscode=$syscode&phonecode=$phonecode",
+    );
+    print(url);
+    final response = await http.get(url);
+    if (response.statusCode == 200) {
+      final document = XmlDocument.parse(response.body);
+      final elements = document.findAllElements('리턴고객마스터');
+
+      List<Map<String, String>> erpCusList =
+          elements.map((element) {
+            final yongnum = element.getElement('고객번호')?.innerText.trim() ?? '';
+            final name = element.getElement('상호명')?.innerText.trim() ?? '';
+            return {'yongnum': yongnum, 'name': name};
+          }).toList();
+
+      return erpCusList;
+    } else {
+      throw Exception('API 호출 실패: ${response.statusCode}');
+    }
+  }
+
   Future<List<String>> erpCusInfoRequest(
     String syscode,
     String yongnum,
@@ -186,6 +218,7 @@ class RestApiService {
     final url = Uri.parse(
       "$baseUrl/$page?syscode=$syscode&yongnum=$yongnum&phonecode=$phonecode",
     );
+    print(url);
     final response = await http.get(url);
 
     if (response.statusCode == 200) {
@@ -324,6 +357,7 @@ class RestApiService {
     final url = Uri.parse(
       "$baseUrl/$page?syscode=$syscode&phonecode=$phonecode",
     );
+    print(url);
     final response = await http.get(url);
     if (response.statusCode == 200) {
       final document = XmlDocument.parse(response.body);
@@ -416,7 +450,7 @@ class RestApiService {
   }
 
   //원격요청
-  Future<String> remoteRequest(
+  Future<XmlDocument> remoteRequest(
     String syscode,
     String monnum,
     String state,
@@ -426,18 +460,27 @@ class RestApiService {
     final String baseUrl =
         "http://neodecisions.com/androidwebservice/WebPage/ServiceCustomerTest.asmx";
     final String page = "remoterequest";
-
+    print(
+      'syscode : ' +
+          syscode +
+          ', monnum : ' +
+          monnum +
+          ', state : ' +
+          state +
+          ', requestreason : ' +
+          requestreason +
+          ', phonecode : ' +
+          phonecode,
+    );
     final url = Uri.parse(
       "$baseUrl/$page?syscode=$syscode&monnum=$monnum&state=$state&requestreason=$requestreason&phonecode=$phonecode",
     );
+    print(url);
     final response = await http.get(url);
 
     if (response.statusCode == 200) {
       final document = XmlDocument.parse(response.body);
-      final result = document.findAllElements('리턴스마트설정마스터').first;
-
-      final centerPhone = result.getElement('고객센터전화번호')?.innerText.trim() ?? '';
-      return centerPhone;
+      return document;
     } else {
       throw Exception('API 호출 실패: ${response.statusCode}');
     }

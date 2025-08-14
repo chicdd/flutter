@@ -1,28 +1,22 @@
-// Modal_Customer_List.dart
 import 'package:flutter/material.dart';
 import 'package:neosecurity/globals.dart';
 
 //거래처 선택
-class CustomerList extends StatefulWidget {
-  const CustomerList({super.key});
+class ERPList extends StatefulWidget {
+  const ERPList({super.key});
 
   @override
-  State<CustomerList> createState() => _CustomerListState();
+  State<ERPList> createState() => _ERPListState();
 }
 
-class _CustomerListState extends State<CustomerList> {
+class _ERPListState extends State<ERPList> {
   late int Index;
   late String title;
-  List<Map<String, String>> cusInfo = [];
-  // void _onItemSelected(int selectInt, String cusInfo) {
-  //   setState(() {});
-  //   cusInfo = selectCus;
-  // }
-
+  List<Map<String, String>> erpInfo = [];
   void onPressed(int index) {
-    Navigator.pop(context, cusList[index]!);
-    print(cusList[index]!);
-    monnum = cusList[index]['monnum'] ?? '';
+    Navigator.pop(context, erpList[index]!);
+    print(erpList[index]!);
+    yongnum = erpList[index]['yongnum'] ?? '';
   }
 
   Widget build(BuildContext context) {
@@ -82,7 +76,7 @@ class _CustomerListState extends State<CustomerList> {
               child: SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: List.generate(cusList.length, (index) {
+                  children: List.generate(erpList.length, (index) {
                     return Padding(
                       padding: const EdgeInsets.symmetric(vertical: 6.0),
                       child: TextButton(
@@ -102,7 +96,7 @@ class _CustomerListState extends State<CustomerList> {
                           ),
                         ),
                         child: Text(
-                          cusList[index]['name']!,
+                          erpList[index]['name']!,
                           style: const TextStyle(fontSize: 16),
                         ),
                       ),

@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:neosecurity/Main.dart';
+import 'package:neosecurity/Display.dart'; // Main 대신 Display import
 import 'package:neosecurity/globals.dart';
 
 import 'Home.dart';
@@ -13,7 +13,7 @@ class AuthGate extends StatelessWidget {
   Future<bool> isAuthenticated() async {
     const storage = FlutterSecureStorage();
     final token = await storage.read(key: 'token');
-    print('토큰읽기');
+    print('AuthGate에서 토큰읽기');
     return token != null && token.isNotEmpty;
   }
 
@@ -23,20 +23,51 @@ class AuthGate extends StatelessWidget {
       future: isAuthenticated(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          print('빌드');
+          print('인증 확인 중...');
           return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
+            body: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text('로딩 중...'),
+                ],
+              ),
+            ),
           );
         }
 
         if (snapshot.hasError) {
-          print('오류');
-          return const Scaffold(body: Center(child: Text('오류 발생')));
+          print('인증 오류: ${snapshot.error}');
+          return Scaffold(
+            body: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text('오류 발생'),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () {
+                      // 다시 시도 또는 로그인 페이지로 이동
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (_) => const Login()),
+                      );
+                    },
+                    child: const Text('다시 시도'),
+                  ),
+                ],
+              ),
+            ),
+          );
         }
 
         final isLoggedIn = snapshot.data ?? false;
-        print('화면호출');
-        return isLoggedIn ? const Main() : const Login();
+        print('인증 결과: $isLoggedIn');
+
+        // Main 대신 Display 호출
+        return isLoggedIn ? const Display() : const Login();
       },
     );
   }
