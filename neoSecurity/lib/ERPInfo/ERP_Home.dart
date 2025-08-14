@@ -36,9 +36,10 @@ class ErpHomeState extends State<ErpHome> {
   @override
   void initState() {
     super.initState();
-
     _Index = globals.tabERPIndex;
     title = itemList[_Index];
+    getErpCustomer();
+    print('getErpCustomer 완료');
   }
 
   @override

@@ -90,7 +90,7 @@ class _HomeState extends State<Home> {
       backgroundColor: const Color(0xfff7f7f7),
       body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.all(20.0),
+          padding: const EdgeInsets.symmetric(horizontal: 20,vertical: 5),
           child: Column(
             children: [
               CusSelect(
@@ -190,7 +190,7 @@ class _HomeState extends State<Home> {
                 ),
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 10),
               if (centerPhone != null &&
                   centerPhone != '') //고객센터 전화번호를 불러오기 성공했다면 고객센터 전화 버튼을 불러온다.
                 SizedBox(

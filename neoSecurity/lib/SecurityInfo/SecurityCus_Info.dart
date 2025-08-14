@@ -52,7 +52,7 @@ class _SecurityCusInfoState extends State<SecurityCusInfo> {
     return Scaffold(
       backgroundColor: const Color(0xfff7f7f7),
       body: Padding(
-        padding: const EdgeInsets.all(20.0),
+        padding: const EdgeInsets.symmetric(horizontal: 20,vertical: 5),
         child: Column(
           children: [
             CusSelect(

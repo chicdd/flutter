@@ -7,7 +7,7 @@ import 'package:neosecurity/Login.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-import 'globals.dart' as globals;
+import 'globals.dart';
 
 class Setting extends StatefulWidget {
   const Setting({super.key});
@@ -22,7 +22,9 @@ void logout(BuildContext context) async {
   await storage.delete(key: 'token');
   print('토큰 삭제됨');
   Navigator.push(context, MaterialPageRoute(builder: (_) => const Login()));
-  globals.selectInt = 0;
+  selectInt = 0;
+  monnum = "";
+  yongnum = "";
 }
 
 class _SettingState extends State<Setting> {
@@ -161,7 +163,7 @@ class _SettingState extends State<Setting> {
                                 ),
 
                                 Text(
-                                  formatPhoneNumber(globals.phoneCode),
+                                  formatPhoneNumber(phoneCode),
                                   style: TextStyle(fontSize: 18),
                                 ),
                               ],

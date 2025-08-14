@@ -43,12 +43,14 @@ class _DvrInfostate extends State<DvrInfo> {
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.symmetric(horizontal: 20,vertical: 5),
             child: Column(
               children: [
                 CusSelect(
                   onPressed: () {
-                    setState(() {});
+                    setState(() {
+                      fetchDvr();
+                    });
                   },
                 ),
               ],

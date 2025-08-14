@@ -14,15 +14,52 @@ class _CustomerListState extends State<CustomerList> {
   late int Index;
   late String title;
   List<Map<String, String>> cusInfo = [];
-  // void _onItemSelected(int selectInt, String cusInfo) {
-  //   setState(() {});
-  //   cusInfo = selectCus;
-  // }
+
+  // 검색 관련 변수들
+  final TextEditingController _searchController = TextEditingController();
+  List<Map<String, String>> filteredCusList = [];
+
+  @override
+  void initState() {
+    super.initState();
+    // 초기에는 전체 리스트를 표시
+    filteredCusList = List.from(cusList);
+
+    // 검색 텍스트가 변경될 때마다 필터링
+    _searchController.addListener(_filterCustomers);
+  }
+
+  @override
+  void dispose() {
+    _searchController.removeListener(_filterCustomers);
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  // 검색 필터링 함수
+  void _filterCustomers() {
+    final query = _searchController.text.toLowerCase();
+
+    setState(() {
+      if (query.isEmpty) {
+        // 검색어가 비어있으면 전체 리스트 표시
+        filteredCusList = List.from(cusList);
+      } else {
+        // 검색어가 있으면 필터링
+        filteredCusList = cusList.where((customer) {
+          final name = customer['name']?.toLowerCase() ?? '';
+          return name.contains(query); // 검색어가 포함된 항목만 표시
+        }).toList();
+      }
+    });
+  }
 
   void onPressed(int index) {
-    Navigator.pop(context, cusList[index]!);
-    print(cusList[index]!);
-    monnum = cusList[index]['monnum'] ?? '';
+    // filteredCusList에서 선택된 항목을 찾아서 원본 cusList의 인덱스를 찾기
+    final selectedCustomer = filteredCusList[index];
+    Navigator.pop(context, selectedCustomer);
+    print(selectedCustomer);
+    monnum = selectedCustomer['monnum'] ?? '';
   }
 
   Widget build(BuildContext context) {
@@ -54,8 +91,9 @@ class _CustomerListState extends State<CustomerList> {
             ),
             const SizedBox(height: 20),
             TextField(
+              controller: _searchController, // 컨트롤러 추가
               decoration: const InputDecoration(
-                hintText: '물건정보 검색',
+                hintText: '거래처명 검색', // 힌트 텍스트 수정
                 prefixIcon: Icon(Icons.search),
                 filled: true,
                 fillColor: Color(0xfff4f4f4),
@@ -65,7 +103,7 @@ class _CustomerListState extends State<CustomerList> {
                 ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.all(Radius.circular(12)),
-                  borderSide: BorderSide.none, // 테두리 선 없애고 배경만 살리기
+                  borderSide: BorderSide.none,
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.all(Radius.circular(12)),
@@ -78,11 +116,26 @@ class _CustomerListState extends State<CustomerList> {
               ),
             ),
             const SizedBox(height: 20),
+            // 검색 결과 개수 표시 (선택사항)
+            if (_searchController.text.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    '검색 결과: ${filteredCusList.length}개',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ),
+              ),
             Flexible(
               child: SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: List.generate(cusList.length, (index) {
+                  children: List.generate(filteredCusList.length, (index) { // filteredCusList 사용
                     return Padding(
                       padding: const EdgeInsets.symmetric(vertical: 6.0),
                       child: TextButton(
@@ -102,7 +155,7 @@ class _CustomerListState extends State<CustomerList> {
                           ),
                         ),
                         child: Text(
-                          cusList[index]['name']!,
+                          filteredCusList[index]['name']!, // filteredCusList 사용
                           style: const TextStyle(fontSize: 16),
                         ),
                       ),

@@ -10,12 +10,19 @@ import 'functions.dart';
 import 'globals.dart';
 import 'Display.dart';
 
-void main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
   HttpOverrides.global = MyHttpOverrides();
+  load();
 
-  // 기본값 먼저 설정 (중요!)
 
+
+
+  runApp(const MyApp());
+}
+
+// 기본값 먼저 설정 (중요!)
+void load() async {
   try {
     await checkAuth();
     await getCenterPhone();
@@ -24,17 +31,13 @@ void main() async {
     await getErpCustomer();
     print('getErpCustomer 완료');
 
-    // await getCustomer();
-    // print('getCustomer 완료');
+    await getCustomer();
+    print('getCustomer 완료');
   } catch (e) {
     print('main 함수에서 에러 발생: $e');
     // 에러가 발생해도 기본값으로 앱이 실행되도록
   }
-
-  runApp(const MyApp());
 }
-
-// 기본값 초기화 함수
 
 //토큰 확인
 Future<void> checkAuth() async {
