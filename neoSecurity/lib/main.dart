@@ -13,29 +13,25 @@ import 'Display.dart';
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   HttpOverrides.global = MyHttpOverrides();
-  load();
-
-
-
 
   runApp(const MyApp());
+  load();
 }
 
 // 기본값 먼저 설정 (중요!)
 void load() async {
+  // checkAuth
   try {
     await checkAuth();
-    await getCenterPhone();
-    print('getCenterPhone 완료');
-
-    await getErpCustomer();
-    print('getErpCustomer 완료');
-
-    await getCustomer();
-    print('getCustomer 완료');
+    print('checkAuth 완료');
   } catch (e) {
-    print('main 함수에서 에러 발생: $e');
-    // 에러가 발생해도 기본값으로 앱이 실행되도록
+    print('checkAuth 에러: $e');
+  }
+  try {
+    await getCenterPhone();
+    print('getCenterPhone() 완료');
+  } catch (e) {
+    print('getCenterPhone() 에러: $e');
   }
 }
 

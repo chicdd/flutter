@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'Select/Cus_Select.dart';
 import 'RestAPI.dart';
 import 'functions.dart';
@@ -15,6 +16,35 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   String _selectedOption = ''; // 라디오버튼 기본 선택값
   Timer? _timer;
+  final tel = Uri.parse('tel:01012345678');
+  void load() async {
+    if (getErpCustomer() == null) {
+      if (getErpCustomer() == null) {}
+    }
+    // getCenterPhone
+    // try {
+    //   await getCenterPhone();
+    //   print('getCenterPhone 완료');
+    // } catch (e) {
+    //   print('getCenterPhone 에러: $e');
+    // }
+    //
+    // // getErpCustomer
+    // try {
+    //   await getErpCustomer();
+    //   print('getErpCustomer 완료');
+    // } catch (e) {
+    //   print('getErpCustomer 에러: $e');
+    // }
+    //
+    // // getCustomer
+    // try {
+    //   await getCustomer();
+    //   print('getCustomer 완료');
+    // } catch (e) {
+    //   print('getCustomer 에러: $e');
+    // }
+  }
 
   void initState() {
     super.initState();
@@ -26,43 +56,17 @@ class _HomeState extends State<Home> {
         _selectedOption = UiChanger(stateList['state'].toString());
       });
     });
-    // if (isfirst == 1) {
-    //   //최초에
-    //   WidgetsBinding.instance.addPostFrameCallback((_) async {
-    //     await getCenterPhone(); //고객센터전화번호 불러오기
-    //     await getCustomer();
-    //     print('호출됨');
-    //     await getState();
-    //
-    //     setState(() {
-    //       _selectedOption = UiChanger(
-    //         stateList['state'].toString(),
-    //       ); //현재 상태 값에 따라서 라디오버튼을 갱신해준다. stateMatchingModel 모델 참고
-    //     });
-    //   });
-    //   isfirst = 0;
-    // } else {
-    //   print('새로고침함');
-    //   WidgetsBinding.instance.addPostFrameCallback((_) async {
-    //     await getCenterPhone(); //고객센터전화번호 불러오기
-    //     await getCustomer();
-    //     await getState();
-    //     setState(() {
-    //       _selectedOption = UiChanger(stateList['state'].toString());
-    //     });
-    //   });
-    // }
-    // 5초마다 setState 호출
-    // _timer = Timer.periodic(const Duration(seconds: 5), (timer) {
-    //   setState(() {
-    //     _counter++; // 또는 API 호출, 데이터 갱신 등
-    //     getState();
-    //     _selectedOption = stateMatchingModel[stateList['state']] ?? '';
-    //   });
-    //   print('globals.stateList${stateList}');
-    //   print(_counter);
-    //   print("_selectedOption" + _selectedOption);
-    // });
+
+    //5초마다 setState 호출
+    _timer = Timer.periodic(const Duration(seconds: 5), (timer) {
+      setState(() {
+        getState();
+        _selectedOption = stateMatchingModel[stateList['state']] ?? '';
+      });
+      print('globals.stateList${stateList}');
+
+      print("_selectedOption" + _selectedOption);
+    });
   }
 
   // @override
@@ -90,7 +94,7 @@ class _HomeState extends State<Home> {
       backgroundColor: const Color(0xfff7f7f7),
       body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20,vertical: 5),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
           child: Column(
             children: [
               CusSelect(
@@ -196,8 +200,17 @@ class _HomeState extends State<Home> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () {
-                      PhoneCall(centerPhone);
+                    onPressed: () async {
+                      try {
+                        // tel: 대신 전화 다이얼러만 열기
+                        final Uri tel = Uri.parse(centerPhone);
+                        await launchUrl(
+                          tel,
+                          mode: LaunchMode.externalApplication,
+                        );
+                      } catch (e) {
+                        print('전화 앱 열기 오류: $e');
+                      }
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white,
@@ -263,16 +276,6 @@ class _HomeState extends State<Home> {
       ),
     );
   }
-
-  //전화걸기 이벤트
-  void PhoneCall(String phoneNumber) async {
-    final Uri url = Uri(scheme: 'tel', path: phoneNumber);
-    // if (await canLaunchUrl(url)) {
-    //   await launchUrl(url);
-    // } else {
-    //   throw '전화를 걸 수 없습니다: $phoneNumber';
-    // }
-  }
 }
 
 String UiChanger(String state) {
@@ -281,3 +284,12 @@ String UiChanger(String state) {
   getImagePath(state);
   return result;
 }
+
+Future<void> _makePhoneCall() async {
+  await launchUrl(launchUri);
+}
+
+final Uri launchUri = Uri(
+  scheme: 'tel', // 전화 걸기 앱 사용
+  path: centerPhone, // 걸 전화번호
+);

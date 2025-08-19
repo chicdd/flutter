@@ -44,6 +44,60 @@ int billClassIndex = 0;
 //사용안함
 int claimIndex = 0;
 
+String defaultSelectText = "거래처선택";
+int selectInt = 0;
+int erpselectInt = 0;
+
+//-관제업체들 저장되는 리스트-
+List<String> secuBasicList = [];
+List<Map<String, String>> userList = [];
+List<Map<String, String>> signalList = [];
+List<Map<String, String>> dvrList = [];
+List<String> erpCusInfoList = [];
+List<Map<String, String>> claimList = [];
+List<Map<String, String>> billList = [];
+List<Customer> customerList = [];
+List<Manager> managerList = [];
+List<Map<String, String>> cusList = [];
+List<Map<String, String>> erpList = [];
+Map<String, String> selectCusList = {};
+Map<String, String> selectErpList = {};
+Map<String, String> stateList = {};
+//유저내역
+//List<Map<String, String>> userList = [];
+//신호내역
+// List<Map<String, String>> signalList = [];
+
+final List<String> signList = ['전체신호', '경계', '해제', '문열림'];
+
+final List<String> billClassList = ['전체', '월정료', '공사비', '위약금'];
+final List<String> depositList = [
+  '전체',
+  'CMS',
+  '무통장입금',
+  '카드결제',
+  '방문수금',
+  '요금면제',
+]; //입금방법
+final List<String> salesList = [
+  '전체',
+  '월정료',
+  '위약금',
+  'CCTV공사비',
+  '해지철거비',
+  '보증금',
+  '해약정산비',
+]; //매출종류
+final List<String> claimClassList = ['전체', '미납', '수금']; //청구구분
+
+//관제 및 영업정보 페이징
+final List<String> securityPageList = ['가입정보', '신호내역', 'DVR'];
+final List<String> cusPageList = ['가입정보', '청구내역', '계산서'];
+
+//라디오버튼
+final List<String> periodList = ['지정기간', '전체기간'];
+final List<String> sortOrderList = ['최신순', '과거순'];
+
 class SMSReceive {
   final String check;
 
@@ -111,57 +165,3 @@ final Map<String, String> remoteModel = {
 //
 //   UserInfo({required this.name, required this.phone});
 // }
-
-String defaultSelectText = "거래처선택";
-int selectInt = 0;
-int erpselectInt = 0;
-
-//-관제업체들 저장되는 리스트-
-List<String> secuBasicList = [];
-List<Map<String, String>> userList = [];
-List<Map<String, String>> signalList = [];
-List<Map<String, String>> dvrList = [];
-List<String> erpCusInfoList = [];
-List<Map<String, String>> claimList = [];
-List<Map<String, String>> billList = [];
-List<Customer> customerList = [];
-List<Manager> managerList = [];
-List<Map<String, String>> cusList = [];
-List<Map<String, String>> erpList = [];
-Map<String, String> selectCusList = {};
-Map<String, String> selectErpList = {};
-Map<String, String> stateList = {};
-//유저내역
-//List<Map<String, String>> userList = [];
-//신호내역
-// List<Map<String, String>> signalList = [];
-
-final List<String> signList = ['전체신호', '경계', '해제', '문열림'];
-
-final List<String> billClassList = ['전체', '월정료', '공사비', '위약금'];
-final List<String> depositList = [
-  '전체',
-  'CMS',
-  '무통장입금',
-  '카드결제',
-  '방문수금',
-  '요금면제',
-]; //입금방법
-final List<String> salesList = [
-  '전체',
-  '월정료',
-  '위약금',
-  'CCTV공사비',
-  '해지철거비',
-  '보증금',
-  '해약정산비',
-]; //매출종류
-final List<String> claimClassList = ['전체', '미납', '수금']; //청구구분
-
-//관제 및 영업정보 페이징
-final List<String> securityPageList = ['가입정보', '신호내역', 'DVR'];
-final List<String> cusPageList = ['가입정보', '청구내역', '계산서'];
-
-//라디오버튼
-final List<String> periodList = ['지정기간', '전체기간'];
-final List<String> sortOrderList = ['최신순', '과거순'];

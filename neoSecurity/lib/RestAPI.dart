@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
@@ -76,7 +77,7 @@ class RestApiService {
     final url = Uri.parse(
       "$baseUrl/$page?syscode=$syscode&custnum=$custnum&phonecode=$phonecode",
     );
-    print(url);
+    ////print(url);
     final response = await http.get(url);
 
     if (response.statusCode == 200) {
@@ -114,7 +115,7 @@ class RestApiService {
     final url = Uri.parse(
       "$baseUrl/$page?syscode=$syscode&monnum=$monnum&day_start=$day_start&day_end=$day_end&phonecode=$phonecode",
     );
-    print(url);
+    //print(url);
     final response = await http.get(url);
     if (response.statusCode == 200) {
       final document = XmlDocument.parse(response.body);
@@ -155,7 +156,7 @@ class RestApiService {
       "$baseUrl/$page?syscode=$syscode&monnum=$monnum&phonecode=$phonecode",
     );
     final response = await http.get(url);
-    print(url);
+    //print(url);
     if (response.statusCode == 200) {
       final document = XmlDocument.parse(response.body);
       final elements = document.findAllElements('리턴DVR마스터');
@@ -188,7 +189,15 @@ class RestApiService {
       "$baseUrl/$page?syscode=$syscode&phonecode=$phonecode",
     );
     print(url);
-    final response = await http.get(url);
+    final response = await http
+        .get(url)
+        .timeout(
+          const Duration(seconds: 10),
+          onTimeout: () {
+            throw TimeoutException('API 호출 타임아웃');
+          },
+        );
+
     if (response.statusCode == 200) {
       final document = XmlDocument.parse(response.body);
       final elements = document.findAllElements('리턴고객마스터');
@@ -218,7 +227,7 @@ class RestApiService {
     final url = Uri.parse(
       "$baseUrl/$page?syscode=$syscode&yongnum=$yongnum&phonecode=$phonecode",
     );
-    print(url);
+    //print(url);
     final response = await http.get(url);
 
     if (response.statusCode == 200) {
@@ -277,7 +286,7 @@ class RestApiService {
       "$baseUrl/$page?syscode=$syscode&yongnum=$yongnum&mi_check=$mi_check&phonecode=$phonecode",
     );
     final response = await http.get(url);
-    print(url);
+    //print(url);
     if (response.statusCode == 200) {
       final document = XmlDocument.parse(response.body);
       final elements = document.findAllElements('리턴매출마스터');
@@ -320,7 +329,7 @@ class RestApiService {
       "$baseUrl/$page?syscode=$syscode&yongnum=$yongnum&phonecode=$phonecode",
     );
     final response = await http.get(url);
-    print(url);
+    //print(url);
     if (response.statusCode == 200) {
       final document = XmlDocument.parse(response.body);
       final elements = document.findAllElements('리턴계산서마스터');
@@ -357,8 +366,16 @@ class RestApiService {
     final url = Uri.parse(
       "$baseUrl/$page?syscode=$syscode&phonecode=$phonecode",
     );
-    print(url);
-    final response = await http.get(url);
+    //print(url);
+    final response = await http
+        .get(url)
+        .timeout(
+          const Duration(seconds: 10),
+          onTimeout: () {
+            throw TimeoutException('API 호출 타임아웃');
+          },
+        );
+    ;
     if (response.statusCode == 200) {
       final document = XmlDocument.parse(response.body);
       final elements = document.findAllElements('리턴관제마스터');
@@ -394,7 +411,15 @@ class RestApiService {
     final url = Uri.parse(
       "$baseUrl/$page?syscode=$syscode&phonecode=$phonecode",
     );
-    final response = await http.get(url);
+    final response = await http
+        .get(url)
+        .timeout(
+          const Duration(seconds: 10),
+          onTimeout: () {
+            throw TimeoutException('API 호출 타임아웃');
+          },
+        );
+    ;
 
     if (response.statusCode == 200) {
       final document = XmlDocument.parse(response.body);
@@ -421,8 +446,14 @@ class RestApiService {
       "$baseUrl/$page?syscode=$syscode&monnum=$monnum&phonecode=$phonecode",
     );
 
-    final response = await http.get(url);
-    print(url);
+    final response = await http
+        .get(url)
+        .timeout(
+          const Duration(seconds: 10),
+          onTimeout: () {
+            throw TimeoutException('API 호출 타임아웃');
+          },
+        );
     if (response.statusCode == 200) {
       final document = XmlDocument.parse(response.body);
       final elements = document.findAllElements('리턴상태마스터');
@@ -434,7 +465,14 @@ class RestApiService {
         final useline = element.getElement('사용회선종류')?.innerText.trim() ?? '';
         final remoteDeviceCode =
             element.getElement('자동원격기기코드')?.innerText.trim() ?? '';
-
+        print(
+          'state' +
+              state +
+              'useline' +
+              useline +
+              'remoteDeviceCode' +
+              remoteDeviceCode,
+        );
         return {
           'state': state,
           'useline': useline,
@@ -475,7 +513,7 @@ class RestApiService {
     final url = Uri.parse(
       "$baseUrl/$page?syscode=$syscode&monnum=$monnum&state=$state&requestreason=$requestreason&phonecode=$phonecode",
     );
-    print(url);
+    //print(url);
     final response = await http.get(url);
 
     if (response.statusCode == 200) {
@@ -496,7 +534,7 @@ class RestApiService {
       "$baseUrl/$page?syscode=$syscode&phonecode=$phonecode",
     );
     final response = await http.get(url);
-    print(url);
+    //print(url);
 
     if (response.statusCode == 200) {
       final document = XmlDocument.parse(response.body);

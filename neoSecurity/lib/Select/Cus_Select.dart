@@ -12,8 +12,7 @@ class CusSelect extends StatefulWidget {
 }
 
 class _CusSelectState extends State<CusSelect> {
-  String title =
-      cusList.isNotEmpty ? cusList[selectInt]['name'] ?? '값 없음' : '값 없음';
+  String title = "";
 
   void onPressed() async {
     final result = await showModalBottomSheet(
@@ -34,9 +33,21 @@ class _CusSelectState extends State<CusSelect> {
         selectInt = cusList.indexOf(result);
         //관제고객 상태 업데이트
       });
-      await getState();
+
+      try {
+        await getState();
+        print('getState 완료');
+      } catch (e) {
+        print('getState 에러: $e');
+      }
       widget.onPressed();
     }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    title = cusList.isNotEmpty ? cusList[selectInt]['name'] ?? '값 없음' : '불러오는중';
   }
 
   @override
