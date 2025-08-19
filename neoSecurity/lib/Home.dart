@@ -156,8 +156,8 @@ class _HomeState extends State<Home> {
                         ],
                       ),
                     ),
-
-                    Row(children: [const SizedBox(height: 20)]),
+                    if (isremote == 'true')
+                      Row(children: [const SizedBox(height: 20)]),
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
@@ -201,16 +201,20 @@ class _HomeState extends State<Home> {
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: () async {
-                      try {
-                        // tel: 대신 전화 다이얼러만 열기
-                        final Uri tel = Uri.parse(centerPhone);
-                        await launchUrl(
-                          tel,
-                          mode: LaunchMode.externalApplication,
-                        );
-                      } catch (e) {
-                        print('전화 앱 열기 오류: $e');
-                      }
+                      print('전화 걸기');
+                      launchUrl(Uri( scheme: 'tel', path: centerPhone,));
+                      // try {
+                      //   // tel: 대신 전화 다이얼러만 열기
+                      //   final Uri tel = Uri.parse(centerPhone);
+                      //   await launchUrl(
+                      //     tel,
+                      //     mode: LaunchMode.externalApplication,
+                      //
+                      //   );
+                      //   print('전화 걸기');
+                      // } catch (e) {
+                      //   print('전화 앱 열기 오류: $e');
+                      // }
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white,

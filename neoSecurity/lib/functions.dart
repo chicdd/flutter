@@ -65,12 +65,14 @@ Future<void> getCustomer() async {
     selectCusList = cusList[selectInt];
     print(cusList);
     monnum = selectCusList['monnum'] ?? '';
+    isremote = selectCusList['isremote'] ?? '';
     print('monnum${monnum}');
   } else {
     // 빈 리스트일 경우 기본값 처리
     selectCusList = {};
     monnum = '';
   }
+  print('cusList$cusList');
 }
 
 Future<void> getErpCustomer() async {
