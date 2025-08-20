@@ -74,7 +74,7 @@ class _CusSelectState extends State<CusSelect> {
               title =
                   cusList.isNotEmpty
                       ? cusList[selectInt]['name'] ?? '값 없음'
-                      : '불러오는중',
+                      : '값 없음',
               style: const TextStyle(
                 color: Colors.black,
                 fontWeight: FontWeight.w700,

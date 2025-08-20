@@ -21,7 +21,12 @@ class _HomeState extends State<Home> {
   final tel = Uri.parse('tel:01012345678');
 
   void _startDataMonitoring() {
+    int attemptCount = 0; // 시도 횟수 카운터 추가
+    const int maxAttempts = 20; // 최대 시도 횟수
+
     _dataCheckTimer = Timer.periodic(Duration(milliseconds: 500), (timer) {
+      attemptCount++; // 시도 횟수 증가
+
       // cusList, stateList, state 모두 체크
       bool cusListReady = cusList.isNotEmpty;
       bool stateListReady = stateList.isNotEmpty;
@@ -39,10 +44,17 @@ class _HomeState extends State<Home> {
         print('state: $state');
         UiChanger(state);
         selectedOption = stateMatchingModel[stateList['state']] ?? '';
-      } else {
-        // 디버깅용 로그
+      } else if (attemptCount >= maxAttempts) {
+        // 20번 시도 후에도 데이터가 없으면 타이머 중지
+        timer.cancel();
+        print('응답없음 - ${maxAttempts}번 시도 후 타임아웃');
         print(
-          '데이터 대기 중 - cusList: $cusListReady, stateList: $stateListReady, state: $stateReady',
+          '최종 상태 - cusList: $cusListReady, stateList: $stateListReady, state: $stateReady',
+        );
+      } else {
+        // 디버깅용 로그 (시도 횟수 포함)
+        print(
+          '데이터 대기 중 ($attemptCount/$maxAttempts) - cusList: $cusListReady, stateList: $stateListReady, state: $stateReady',
         );
       }
     });

@@ -194,32 +194,32 @@ class _ModalSignFilterState extends State<ModalSignFilter> {
                 ),
               ),
 
-              const SizedBox(height: 30),
-
-              // 신호구분 제목
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  '신호구분',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-              ),
-
-              const SizedBox(height: 20),
-
-              SizedBox(
-                width: double.infinity,
-                child: SignSelect(
-                  signal: "신호명",
-                  onPressed: (int selectedIndex) {
-                    setState(() {
-                      _classIndex = selectedIndex;
-                    });
-                  },
-                ),
-              ),
-
-              const SizedBox(height: 30),
+              //신호별 조회기능 구현 안 되어 주석처리.
+              // const SizedBox(height: 30),
+              //
+              // // 신호구분 제목
+              // const Align(
+              //   alignment: Alignment.centerLeft,
+              //   child: Text(
+              //     '신호구분',
+              //     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              //   ),
+              // ),
+              //
+              // const SizedBox(height: 20),
+              //
+              // SizedBox(
+              //   width: double.infinity,
+              //   child: SignSelect(
+              //     signal: "신호명",
+              //     onPressed: (int selectedIndex) {
+              //       setState(() {
+              //         _classIndex = selectedIndex;
+              //       });
+              //     },
+              //   ),
+              // ),
+              const SizedBox(height: 40),
 
               SizedBox(
                 width: double.infinity,
