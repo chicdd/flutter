@@ -47,7 +47,8 @@ class _CusSelectState extends State<CusSelect> {
   @override
   void initState() {
     super.initState();
-    title = cusList.isNotEmpty ? cusList[selectInt]['name'] ?? '값 없음' : '불러오는중';
+
+    print('title$title');
   }
 
   @override
@@ -70,7 +71,10 @@ class _CusSelectState extends State<CusSelect> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              title,
+              title =
+                  cusList.isNotEmpty
+                      ? cusList[selectInt]['name'] ?? '값 없음'
+                      : '불러오는중',
               style: const TextStyle(
                 color: Colors.black,
                 fontWeight: FontWeight.w700,

@@ -7,68 +7,97 @@ import 'package:neosecurity/globals.dart';
 import 'Home.dart';
 import 'Login.dart';
 
-class AuthGate extends StatelessWidget {
+class AuthGate extends StatefulWidget {
   const AuthGate({super.key});
 
-  Future<bool> isAuthenticated() async {
-    const storage = FlutterSecureStorage();
-    final token = await storage.read(key: 'token');
-    print('AuthGate에서 토큰읽기');
-    return token != null && token.isNotEmpty;
+  @override
+  State<AuthGate> createState() => _AuthGateState();
+}
+
+class _AuthGateState extends State<AuthGate> {
+  bool _isLoading = true;
+  bool _isAuthenticated = false;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkAuthentication();
+  }
+
+  Future<void> _checkAuthentication() async {
+    try {
+      const storage = FlutterSecureStorage();
+      final token = await storage.read(key: 'token');
+      print('AuthGate에서 토큰읽기');
+
+      setState(() {
+        _isAuthenticated = token != null && token.isNotEmpty;
+        _isLoading = false;
+      });
+
+      print('인증 결과: $_isAuthenticated');
+    } catch (e) {
+      print('인증 오류: $e');
+      setState(() {
+        _error = e.toString();
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _retry() {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+    _checkAuthentication();
   }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<bool>(
-      future: isAuthenticated(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          print('인증 확인 중...');
-          return const Scaffold(
-            body: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircularProgressIndicator(),
-                  SizedBox(height: 16),
-                  Text('로딩 중...'),
-                ],
+    if (_isLoading) {
+      print('인증 확인 중...');
+      return const Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 16),
+              Text('로딩 중...'),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (_error != null) {
+      return Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text('오류 발생'),
+              const SizedBox(height: 16),
+              ElevatedButton(onPressed: _retry, child: const Text('다시 시도')),
+              const SizedBox(height: 8),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (_) => const Login()),
+                  );
+                },
+                child: const Text('로그인 페이지로'),
               ),
-            ),
-          );
-        }
+            ],
+          ),
+        ),
+      );
+    }
 
-        if (snapshot.hasError) {
-          print('인증 오류: ${snapshot.error}');
-          return Scaffold(
-            body: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text('오류 발생'),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () {
-                      // 다시 시도 또는 로그인 페이지로 이동
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (_) => const Login()),
-                      );
-                    },
-                    child: const Text('다시 시도'),
-                  ),
-                ],
-              ),
-            ),
-          );
-        }
-
-        final isLoggedIn = snapshot.data ?? false;
-        print('인증 결과: $isLoggedIn');
-
-        // Main 대신 Display 호출
-        return isLoggedIn ? const Display() : const Login();
-      },
-    );
+    // Main 대신 Display 호출
+    return _isAuthenticated ? const Display() : const Login();
   }
 }

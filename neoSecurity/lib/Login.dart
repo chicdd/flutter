@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:neosecurity/Main.dart';
 import 'package:neosecurity/randomNumCreate.dart';
@@ -38,6 +39,10 @@ class _LoginState extends State<Login> {
             ),
             const SizedBox(height: 40),
             TextField(
+              keyboardType: TextInputType.number, //숫자키패드
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp('[0-9]')), //숫자만 입력되도록
+              ],
               controller: _phoneCode,
               decoration: InputDecoration(
                 labelText: '휴대폰번호',
@@ -49,12 +54,12 @@ class _LoginState extends State<Login> {
                     //랜덤4자리숫자생성
 
                     // 인증번호 발송 로직
-                    RestApiService().sendSMS(
-                      syscode,
-                      sendPhone,
-                      _phoneCode.text,
-                      _smsMessage,
-                    );
+                    // RestApiService().sendSMS(
+                    //   syscode,
+                    //   sendPhone,
+                    //   _phoneCode.text,
+                    //   _smsMessage,
+                    // );
                     //print(random4Number());
                     phoneCode = _phoneCode.text;
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -107,7 +112,7 @@ class _LoginState extends State<Login> {
                       } else {
                         //검증 모두 통과하면
                         saveToken(phoneCode); //휴대폰번호를 토큰으로 휴대폰에 저장
-                        await getCustomer();
+                        //await getCustomer();
                         Navigator.push(
                           context,
                           MaterialPageRoute(

@@ -12,6 +12,7 @@ String certNumber = ""; //인증번호
 String message = ""; //인증발송메세지
 String phoneCode = ""; //휴대폰번호
 String centerPhone = ""; //고객센터전화번호
+String selectedOption = "";
 DateTime day_start = DateTime.now().subtract(Duration(days: 7)); //조회시작날짜
 DateTime day_end = DateTime.now(); //조회끝날짜
 String mi_check = ""; //청구구분

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:neosecurity/Modal/Modal_Customer_List.dart';
 import 'package:neosecurity/Select/ERP_Select.dart';
@@ -5,6 +7,8 @@ import '../Modal/Modal_page_List.dart';
 import '../RestAPI.dart';
 import '../Select/Cus_Select.dart';
 import 'package:neosecurity/globals.dart';
+
+import '../functions.dart';
 
 class ERPCusInfo extends StatefulWidget {
   const ERPCusInfo({super.key});
@@ -14,22 +18,45 @@ class ERPCusInfo extends StatefulWidget {
 }
 
 class _ERPCusInfoState extends State<ERPCusInfo> {
+  Timer? _dataCheckTimer;
   @override
   void initState() {
+    erpinitializeData();
+    _startDataMonitoring();
     super.initState();
-    fetchErpCusInfo();
+  }
+
+  void _startDataMonitoring() {
+    _dataCheckTimer = Timer.periodic(Duration(milliseconds: 500), (timer) {
+      bool erpCusInfoListReady = erpCusInfoList.isNotEmpty;
+      bool erpListReady = erpList.isNotEmpty;
+
+      if (erpCusInfoListReady && erpListReady && mounted) {
+        setState(() {
+          // Select 위젯 업데이트를 위한 setState
+        });
+        // 데이터를 받았으므로 타이머 중지
+        timer.cancel();
+        print('모든 데이터 감지됨, Select 업데이트');
+        print('erpCusInfoList 개수: ${erpCusInfoList.length}');
+      } else {
+        // 디버깅용 로그
+        print(
+          '데이터 대기 중 - erpCusInfoListReady: $erpCusInfoListReady, erpListReady: $erpListReady',
+        );
+      }
+    });
   }
 
   Future<void> fetchErpCusInfo() async {
     try {
-      List<String> result = await RestApiService().erpCusInfoRequest(
+      final result = await RestApiService().erpCusInfoRequest(
         syscode,
         yongnum,
         phoneCode,
       );
-
-      setState(() {});
       erpCusInfoList = result;
+      setState(() {});
       print("erpCusInfoList: ${erpCusInfoList}");
     } catch (e) {
       print("API 호출 오류: $e");
@@ -37,12 +64,42 @@ class _ERPCusInfoState extends State<ERPCusInfo> {
     print('api호출함');
   }
 
+  Future<void> erpinitializeData() async {
+    try {
+      // 1단계: 먼저 고객 리스트 가져오기
+      final erpcustomers = await RestApiService().erpCusListRequest(
+        syscode,
+        phoneCode,
+      );
+      erpList = erpcustomers;
+      print('result$erpcustomers');
+      selectErpList = erpList[erpselectInt];
+      yongnum = selectErpList['yongnum'] ?? '';
+
+      // 2단계: 첫 번째 고객 또는 선택된 고객의 상태 정보 가져오기
+      if (erpcustomers.isNotEmpty) {
+        final yongnum = erpcustomers[0]['yongnum'] ?? '';
+        if (yongnum.isNotEmpty) {
+          final result = await RestApiService().erpCusInfoRequest(
+            syscode,
+            yongnum,
+            phoneCode,
+          );
+          erpCusInfoList = result;
+          print("erpCusInfoList: ${erpCusInfoList}");
+        }
+      }
+    } catch (e) {
+      print('오류: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xfff7f7f7),
       body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20,vertical: 5),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
         child: Column(
           children: [
             ERPSelect(

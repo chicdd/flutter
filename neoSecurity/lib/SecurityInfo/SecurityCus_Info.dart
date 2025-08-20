@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:neosecurity/Modal/Modal_Customer_List.dart';
 import '../Modal/Modal_page_List.dart';
@@ -13,23 +15,39 @@ class SecurityCusInfo extends StatefulWidget {
 }
 
 class _SecurityCusInfoState extends State<SecurityCusInfo> {
+  Timer? _dataCheckTimer;
   void initState() {
     super.initState();
     fetchSecuBasic();
     fetchUserList();
+    _startDataMonitoring();
   }
 
   Future<void> fetchSecuBasic() async {
+    print('monnum$monnum');
     try {
-      List<String> result = await RestApiService().secuBasicRequest(
+      final result = await RestApiService().secuBasicRequest(
         syscode,
         monnum,
         phoneCode,
       );
+      print('result$result');
+      secuBasicList = result;
 
-      setState(() {
-        secuBasicList = result;
-      });
+      if (result.isNotEmpty) {
+        if (monnum.isNotEmpty) {
+          stateList = await RestApiService().currentStateRequest(
+            syscode,
+            monnum,
+            phoneCode,
+          );
+          // state 정보 사용
+          state = stateList['state'] ?? '';
+          print('state$state');
+          print('monnum$monnum');
+          print('isremote$isremote');
+        }
+      }
 
       print("globals.secuBasicList: ${secuBasicList}");
     } catch (e) {
@@ -39,12 +57,38 @@ class _SecurityCusInfoState extends State<SecurityCusInfo> {
   }
 
   Future<void> fetchUserList() async {
-    userList = await RestApiService().userListRequest(
+    final result = await RestApiService().userListRequest(
       syscode,
       monnum,
       phoneCode,
     );
+    userList = result;
     setState(() {});
+  }
+
+  void _startDataMonitoring() {
+    _dataCheckTimer = Timer.periodic(Duration(milliseconds: 500), (timer) {
+      // cusList, stateList, state 모두 체크
+      bool secuBasicListReady = secuBasicList.isNotEmpty;
+      bool userListReady = userList.isNotEmpty;
+
+      if (secuBasicListReady && userListReady && mounted) {
+        setState(() {
+          // Select 위젯 업데이트를 위한 setState
+        });
+        // 데이터를 받았으므로 타이머 중지
+        timer.cancel();
+        print('모든 데이터 감지됨, Select 업데이트');
+        print('cusList 개수: ${cusList.length}');
+        print('stateList: $stateList');
+        print('state: $state');
+      } else {
+        // 디버깅용 로그
+        print(
+          '데이터 대기 중 - secuBasicListReady: $secuBasicListReady, userListReady: $userListReady',
+        );
+      }
+    });
   }
 
   @override
@@ -52,7 +96,7 @@ class _SecurityCusInfoState extends State<SecurityCusInfo> {
     return Scaffold(
       backgroundColor: const Color(0xfff7f7f7),
       body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20,vertical: 5),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
         child: Column(
           children: [
             CusSelect(

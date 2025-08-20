@@ -14,59 +14,55 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  String _selectedOption = ''; // 라디오버튼 기본 선택값
   Timer? _timer;
+  Timer? _dataCheckTimer;
   final tel = Uri.parse('tel:01012345678');
-  void load() async {
-    if (getErpCustomer() == null) {
-      if (getErpCustomer() == null) {}
-    }
-    // getCenterPhone
-    // try {
-    //   await getCenterPhone();
-    //   print('getCenterPhone 완료');
-    // } catch (e) {
-    //   print('getCenterPhone 에러: $e');
-    // }
-    //
-    // // getErpCustomer
-    // try {
-    //   await getErpCustomer();
-    //   print('getErpCustomer 완료');
-    // } catch (e) {
-    //   print('getErpCustomer 에러: $e');
-    // }
-    //
-    // // getCustomer
-    // try {
-    //   await getCustomer();
-    //   print('getCustomer 완료');
-    // } catch (e) {
-    //   print('getCustomer 에러: $e');
-    // }
+
+  void _startDataMonitoring() {
+    _dataCheckTimer = Timer.periodic(Duration(milliseconds: 500), (timer) {
+      // cusList, stateList, state 모두 체크
+      bool cusListReady = cusList.isNotEmpty;
+      bool stateListReady = stateList.isNotEmpty;
+      bool stateReady = state.isNotEmpty;
+
+      if (cusListReady && stateListReady && stateReady && mounted) {
+        setState(() {
+          // Select 위젯 업데이트를 위한 setState
+        });
+        // 데이터를 받았으므로 타이머 중지
+        timer.cancel();
+        print('모든 데이터 감지됨, Select 업데이트');
+        print('cusList 개수: ${cusList.length}');
+        print('stateList: $stateList');
+        print('state: $state');
+        UiChanger(state);
+      } else {
+        // 디버깅용 로그
+        print(
+          '데이터 대기 중 - cusList: $cusListReady, stateList: $stateListReady, state: $stateReady',
+        );
+      }
+    });
   }
 
   void initState() {
     super.initState();
+    _startDataMonitoring();
 
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await getCustomer();
-      await getState();
-      setState(() {
-        _selectedOption = UiChanger(stateList['state'].toString());
-      });
+    setState(() {
+      print('_selectedOption${state}');
     });
 
     //5초마다 setState 호출
-    _timer = Timer.periodic(const Duration(seconds: 5), (timer) {
-      setState(() {
-        getState();
-        _selectedOption = stateMatchingModel[stateList['state']] ?? '';
-      });
-      print('globals.stateList${stateList}');
-
-      print("_selectedOption" + _selectedOption);
-    });
+    // _timer = Timer.periodic(const Duration(seconds: 5), (timer) {
+    //   setState(() {
+    //     getState();
+    //     _selectedOption = stateMatchingModel[stateList['state']] ?? '';
+    //   });
+    //   print('globals.stateList${stateList}');
+    //
+    //   print("_selectedOption" + _selectedOption);
+    // });
   }
 
   // @override
@@ -103,7 +99,7 @@ class _HomeState extends State<Home> {
                   setState(() {
                     print('stateList[state]' + stateList['state'].toString());
                   });
-                  _selectedOption = UiChanger(stateList['state'].toString());
+                  UiChanger(state);
                 },
               ),
 
@@ -156,40 +152,40 @@ class _HomeState extends State<Home> {
                         ],
                       ),
                     ),
+                    Row(children: [const SizedBox(height: 20)]),
                     if (isremote == 'true')
-                      Row(children: [const SizedBox(height: 20)]),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: () async {
-                          String result = await receiveRemote();
-                          if (result == "1") {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('원격요청되었습니다.')),
-                            );
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('원격오류. 관리자에게 문의하세요.'),
-                              ),
-                            );
-                          }
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Color(0xff2196f3),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () async {
+                            String result = await receiveRemote();
+                            if (result == "1") {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('원격요청되었습니다.')),
+                              );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('원격오류. 관리자에게 문의하세요.'),
+                                ),
+                              );
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Color(0xff2196f3),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            textStyle: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            shadowColor: Colors.transparent,
                           ),
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          textStyle: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                          ),
-                          shadowColor: Colors.transparent,
+                          child: const Text('원격요청'),
                         ),
-                        child: const Text('원격요청'),
                       ),
-                    ),
                   ],
                 ),
               ),
@@ -202,7 +198,7 @@ class _HomeState extends State<Home> {
                   child: ElevatedButton(
                     onPressed: () async {
                       print('전화 걸기');
-                      launchUrl(Uri( scheme: 'tel', path: centerPhone,));
+                      launchUrl(Uri(scheme: 'tel', path: centerPhone));
                       // try {
                       //   // tel: 대신 전화 다이얼러만 열기
                       //   final Uri tel = Uri.parse(centerPhone);
@@ -251,13 +247,12 @@ class _HomeState extends State<Home> {
 
   //라디오버튼
   Widget command(String value) {
-    final bool isSelected = _selectedOption == value;
+    final bool isSelected = stateMatchingModel[state] == value;
 
     return Expanded(
       child: GestureDetector(
         onTap: () {
           setState(() {
-            _selectedOption = value;
             state = value;
           });
         },

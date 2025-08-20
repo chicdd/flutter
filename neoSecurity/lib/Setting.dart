@@ -57,93 +57,91 @@ class _SettingState extends State<Setting> {
                     alignment: Alignment.center,
                     child: Column(
                       children: [
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 8,
-                          ),
-                          child: SizedBox(
-                            width: double.infinity,
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Row(
-                                  children: [
-                                    Padding(
-                                      padding: const EdgeInsets.only(top: 4),
-                                      child: Icon(
-                                        Icons.content_paste_outlined,
-                                        color: Colors.black,
-                                      ),
-                                    ),
-                                    SizedBox(width: 12),
-                                    Text(
-                                      "공지사항",
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        color: Colors.black,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 4),
-                                  child: Icon(
-                                    Icons.arrow_forward_ios_outlined,
-                                    size: 24,
-                                    color: Colors.black54,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 25),
-                        // Divider(thickness: 1, height: 1, color: Color(0xffdfdfdf)),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 8,
-                          ),
-                          child: SizedBox(
-                            width: double.infinity,
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Row(
-                                  children: [
-                                    Padding(
-                                      padding: const EdgeInsets.only(top: 4),
-                                      child: Icon(
-                                        Icons.support_agent_outlined,
-                                        color: Colors.black,
-                                      ),
-                                    ),
-                                    SizedBox(width: 12),
-                                    Text(
-                                      "기술지원 앱 설치",
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        color: Colors.black,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 4),
-                                  child: Icon(
-                                    Icons.arrow_forward_ios_outlined,
-                                    size: 24,
-                                    color: Colors.black54,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-
-                        const SizedBox(height: 50),
-
+                        // Padding(
+                        //   padding: const EdgeInsets.symmetric(
+                        //     horizontal: 20,
+                        //     vertical: 8,
+                        //   ),
+                        //   child: SizedBox(
+                        //     width: double.infinity,
+                        //     child: Row(
+                        //       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        //       children: [
+                        //         Row(
+                        //           children: [
+                        //             Padding(
+                        //               padding: const EdgeInsets.only(top: 4),
+                        //               child: Icon(
+                        //                 Icons.content_paste_outlined,
+                        //                 color: Colors.black,
+                        //               ),
+                        //             ),
+                        //             SizedBox(width: 12),
+                        //             Text(
+                        //               "공지사항",
+                        //               style: TextStyle(
+                        //                 fontSize: 18,
+                        //                 color: Colors.black,
+                        //               ),
+                        //             ),
+                        //           ],
+                        //         ),
+                        //         Padding(
+                        //           padding: const EdgeInsets.only(top: 4),
+                        //           child: Icon(
+                        //             Icons.arrow_forward_ios_outlined,
+                        //             size: 24,
+                        //             color: Colors.black54,
+                        //           ),
+                        //         ),
+                        //       ],
+                        //     ),
+                        //   ),
+                        // ),
+                        // const SizedBox(height: 25),
+                        // // Divider(thickness: 1, height: 1, color: Color(0xffdfdfdf)),
+                        // Padding(
+                        //   padding: const EdgeInsets.symmetric(
+                        //     horizontal: 20,
+                        //     vertical: 8,
+                        //   ),
+                        //   child: SizedBox(
+                        //     width: double.infinity,
+                        //     child: Row(
+                        //       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        //       children: [
+                        //         Row(
+                        //           children: [
+                        //             Padding(
+                        //               padding: const EdgeInsets.only(top: 4),
+                        //               child: Icon(
+                        //                 Icons.support_agent_outlined,
+                        //                 color: Colors.black,
+                        //               ),
+                        //             ),
+                        //             SizedBox(width: 12),
+                        //             Text(
+                        //               "기술지원 앱 설치",
+                        //               style: TextStyle(
+                        //                 fontSize: 18,
+                        //                 color: Colors.black,
+                        //               ),
+                        //             ),
+                        //           ],
+                        //         ),
+                        //         Padding(
+                        //           padding: const EdgeInsets.only(top: 4),
+                        //           child: Icon(
+                        //             Icons.arrow_forward_ios_outlined,
+                        //             size: 24,
+                        //             color: Colors.black54,
+                        //           ),
+                        //         ),
+                        //       ],
+                        //     ),
+                        //   ),
+                        // ),
+                        // const SizedBox(height: 50),
                         Padding(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 20,

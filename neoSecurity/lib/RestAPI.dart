@@ -50,7 +50,7 @@ class RestApiService {
       "$baseUrl/$page?syscode=$syscode&monnum=$monnum&phonecode=$phonecode",
     );
     final response = await http.get(url);
-
+    print(url);
     if (response.statusCode == 200) {
       final document = XmlDocument.parse(response.body);
       final result = document.findAllElements('리턴관제마스터').first;
@@ -208,7 +208,7 @@ class RestApiService {
             final name = element.getElement('상호명')?.innerText.trim() ?? '';
             return {'yongnum': yongnum, 'name': name};
           }).toList();
-
+      print('erpCusList$erpCusList');
       return erpCusList;
     } else {
       throw Exception('API 호출 실패: ${response.statusCode}');
@@ -227,7 +227,7 @@ class RestApiService {
     final url = Uri.parse(
       "$baseUrl/$page?syscode=$syscode&yongnum=$yongnum&phonecode=$phonecode",
     );
-    //print(url);
+    print(url);
     final response = await http.get(url);
 
     if (response.statusCode == 200) {
@@ -366,7 +366,8 @@ class RestApiService {
     final url = Uri.parse(
       "$baseUrl/$page?syscode=$syscode&phonecode=$phonecode",
     );
-    //print(url);
+    print(url);
+    //print('phonecode$phonecode');
     final response = await http
         .get(url)
         .timeout(
@@ -375,7 +376,7 @@ class RestApiService {
             throw TimeoutException('API 호출 타임아웃');
           },
         );
-    ;
+
     if (response.statusCode == 200) {
       final document = XmlDocument.parse(response.body);
       final elements = document.findAllElements('리턴관제마스터');
@@ -426,6 +427,7 @@ class RestApiService {
       final result = document.findAllElements('리턴스마트설정마스터').first;
 
       final centerPhone = result.getElement('고객센터전화번호')?.innerText.trim() ?? '';
+      print('centerPhone 값 : $centerPhone');
       return centerPhone;
     } else {
       throw Exception('API 호출 실패: ${response.statusCode}');
@@ -445,7 +447,7 @@ class RestApiService {
     final url = Uri.parse(
       "$baseUrl/$page?syscode=$syscode&monnum=$monnum&phonecode=$phonecode",
     );
-
+    print(url);
     final response = await http
         .get(url)
         .timeout(

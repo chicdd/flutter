@@ -1,10 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:neosecurity/ERPInfo/Bill_Info.dart';
 import 'package:neosecurity/ERPInfo/Claim_Info.dart';
 import 'package:neosecurity/ERPInfo/ERPCus_Info.dart';
 import 'package:neosecurity/Modal/Modal_page_List.dart';
-import 'package:neosecurity/globals.dart' as globals;
+import 'package:neosecurity/globals.dart';
 
+import '../RestAPI.dart';
 import '../functions.dart';
 
 class ErpHome extends StatefulWidget {
@@ -16,15 +19,15 @@ class ErpHome extends StatefulWidget {
 class ErpHomeState extends State<ErpHome> {
   late int _Index = 0;
   late String title = '타이틀 없음';
-  List<String> itemList = globals.cusPageList;
+  List<String> itemList = cusPageList;
   final List<Widget> _pages = [ERPCusInfo(), ClaimInfo(), BillInfo()];
-
+  Timer? _dataCheckTimer;
   void _onItemSelected(int index, String newTitle) {
     setState(() {
       _Index = index;
       title = newTitle;
     });
-    globals.tabERPIndex = index;
+    tabERPIndex = index;
   }
 
   // void _setTitle(String newTitle) {
@@ -36,9 +39,9 @@ class ErpHomeState extends State<ErpHome> {
   @override
   void initState() {
     super.initState();
-    _Index = globals.tabERPIndex;
+    _Index = tabERPIndex;
     title = itemList[_Index];
-    getErpCustomer();
+
     print('getErpCustomer 완료');
   }
 

@@ -12,8 +12,7 @@ class ERPSelect extends StatefulWidget {
 }
 
 class _ERPSelectState extends State<ERPSelect> {
-  String title =
-      erpList.isNotEmpty ? erpList[erpselectInt]['name'] ?? '값 없음' : '값 없음';
+  String title = "";
 
   void onPressed() async {
     final result = await showModalBottomSheet(
@@ -59,7 +58,10 @@ class _ERPSelectState extends State<ERPSelect> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              title,
+              title =
+                  erpList.isNotEmpty
+                      ? erpList[erpselectInt]['name'] ?? '값 없음'
+                      : '값 없음',
               style: const TextStyle(
                 color: Colors.black,
                 fontWeight: FontWeight.w700,

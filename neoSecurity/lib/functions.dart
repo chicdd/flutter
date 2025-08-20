@@ -56,29 +56,35 @@ Future<void> getState() async {
 
 Future<void> getCenterPhone() async {
   centerPhone = await RestApiService().smartSettingRequest(syscode, phoneCode);
-  print('고객센터전화번호${centerPhone}');
 }
 
-Future<void> getCustomer() async {
-  cusList = await RestApiService().customerRequest(syscode, phoneCode);
-  if (cusList.isNotEmpty) {
-    selectCusList = cusList[selectInt];
-    print(cusList);
-    monnum = selectCusList['monnum'] ?? '';
-    isremote = selectCusList['isremote'] ?? '';
-    print('monnum${monnum}');
-  } else {
-    // 빈 리스트일 경우 기본값 처리
-    selectCusList = {};
-    monnum = '';
-  }
-  print('cusList$cusList');
-}
+// Future<void> getCustomer() async {
+//   cusList = await RestApiService().customerRequest(syscode, phoneCode);
+//   // if (cusList.isNotEmpty) {
+//   //   selectCusList = cusList[selectInt];
+//   //   print(cusList);
+//   //   monnum = selectCusList['monnum'] ?? '';
+//   //   isremote = selectCusList['isremote'] ?? '';
+//   //   print('monnum${monnum}');
+//   // } else {
+//   //   // 빈 리스트일 경우 기본값 처리
+//   //   selectCusList = {};
+//   //   monnum = '';
+//   // }
+//   print('cusList$cusList');
+// }
 
 Future<void> getErpCustomer() async {
-  erpList = await RestApiService().erpCusListRequest(syscode, phoneCode);
-  selectErpList = erpList[erpselectInt];
-  yongnum = selectErpList['yongnum'] ?? '';
+  try {
+    final result = await RestApiService().erpCusListRequest(syscode, phoneCode);
+    erpList = result;
+    print('result$result');
+    selectErpList = erpList[erpselectInt];
+    yongnum = selectErpList['yongnum'] ?? '';
+  } catch (e) {
+    print("API 호출 오류: $e");
+  }
+
   print('yongnum${yongnum}');
 }
 

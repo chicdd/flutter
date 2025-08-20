@@ -10,30 +10,30 @@ import 'functions.dart';
 import 'globals.dart';
 import 'Display.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   HttpOverrides.global = MyHttpOverrides();
-
+  await checkAuth();
   runApp(const MyApp());
-  load();
+  // load();
 }
 
 // 기본값 먼저 설정 (중요!)
-void load() async {
-  // checkAuth
-  try {
-    await checkAuth();
-    print('checkAuth 완료');
-  } catch (e) {
-    print('checkAuth 에러: $e');
-  }
-  try {
-    await getCenterPhone();
-    print('getCenterPhone() 완료');
-  } catch (e) {
-    print('getCenterPhone() 에러: $e');
-  }
-}
+// void load() async {
+//   // checkAuth
+//   try {
+//     await checkAuth();
+//     print('checkAuth 완료');
+//   } catch (e) {
+//     print('checkAuth 에러: $e');
+//   }
+//   try {
+//
+//     print('getCenterPhone() 완료');
+//   } catch (e) {
+//     print('getCenterPhone() 에러: $e');
+//   }
+// }
 
 //토큰 확인
 Future<void> checkAuth() async {
