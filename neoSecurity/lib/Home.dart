@@ -17,6 +17,7 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   Timer? _timer;
   Timer? _dataCheckTimer;
+  late String _selectedOption;
   final tel = Uri.parse('tel:01012345678');
 
   void _startDataMonitoring() {
@@ -37,6 +38,7 @@ class _HomeState extends State<Home> {
         print('stateList: $stateList');
         print('state: $state');
         UiChanger(state);
+        selectedOption = stateMatchingModel[stateList['state']] ?? '';
       } else {
         // 디버깅용 로그
         print(
@@ -49,21 +51,18 @@ class _HomeState extends State<Home> {
   void initState() {
     super.initState();
     _startDataMonitoring();
-
-    setState(() {
-      print('_selectedOption${state}');
-    });
+    setState(() {});
 
     //5초마다 setState 호출
-    // _timer = Timer.periodic(const Duration(seconds: 5), (timer) {
-    //   setState(() {
-    //     getState();
-    //     _selectedOption = stateMatchingModel[stateList['state']] ?? '';
-    //   });
-    //   print('globals.stateList${stateList}');
-    //
-    //   print("_selectedOption" + _selectedOption);
-    // });
+    _timer = Timer.periodic(const Duration(seconds: 10), (timer) {
+      setState(() {
+        getState();
+        state = stateMatchingModel[stateList['state']] ?? '';
+      });
+      print('globals.stateList${stateList}');
+
+      print("_selectedOption" + state);
+    });
   }
 
   // @override
@@ -249,13 +248,14 @@ class _HomeState extends State<Home> {
 
   //라디오버튼
   Widget command(String value) {
-    final bool isSelected = stateMatchingModel[state] == value;
+    final bool isSelected = selectedOption == value;
 
     return Expanded(
       child: GestureDetector(
         onTap: () {
           setState(() {
-            state = value;
+            selectedOption = value;
+            print(state);
           });
         },
         child: Container(
@@ -281,13 +281,12 @@ class _HomeState extends State<Home> {
 
 String UiChanger(String state) {
   String result = "";
-  result = stateMatchingModel[state] ?? '';
-  getImagePath(state);
-  return result;
-}
 
-Future<void> _makePhoneCall() async {
-  await launchUrl(launchUri);
+  result = stateMatchingModel[stateList['state']] ?? '';
+  print(stateMatchingModel[stateList['state']]);
+  print('UiChanger$result');
+  getImagePath(state);
+  return state;
 }
 
 final Uri launchUri = Uri(
