@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:neosecurity/SecurityInfo/SecurityCus_Info.dart';
 import 'package:neosecurity/SecurityInfo/DvrInfo.dart';
 import 'package:neosecurity/SecurityInfo/Sign_Info.dart';
@@ -44,6 +45,7 @@ class SecurityHomeState extends State<SecurityHome> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        systemOverlayStyle: SystemUiOverlayStyle.dark,
         title: Row(
           children: [
             ElevatedButton(

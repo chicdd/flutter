@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:neosecurity/Modal/Modal_Customer_List.dart';
 import 'package:neosecurity/Modal/Modal_Sign_Filter.dart';
@@ -32,6 +33,7 @@ class _SettingState extends State<Setting> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        systemOverlayStyle: SystemUiOverlayStyle.dark,
         title: const Text(
           '설정',
           style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700),

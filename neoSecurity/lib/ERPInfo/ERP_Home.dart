@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:neosecurity/ERPInfo/Bill_Info.dart';
 import 'package:neosecurity/ERPInfo/Claim_Info.dart';
 import 'package:neosecurity/ERPInfo/ERPCus_Info.dart';
@@ -49,6 +50,7 @@ class ErpHomeState extends State<ErpHome> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        systemOverlayStyle: SystemUiOverlayStyle.dark,
         title: Row(
           children: [
             ElevatedButton(
