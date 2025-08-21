@@ -8,6 +8,7 @@ import 'package:neosecurity/Login.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+import 'Home.dart';
 import 'globals.dart';
 
 class Setting extends StatefulWidget {
@@ -34,9 +35,32 @@ class _SettingState extends State<Setting> {
     return Scaffold(
       appBar: AppBar(
         systemOverlayStyle: SystemUiOverlayStyle.dark,
-        title: const Text(
-          '설정',
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700),
+        iconTheme: const IconThemeData(
+          color: Colors.black, // 색변경
+        ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const Home()),
+            );
+          },
+        ),
+        title: Row(
+          children: [
+            SizedBox(
+              width: 130,
+              child: Text(
+                '설정',
+                style: const TextStyle(
+                  fontSize: 21,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.black,
+                ),
+              ),
+            ),
+          ],
         ),
         backgroundColor: Colors.transparent,
         automaticallyImplyLeading: false,

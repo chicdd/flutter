@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:neosecurity/Display.dart';
 import 'package:neosecurity/Main.dart';
 import 'package:neosecurity/randomNumCreate.dart';
 
@@ -154,10 +155,10 @@ class _LoginState extends State<Login> {
                         //검증 모두 통과하면
                         saveToken(phoneCode); //휴대폰번호를 토큰으로 휴대폰에 저장
                         //await getCustomer();
-                        Navigator.push(
+                        Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const Main(),
+                            builder: (context) => const Display(),
                           ), //Main으로 위젯 넘기기
                         );
                       }
