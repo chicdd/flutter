@@ -74,19 +74,19 @@ Future<void> getCenterPhone() async {
 //   print('cusList$cusList');
 // }
 
-Future<void> getErpCustomer() async {
-  try {
-    final result = await RestApiService().erpCusListRequest(syscode, phoneCode);
-    erpList = result;
-    print('result$result');
-    selectErpList = erpList[erpselectInt];
-    yongnum = selectErpList['yongnum'] ?? '';
-  } catch (e) {
-    print("API 호출 오류: $e");
-  }
-
-  print('yongnum${yongnum}');
-}
+// Future<void> getErpCustomer() async {
+//   try {
+//     final result = await RestApiService().erpCusListRequest(syscode, phoneCode);
+//     erpList = result;
+//     print('result$result');
+//     selectErpList = erpList[erpselectInt];
+//     yongnum = selectErpList['yongnum'] ?? '';
+//   } catch (e) {
+//     print("API 호출 오류: $e");
+//   }
+//
+//   print('yongnum${yongnum}');
+// }
 
 Future<String> receiveRemote() async {
   XmlDocument result;

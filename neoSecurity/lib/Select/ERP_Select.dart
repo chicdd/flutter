@@ -29,7 +29,7 @@ class _ERPSelectState extends State<ERPSelect> {
       setState(() {
         title = result['name']!;
         print(result);
-        selectErpList = result;
+        //selectErpList = result;
         erpselectInt = erpList.indexOf(result);
         print(erpselectInt);
         //영업고객 상태 업데이트

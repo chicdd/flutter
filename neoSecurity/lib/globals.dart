@@ -52,18 +52,16 @@ int erpselectInt = 0;
 
 //-관제업체들 저장되는 리스트-
 List<String> secuBasicList = [];
+List<String> erpCusInfoList = [];
 List<Map<String, String>> userList = [];
 List<Map<String, String>> signalList = [];
 List<Map<String, String>> dvrList = [];
-List<String> erpCusInfoList = [];
 List<Map<String, String>> claimList = [];
 List<Map<String, String>> billList = [];
-List<Customer> customerList = [];
-List<Manager> managerList = [];
 List<Map<String, String>> cusList = [];
 List<Map<String, String>> erpList = [];
-Map<String, String> selectCusList = {};
-Map<String, String> selectErpList = {};
+//Map<String, String> selectCusList = {};
+//Map<String, String> selectErpList = {};
 Map<String, String> stateList = {};
 //유저내역
 //List<Map<String, String>> userList = [];
@@ -113,41 +111,6 @@ class SMSReceive {
   }
 }
 
-class Customer {
-  final String code;
-  final String name;
-
-  Customer({required this.code, required this.name});
-
-  factory Customer.fromJson(Map<String, dynamic> json) {
-    return Customer(
-      code: json['거래처코드'] as String? ?? '',
-      name: json['거래처명'] as String? ?? '',
-    );
-  }
-}
-
-class Manager {
-  final String code;
-  final String name;
-
-  Manager({required this.code, required this.name});
-
-  factory Manager.fromJson(Map<String, dynamic> json) {
-    return Manager(
-      code: json['담당자코드'] as String? ?? '',
-      name: json['담당자명'] as String? ?? '',
-    );
-  }
-}
-
-class BasicInfo {
-  final String customer;
-  final String date;
-
-  BasicInfo({required this.customer, required this.date});
-}
-
 final Map<String, String> stateMatchingModel = {
   '경계': '해제',
   '해제': '경계',
@@ -161,9 +124,3 @@ final Map<String, String> remoteModel = {
   '문열림': '7',
   '문닫힘': '8',
 };
-// class UserInfo {
-//   final String name;
-//   final String phone;
-//
-//   UserInfo({required this.name, required this.phone});
-// }

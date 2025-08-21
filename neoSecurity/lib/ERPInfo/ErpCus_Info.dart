@@ -85,8 +85,8 @@ class _ERPCusInfoState extends State<ERPCusInfo> {
       );
       erpList = erpcustomers;
       print('result$erpcustomers');
-      selectErpList = erpList[erpselectInt];
-      yongnum = selectErpList['yongnum'] ?? '';
+      //selectErpList = erpList[erpselectInt];
+      yongnum = erpList[erpselectInt]['yongnum'] ?? '';
 
       // 2단계: 첫 번째 고객 또는 선택된 고객의 상태 정보 가져오기
       if (erpcustomers.isNotEmpty) {

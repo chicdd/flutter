@@ -29,7 +29,7 @@ class _CusSelectState extends State<CusSelect> {
       setState(() {
         title = result['name']!;
         print(result);
-        selectCusList = result;
+        //selectCusList = result;
         selectInt = cusList.indexOf(result);
         //관제고객 상태 업데이트
       });
