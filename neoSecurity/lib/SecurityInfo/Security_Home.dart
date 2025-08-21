@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:neosecurity/Home.dart';
 import 'package:neosecurity/SecurityInfo/SecurityCus_Info.dart';
 import 'package:neosecurity/SecurityInfo/DvrInfo.dart';
 import 'package:neosecurity/SecurityInfo/Sign_Info.dart';
@@ -18,27 +19,23 @@ class SecurityHomeState extends State<SecurityHome> {
   late int _Index = 0;
   late String title = '타이틀 없음';
   final List<Widget> _pages = [SecurityCusInfo(), SignInfo(), DvrInfo()];
-
-  void _onItemSelected(int index, String newTitle) {
-    setState(() {
-      print('index$index');
-      _Index = index;
-      title = newTitle;
-    });
-    tabSecurityIndex = index;
-  }
-
-  // void _setTitle(String newTitle) {
-  //   setState(() {
-  //     title = newTitle;
-  //   });
-  // }
+  int _selectedIndex = 0;
 
   @override
   void initState() {
     super.initState();
-    _Index = tabSecurityIndex;
     title = securityPageList[_Index];
+  }
+
+  void _onItemTapped(int index) {
+    if (mounted) {
+      // mounted 체크 추가
+      setState(() {
+        _selectedIndex = index; // BottomNavigationBar에 반영
+        _Index = index; // body도 같이 반영
+        title = securityPageList[index]; // 타이틀도 변경
+      });
+    }
   }
 
   @override
@@ -46,54 +43,29 @@ class SecurityHomeState extends State<SecurityHome> {
     return Scaffold(
       appBar: AppBar(
         systemOverlayStyle: SystemUiOverlayStyle.dark,
+        iconTheme: const IconThemeData(
+          color: Colors.black, // 색변경
+        ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const Home()),
+            );
+          },
+        ),
         title: Row(
           children: [
-            ElevatedButton(
-              onPressed: () {
-                showModalBottomSheet(
-                  context: context,
-                  isScrollControlled: true,
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.vertical(
-                      top: Radius.circular(20),
-                    ),
-                  ),
-                  backgroundColor: Colors.white,
-                  builder:
-                      (context) => pageList(
-                        context: context,
-                        itemList: securityPageList,
-                        onItemSelected: _onItemSelected,
-                      ),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  vertical: 20,
-                  horizontal: 10,
+            SizedBox(
+              width: 130,
+              child: Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 21,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.black,
                 ),
-                backgroundColor: Colors.transparent,
-                foregroundColor: Colors.black,
-                elevation: 0,
-                shadowColor: Colors.transparent,
-                minimumSize: Size.zero,
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-              child: Row(
-                children: [
-                  SizedBox(
-                    width: 130,
-                    child: Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 21,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  const Icon(Icons.expand_more),
-                ],
               ),
             ),
           ],
@@ -102,8 +74,42 @@ class SecurityHomeState extends State<SecurityHome> {
         automaticallyImplyLeading: false,
         shadowColor: Colors.transparent,
       ),
+
       backgroundColor: const Color(0xfff7f7f7),
+
       body: _pages[_Index],
+
+      bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed, // 명시적으로 고정형 지정
+        currentIndex: _selectedIndex,
+        onTap: _onItemTapped,
+        backgroundColor: const Color(0xffffffff),
+        selectedItemColor: Colors.black,
+        unselectedItemColor: Colors.black54,
+        items: [
+          BottomNavigationBarItem(
+            icon: Padding(
+              padding: EdgeInsets.only(top: 8.0),
+              child: Icon(Icons.home_filled),
+            ),
+            label: securityPageList[0],
+          ),
+          BottomNavigationBarItem(
+            icon: Padding(
+              padding: EdgeInsets.only(top: 8.0),
+              child: Icon(Icons.person),
+            ),
+            label: securityPageList[1],
+          ),
+          BottomNavigationBarItem(
+            icon: Padding(
+              padding: EdgeInsets.only(top: 8.0),
+              child: Icon(Icons.list_alt),
+            ),
+            label: securityPageList[2],
+          ),
+        ],
+      ),
     );
   }
 }

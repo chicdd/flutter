@@ -1,7 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:neosecurity/ERPInfo/ERP_Home.dart';
+import 'package:neosecurity/SecurityInfo/Security_Home.dart';
+import 'package:neosecurity/Setting.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'Modal/Modal_page_List.dart';
 import 'Select/Cus_Select.dart';
 import 'RestAPI.dart';
 import 'functions.dart';
@@ -19,7 +23,9 @@ class _HomeState extends State<Home> {
   Timer? _dataCheckTimer;
   late String _selectedOption;
   final tel = Uri.parse('tel:01012345678');
-
+  int _selectedIndex = 0;
+  late String title = '타이틀 없음';
+  late int _Index = 0;
   void _startDataMonitoring() {
     int attemptCount = 0; // 시도 횟수 카운터 추가
     const int maxAttempts = 20; // 최대 시도 횟수
@@ -77,11 +83,29 @@ class _HomeState extends State<Home> {
     });
   }
 
-  // @override
-  // void dispose() {
-  //   _timer?.cancel(); // 꼭 해제해 주세요!
-  //   super.dispose();
-  // }
+  @override
+  void dispose() {
+    _timer?.cancel(); // 꼭 해제해 주세요!
+    super.dispose();
+  }
+
+  void _onItemTapped(int index) {
+    if (mounted) {
+      // mounted 체크 추가
+      setState(() {
+        _selectedIndex = index;
+      });
+    }
+  }
+
+  void _onItemSelected(int index, String newTitle) {
+    setState(() {
+      print('index$index');
+      _Index = index;
+      title = newTitle;
+    });
+    tabSecurityIndex = index;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -143,6 +167,7 @@ class _HomeState extends State<Home> {
                     ),
 
                     const SizedBox(height: 20),
+
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 0.0),
                       child: Row(
@@ -155,6 +180,7 @@ class _HomeState extends State<Home> {
                     ),
 
                     const SizedBox(height: 10),
+
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 0.0),
                       child: Row(
@@ -165,92 +191,358 @@ class _HomeState extends State<Home> {
                         ],
                       ),
                     ),
-                    Row(children: [const SizedBox(height: 20)]),
-                    if (isremote == 'true')
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: () async {
-                            String result = await receiveRemote();
-                            if (result == "1") {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('원격요청되었습니다.')),
-                              );
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('원격오류. 관리자에게 문의하세요.'),
+                    const SizedBox(height: 10),
+
+                    Row(
+                      children: [
+                        if (isremote == 'true')
+                          Expanded(
+                            child: SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                onPressed: () async {
+                                  String result = await receiveRemote();
+                                  if (result == "1") {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text('원격요청되었습니다.'),
+                                      ),
+                                    );
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text('원격오류. 관리자에게 문의하세요.'),
+                                      ),
+                                    );
+                                  }
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Color(0xff2196f3),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 16,
+                                  ),
+                                  textStyle: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  shadowColor: Colors.transparent,
                                 ),
-                              );
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Color(0xff2196f3),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                                child: const Text('원격요청'),
+                              ),
                             ),
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            textStyle: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                            ),
-                            shadowColor: Colors.transparent,
                           ),
-                          child: const Text('원격요청'),
-                        ),
-                      ),
+
+                        const SizedBox(width: 10),
+
+                        if (centerPhone != null &&
+                            centerPhone !=
+                                '') //고객센터 전화번호를 불러오기 성공했다면 고객센터 전화 버튼을 불러온다.
+                          Expanded(
+                            child: SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                onPressed: () {
+                                  (context) => pageList(
+                                    context: context,
+                                    itemList: securityPageList,
+                                    onItemSelected: _onItemSelected,
+                                  );
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    side: BorderSide(color: Color(0xff545454)),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 16,
+                                  ),
+                                  textStyle: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  shadowColor: Colors.black38,
+                                  elevation: 4,
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.phone, color: Colors.black54),
+                                    SizedBox(width: 12),
+                                    Text(
+                                      "관제실 통화",
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        color: Colors.black54,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
                   ],
                 ),
               ),
 
-              const SizedBox(height: 10),
-              if (centerPhone != null &&
-                  centerPhone != '') //고객센터 전화번호를 불러오기 성공했다면 고객센터 전화 버튼을 불러온다.
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () async {
-                      print('전화 걸기');
-                      launchUrl(Uri(scheme: 'tel', path: centerPhone));
-                      // try {
-                      //   // tel: 대신 전화 다이얼러만 열기
-                      //   final Uri tel = Uri.parse(centerPhone);
-                      //   await launchUrl(
-                      //     tel,
-                      //     mode: LaunchMode.externalApplication,
-                      //
-                      //   );
-                      //   print('전화 걸기');
-                      // } catch (e) {
-                      //   print('전화 앱 열기 오류: $e');
-                      // }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      textStyle: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      shadowColor: Colors.black38,
-                      elevation: 4,
+              const SizedBox(height: 20),
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black12,
+                      blurRadius: 8,
+                      offset: Offset(0, 4),
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
                       children: [
-                        Icon(Icons.phone, color: Colors.black54),
-                        SizedBox(width: 12),
-                        Text(
-                          "관제실 통화",
-                          style: TextStyle(fontSize: 16, color: Colors.black54),
+                        Expanded(
+                          child: SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: () async {
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const SecurityHome(),
+                                  ),
+                                );
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  //side: BorderSide(color: Color(0xff545454)),
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 10,
+                                ),
+                                textStyle: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                shadowColor: Colors.transparent,
+                                elevation: 4,
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.person,
+                                    size: 30,
+                                    color: Colors.black54,
+                                  ),
+                                  SizedBox(width: 12),
+                                  Text(
+                                    "관제정보",
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.black54,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: () async {
+                                Navigator.pushReplacement(
+                                  context,
+                                  PageRouteBuilder(
+                                    pageBuilder:
+                                        (
+                                          context,
+                                          animation,
+                                          secondaryAnimation,
+                                        ) => const ErpHome(),
+                                    transitionsBuilder: (
+                                      context,
+                                      animation,
+                                      secondaryAnimation,
+                                      child,
+                                    ) {
+                                      // fade + scale 예시
+                                      return FadeTransition(
+                                        opacity: animation,
+                                        child: ScaleTransition(
+                                          scale: Tween<double>(
+                                            begin: 0.8,
+                                            end: 1.0,
+                                          ).animate(animation),
+                                          child: child,
+                                        ),
+                                      );
+                                    },
+                                    transitionDuration: const Duration(
+                                      milliseconds: 500,
+                                    ), // 전환 속도
+                                  ),
+                                );
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  //side: BorderSide(color: Color(0xff545454)),
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 10,
+                                ),
+                                textStyle: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                shadowColor: Colors.transparent,
+                                elevation: 4,
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.person,
+                                    size: 30,
+                                    color: Colors.black54,
+                                  ),
+                                  SizedBox(width: 12),
+                                  Text(
+                                    "영업정보",
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.black54,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
                         ),
                       ],
                     ),
-                  ),
+
+                    const SizedBox(height: 20),
+
+                    Row(
+                      children: [
+                        Expanded(
+                          child: SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: () async {
+                                print('전화 걸기');
+                                launchUrl(
+                                  Uri(scheme: 'tel', path: centerPhone),
+                                );
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  //side: BorderSide(color: Color(0xff545454)),
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 10,
+                                ),
+                                textStyle: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                shadowColor: Colors.transparent,
+                                elevation: 4,
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.person,
+                                    size: 30,
+                                    color: Colors.black54,
+                                  ),
+                                  SizedBox(width: 12),
+                                  Text(
+                                    "공지사항",
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.black54,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: () async {
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const Setting(),
+                                  ),
+                                );
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  //side: BorderSide(color: Color(0xff545454)),
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 10,
+                                ),
+                                textStyle: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                shadowColor: Colors.transparent,
+                                elevation: 4,
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.person,
+                                    size: 30,
+                                    color: Colors.black54,
+                                  ),
+                                  SizedBox(width: 12),
+                                  Text(
+                                    "환경설정",
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.black54,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
+              ),
             ],
           ),
         ),
@@ -273,7 +565,7 @@ class _HomeState extends State<Home> {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 14),
           decoration: BoxDecoration(
-            color: isSelected ? Color(0xff2196f3) : Color(0xffefefef),
+            color: isSelected ? Color(0xff5dc7ff) : Color(0xffefefef),
             borderRadius: BorderRadius.circular(12),
           ),
           alignment: Alignment.center,
