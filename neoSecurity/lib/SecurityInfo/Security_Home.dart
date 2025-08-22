@@ -90,21 +90,21 @@ class SecurityHomeState extends State<SecurityHome> {
           BottomNavigationBarItem(
             icon: Padding(
               padding: EdgeInsets.only(top: 8.0),
-              child: Icon(Icons.home_filled),
+              child: Icon(Icons.account_circle),
             ),
             label: securityPageList[0],
           ),
           BottomNavigationBarItem(
             icon: Padding(
               padding: EdgeInsets.only(top: 8.0),
-              child: Icon(Icons.person),
+              child: Icon(Icons.notifications_active),
             ),
             label: securityPageList[1],
           ),
           BottomNavigationBarItem(
             icon: Padding(
               padding: EdgeInsets.only(top: 8.0),
-              child: Icon(Icons.list_alt),
+              child: Icon(Icons.videocam),
             ),
             label: securityPageList[2],
           ),

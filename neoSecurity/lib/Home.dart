@@ -26,11 +26,12 @@ class _HomeState extends State<Home> {
   int _selectedIndex = 0;
   late String title = '타이틀 없음';
   late int _Index = 0;
+
   void _startDataMonitoring() {
     int attemptCount = 0; // 시도 횟수 카운터 추가
     const int maxAttempts = 20; // 최대 시도 횟수
 
-    _dataCheckTimer = Timer.periodic(Duration(milliseconds: 500), (timer) {
+    _dataCheckTimer = Timer.periodic(Duration(milliseconds: 1000), (timer) {
       attemptCount++; // 시도 횟수 증가
 
       // cusList, stateList, state 모두 체크
@@ -54,6 +55,7 @@ class _HomeState extends State<Home> {
         // 20번 시도 후에도 데이터가 없으면 타이머 중지
         timer.cancel();
         print('응답없음 - ${maxAttempts}번 시도 후 타임아웃');
+        initializeData();
         print(
           '최종 상태 - cusList: $cusListReady, stateList: $stateListReady, state: $stateReady',
         );
@@ -341,7 +343,7 @@ class _HomeState extends State<Home> {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Icon(
-                                    Icons.person,
+                                    Icons.security,
                                     size: 30,
                                     color: Colors.black54,
                                   ),
@@ -417,7 +419,7 @@ class _HomeState extends State<Home> {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Icon(
-                                    Icons.person,
+                                    Icons.bar_chart,
                                     size: 30,
                                     color: Colors.black54,
                                   ),
@@ -471,7 +473,7 @@ class _HomeState extends State<Home> {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Icon(
-                                    Icons.person,
+                                    Icons.campaign,
                                     size: 30,
                                     color: Colors.black54,
                                   ),
@@ -521,7 +523,7 @@ class _HomeState extends State<Home> {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Icon(
-                                    Icons.person,
+                                    Icons.settings,
                                     size: 30,
                                     color: Colors.black54,
                                   ),

@@ -134,3 +134,37 @@ String parsing(final xmlString) {
     return '원격 오류';
   }
 }
+
+Future<void> initializeData() async {
+  try {
+    // 1단계: 먼저 고객 리스트 가져오기
+    final customers = await RestApiService().customerRequest(
+      syscode,
+      phoneCode,
+    );
+    print('customers$customers');
+    cusList = customers;
+    isremote = cusList[selectInt]['isremote'] ?? "";
+    monnum = cusList[selectInt]['monnum'] ?? "";
+    print('cusList$cusList');
+
+    // 2단계: 첫 번째 고객 또는 선택된 고객의 상태 정보 가져오기
+    if (customers.isNotEmpty) {
+      final monnum = customers[0]['monnum'] ?? '';
+      if (monnum.isNotEmpty) {
+        stateList = await RestApiService().currentStateRequest(
+          syscode,
+          monnum,
+          phoneCode,
+        );
+        // state 정보 사용
+        state = stateList['state'] ?? '';
+        print('state$state');
+        print('monnum$monnum');
+        print('isremote$isremote');
+      }
+    }
+  } catch (e) {
+    print('오류: $e');
+  }
+}

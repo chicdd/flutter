@@ -70,7 +70,7 @@ class _SecurityCusInfoState extends State<SecurityCusInfo> {
     int attemptCount = 0; // 시도 횟수 카운터 추가
     const int maxAttempts = 20; // 최대 시도 횟수
 
-    _dataCheckTimer = Timer.periodic(Duration(milliseconds: 500), (timer) {
+    _dataCheckTimer = Timer.periodic(Duration(milliseconds: 1000), (timer) {
       attemptCount++; // 시도 횟수 증가
 
       // cusList, stateList, state 모두 체크
@@ -91,6 +91,8 @@ class _SecurityCusInfoState extends State<SecurityCusInfo> {
         // 20번 시도 후에도 데이터가 없으면 타이머 중지
         timer.cancel();
         print('응답없음 - ${maxAttempts}번 시도 후 타임아웃');
+        fetchSecuBasic();
+        fetchUserList();
         print(
           '최종 상태 - secuBasicListReady: $secuBasicListReady, userListReady: $userListReady',
         );

@@ -30,7 +30,7 @@ class _ERPCusInfoState extends State<ERPCusInfo> {
     int attemptCount = 0; // 시도 횟수 카운터 추가
     const int maxAttempts = 20; // 최대 시도 횟수
 
-    _dataCheckTimer = Timer.periodic(Duration(milliseconds: 500), (timer) {
+    _dataCheckTimer = Timer.periodic(Duration(milliseconds: 1000), (timer) {
       attemptCount++; // 시도 횟수 증가
 
       bool erpCusInfoListReady = erpCusInfoList.isNotEmpty;

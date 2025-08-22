@@ -20,7 +20,6 @@ class _LoginState extends State<Login> {
   final _phoneCode = TextEditingController();
   final _password = TextEditingController();
   final String _smsMessage = "[인증번호:${random4Number()}] 인증번호를 입력해주세요.(한세시큐리티)";
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(

@@ -95,14 +95,14 @@ class ErpHomeState extends State<ErpHome> {
           BottomNavigationBarItem(
             icon: Padding(
               padding: EdgeInsets.only(top: 8.0),
-              child: Icon(Icons.home_filled),
+              child: Icon(Icons.person),
             ),
             label: cusPageList[0],
           ),
           BottomNavigationBarItem(
             icon: Padding(
               padding: EdgeInsets.only(top: 8.0),
-              child: Icon(Icons.person),
+              child: Icon(Icons.receipt_long),
             ),
             label: cusPageList[1],
           ),
