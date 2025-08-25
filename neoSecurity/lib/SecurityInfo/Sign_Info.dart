@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_sticky_header/flutter_sticky_header.dart';
 import 'package:neosecurity/Modal/Modal_Customer_List.dart';
@@ -14,6 +16,7 @@ class SignInfo extends StatefulWidget {
 }
 
 class _SignInfoState extends State<SignInfo> {
+  Timer? _dataCheckTimer;
   late String filterPeriod;
   late String filterSortOrder;
   late String filterClass;
@@ -27,7 +30,46 @@ class _SignInfoState extends State<SignInfo> {
   void initState() {
     super.initState();
     _initializeFilters();
-    _signalFuture = fetchSignal(); // Future로 저장
+    _refreshData();
+    _startDataMonitoring();
+  }
+
+  void _startDataMonitoring() {
+    int attemptCount = 0; // 시도 횟수 카운터 추가
+    const int maxAttempts = 20; // 최대 시도 횟수
+
+    _dataCheckTimer = Timer.periodic(const Duration(milliseconds: 1000), (
+      timer,
+    ) {
+      attemptCount++; // 시도 횟수 증가
+
+      // cusList, stateList, state 모두 체크
+      bool signListReady = signList.isNotEmpty;
+
+      if (signListReady && mounted) {
+        setState(() {
+          // Select 위젯 업데이트를 위한 setState
+        });
+        // 데이터를 받았으므로 타이머 중지
+        timer.cancel();
+      } else if (attemptCount >= maxAttempts) {
+        // 20번 시도 후에도 데이터가 없으면 타이머 중지
+        timer.cancel();
+        print('응답없음 - ${maxAttempts}번 시도 후 타임아웃');
+        print('최종 상태 - signList: $signListReady');
+      } else {
+        // 5회마다 fetchUserList 호출
+        if (attemptCount % 5 == 0) {
+          print('데이터 없음, ${attemptCount}회 시도 중 fetchUserList() 실행');
+          _refreshData();
+        }
+
+        // 디버깅용 로그 (시도 횟수 포함)
+        print(
+          '데이터 대기 중 ($attemptCount/$maxAttempts) - signList: $signListReady',
+        );
+      }
+    });
   }
 
   void _initializeFilters() {
@@ -297,7 +339,7 @@ class _SignInfoState extends State<SignInfo> {
 
   Widget _buildFilterHeader() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20,vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
       child: Column(
         children: [
           CusSelect(

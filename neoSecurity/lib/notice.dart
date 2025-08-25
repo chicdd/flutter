@@ -16,7 +16,7 @@ class Notice extends StatefulWidget {
 class _NoticeState extends State<Notice> {
   Timer? _dataCheckTimer;
 
-  Future<void> fetchErpCusInfo() async {
+  Future<void> fetchNotice() async {
     try {
       final result = await noticeRequest(syscode, phoneCode);
       noticeList = result;
@@ -43,15 +43,11 @@ class _NoticeState extends State<Notice> {
         });
         // 데이터를 받았으므로 타이머 중지
         timer.cancel();
-        print('모든 데이터 감지됨, Select 업데이트');
-        print('cusList 개수: ${cusList.length}');
-        print('stateList: $stateList');
-        print('state: $state');
       } else if (attemptCount >= maxAttempts) {
         // 20번 시도 후에도 데이터가 없으면 타이머 중지
         timer.cancel();
         print('응답없음 - ${maxAttempts}번 시도 후 타임아웃');
-        fetchErpCusInfo();
+        fetchNotice();
         print('최종 상태 - noticeListReady: $noticeListReady');
       } else {
         // 디버깅용 로그 (시도 횟수 포함)
@@ -65,7 +61,7 @@ class _NoticeState extends State<Notice> {
   @override
   void initState() {
     super.initState();
-    fetchErpCusInfo();
+    fetchNotice();
     _startDataMonitoring();
     // time 값의 역순으로 정렬 (최신순)
     noticeList.sort(

@@ -377,34 +377,8 @@ class _HomeState extends State<Home> {
                               onPressed: () async {
                                 Navigator.pushReplacement(
                                   context,
-                                  PageRouteBuilder(
-                                    pageBuilder:
-                                        (
-                                          context,
-                                          animation,
-                                          secondaryAnimation,
-                                        ) => const ErpHome(),
-                                    transitionsBuilder: (
-                                      context,
-                                      animation,
-                                      secondaryAnimation,
-                                      child,
-                                    ) {
-                                      // fade + scale 예시
-                                      return FadeTransition(
-                                        opacity: animation,
-                                        child: ScaleTransition(
-                                          scale: Tween<double>(
-                                            begin: 0.8,
-                                            end: 1.0,
-                                          ).animate(animation),
-                                          child: child,
-                                        ),
-                                      );
-                                    },
-                                    transitionDuration: const Duration(
-                                      milliseconds: 500,
-                                    ), // 전환 속도
+                                  MaterialPageRoute(
+                                    builder: (context) => const ErpHome(),
                                   ),
                                 );
                               },
