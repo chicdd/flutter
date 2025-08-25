@@ -63,7 +63,6 @@ class MyApp extends StatelessWidget {
       localizationsDelegates: const [
         // 기본 cupertino + material 로컬라이제이션 지원
         DefaultCupertinoLocalizations.delegate,
-        DefaultMaterialLocalizations.delegate,
         DefaultWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
@@ -73,6 +72,7 @@ class MyApp extends StatelessWidget {
         Locale('ko', 'KR'), // Korean
         Locale('en', 'US'), // English
       ],
+      debugShowCheckedModeBanner: false,
     );
   }
 }

@@ -233,7 +233,7 @@ class _HomeState extends State<Home> {
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   padding: const EdgeInsets.symmetric(
-                                    vertical: 16,
+                                    vertical: 14,
                                   ),
                                   textStyle: TextStyle(
                                     fontSize: 16,
@@ -269,7 +269,7 @@ class _HomeState extends State<Home> {
                                     side: BorderSide(color: Color(0xff545454)),
                                   ),
                                   padding: const EdgeInsets.symmetric(
-                                    vertical: 16,
+                                    vertical: 12,
                                   ),
                                   textStyle: TextStyle(
                                     fontSize: 16,
@@ -339,7 +339,7 @@ class _HomeState extends State<Home> {
                                   //side: BorderSide(color: Color(0xff545454)),
                                 ),
                                 padding: const EdgeInsets.symmetric(
-                                  vertical: 10,
+                                  vertical: 0,
                                 ),
                                 textStyle: TextStyle(
                                   fontSize: 16,
@@ -389,7 +389,7 @@ class _HomeState extends State<Home> {
                                   //side: BorderSide(color: Color(0xff545454)),
                                 ),
                                 padding: const EdgeInsets.symmetric(
-                                  vertical: 10,
+                                  vertical: 0,
                                 ),
                                 textStyle: TextStyle(
                                   fontSize: 16,
@@ -446,7 +446,7 @@ class _HomeState extends State<Home> {
                                   //side: BorderSide(color: Color(0xff545454)),
                                 ),
                                 padding: const EdgeInsets.symmetric(
-                                  vertical: 10,
+                                  vertical: 0,
                                 ),
                                 textStyle: TextStyle(
                                   fontSize: 16,
@@ -496,7 +496,7 @@ class _HomeState extends State<Home> {
                                   //side: BorderSide(color: Color(0xff545454)),
                                 ),
                                 padding: const EdgeInsets.symmetric(
-                                  vertical: 10,
+                                  vertical: 0,
                                 ),
                                 textStyle: TextStyle(
                                   fontSize: 16,

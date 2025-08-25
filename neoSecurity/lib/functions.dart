@@ -104,13 +104,13 @@ Future<String> receiveRemote() async {
 String getImagePath(String? state) {
   switch (state) {
     case '경계':
-      return 'image/경계3.jpg';
+      return 'image/alert.jpg';
     case '해제':
-      return 'image/해제3.jpg';
-    case '문열림':
-      return 'image/문열림3.jpg';
-    case '문닫힘':
-      return 'image/문닫힘3.jpg';
+      return 'image/disalert.jpg';
+    //case '문열림':
+      //return 'image/문열림3.jpg';
+    //case '문닫힘':
+      //return 'image/문닫힘3.jpg';
     default:
       return 'image/default.jpg'; // fallback 이미지
   }
