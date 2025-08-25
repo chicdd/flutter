@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:neosecurity/ERPInfo/ERP_Home.dart';
 import 'package:neosecurity/SecurityInfo/Security_Home.dart';
 import 'package:neosecurity/Setting.dart';
+import 'package:neosecurity/Notice.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'Modal/Modal_page_List.dart';
 import 'Select/Cus_Select.dart';
@@ -31,7 +32,9 @@ class _HomeState extends State<Home> {
     int attemptCount = 0; // 시도 횟수 카운터 추가
     const int maxAttempts = 20; // 최대 시도 횟수
 
-    _dataCheckTimer = Timer.periodic(Duration(milliseconds: 1000), (timer) {
+    _dataCheckTimer = Timer.periodic(const Duration(milliseconds: 1000), (
+      timer,
+    ) {
       attemptCount++; // 시도 횟수 증가
 
       // cusList, stateList, state 모두 체크
@@ -60,6 +63,12 @@ class _HomeState extends State<Home> {
           '최종 상태 - cusList: $cusListReady, stateList: $stateListReady, state: $stateReady',
         );
       } else {
+        // 5회마다 fetchUserList 호출
+        if (attemptCount % 5 == 0) {
+          print('데이터 없음, ${attemptCount}회 시도 중 fetchUserList() 실행');
+          initializeData();
+        }
+
         // 디버깅용 로그 (시도 횟수 포함)
         print(
           '데이터 대기 중 ($attemptCount/$maxAttempts) - cusList: $cusListReady, stateList: $stateListReady, state: $stateReady',
@@ -448,10 +457,13 @@ class _HomeState extends State<Home> {
                             width: double.infinity,
                             child: ElevatedButton(
                               onPressed: () async {
-                                print('전화 걸기');
-                                launchUrl(
-                                  Uri(scheme: 'tel', path: centerPhone),
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const Notice(),
+                                  ),
                                 );
+                                //fetchErpCusInfo();
                               },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.white,

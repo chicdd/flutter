@@ -62,6 +62,7 @@ List<Map<String, String>> claimList = [];
 List<Map<String, String>> billList = [];
 List<Map<String, String>> cusList = [];
 List<Map<String, String>> erpList = [];
+List<Map<String, String>> noticeList = [];
 //Map<String, String> selectCusList = {};
 //Map<String, String> selectErpList = {};
 Map<String, String> stateList = {};

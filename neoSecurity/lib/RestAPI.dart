@@ -551,14 +551,44 @@ class RestApiService {
       throw Exception('API 호출 실패: ${response.statusCode}');
     }
   }
+}
 
-  // void main() async {
-  //   List<Customer> Customers = await fetchAlbums();
-  //
-  //   for (var Customer in Customers) {
-  //     print('remoterequestResult: ${Customer.code}, ${Customer.name}');
-  //   }
-  // }
+//공지사항 불러오기
+Future<List<Map<String, String>>> noticeRequest(
+  String syscode,
+  String phonecode,
+) async {
+  final String baseUrl =
+      "http://neodecisions.com/androidwebservice/WebPage/ServiceCustomerTest.asmx";
+  final String page = "searchnotice";
+
+  final url = Uri.parse("$baseUrl/$page?syscode=$syscode&phonecode=$phonecode");
+  print(url);
+  final response = await http
+      .get(url)
+      .timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          throw TimeoutException('API 호출 타임아웃');
+        },
+      );
+
+  if (response.statusCode == 200) {
+    final document = XmlDocument.parse(response.body);
+    final elements = document.findAllElements('리턴공지마스터');
+
+    List<Map<String, String>> noticeList =
+        elements.map((element) {
+          final number = element.getElement('ID')?.innerText.trim() ?? '';
+          final body = element.getElement('내용')?.innerText.trim() ?? '';
+          final time = element.getElement('입력시간')?.innerText.trim() ?? '';
+          return {'number': number, 'body': body, 'time': time};
+        }).toList();
+
+    return noticeList;
+  } else {
+    throw Exception('API 호출 실패: ${response.statusCode}');
+  }
 }
 
 // import 'dart:convert';

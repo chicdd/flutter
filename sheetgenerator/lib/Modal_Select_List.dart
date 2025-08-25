@@ -30,7 +30,7 @@ class _SelectListState extends State<SelectList> {
   void initState() {
     super.initState();
     _customerFuture = RestApiService().fetch(widget.selectClass);
-    selectClass = matchingModel(widget.selectClass);
+    //selectClass = matchingModel(widget.selectClass);
     print(_customerFuture);
     // switch (widget.selectClass) {
     //   case "Customer":
