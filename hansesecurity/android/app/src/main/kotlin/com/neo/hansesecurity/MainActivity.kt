@@ -1,4 +1,4 @@
-package com.hansesecurity.app
+package com.neo.hansesecurity
 
 import io.flutter.embedding.android.FlutterActivity
 
