@@ -40,11 +40,11 @@ class _ModalClaimFilterState extends State<ModalClaimFilter> {
     globals.claimClassIndex = _claimclassIndex; //적용버튼 눌렀을때의
     globals.claimIndex = _claimclassIndex; //신호를 고르기만했을 때에도 적용
 
-    print(globals.claimPeriodIndex);
-    print(globals.claimSortOrderIndex);
-    print('depositClassIndex' + globals.depositClassIndex.toString());
-    print('salesClassIndex' + globals.salesClassIndex.toString());
-    print('claimClassIndex' + globals.claimClassIndex.toString());
+    //print(globals.claimPeriodIndex);
+    //print(globals.claimSortOrderIndex);
+    //print('depositClassIndex' + globals.depositClassIndex.toString());
+    //print('salesClassIndex' + globals.salesClassIndex.toString());
+    //print('claimClassIndex' + globals.claimClassIndex.toString());
 
     setState(() {});
 
@@ -242,7 +242,7 @@ class _ModalClaimFilterState extends State<ModalClaimFilter> {
         onTap: () {
           setState(() {
             _periodIndex = index; //전역변수의 상태값을 바꿔줌.
-            print("조회기간인덱스 : " + _periodIndex.toString());
+            //print("조회기간인덱스 : " + _periodIndex.toString());
           });
         },
         child: Container(
@@ -274,7 +274,7 @@ class _ModalClaimFilterState extends State<ModalClaimFilter> {
         onTap: () {
           setState(() {
             _sortOrderIndex = index;
-            print("정렬순서인덱스 : " + _sortOrderIndex.toString());
+            //print("정렬순서인덱스 : " + _sortOrderIndex.toString());
           });
         },
         child: Container(

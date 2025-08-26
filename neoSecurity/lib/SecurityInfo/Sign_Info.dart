@@ -128,7 +128,7 @@ class _SignInfoState extends State<SignInfo> {
       print('tempSignalList$tempSignalList');
       return tempSignalList;
     } catch (e) {
-      print("API 호출 오류: $e");
+      //print("API 호출 오류: $e");
       throw e; // FutureBuilder에서 에러 상태로 처리
     }
   }

@@ -106,8 +106,8 @@ class RestApiService {
   ) async {
     day_start = dateconvert(day_start);
     day_end = dateconvert(day_end);
-    print("day_start = " + day_start);
-    print("day_end = " + day_end);
+    //print("day_start = " + day_start);
+    //print("day_end = " + day_end);
     final String baseUrl =
         "http://neodecisions.com/androidwebservice/WebPage/ServiceCustomerTest.asmx";
     final String page = "monsinho";

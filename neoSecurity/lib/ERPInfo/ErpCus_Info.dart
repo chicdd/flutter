@@ -69,9 +69,9 @@ class _ERPCusInfoState extends State<ERPCusInfo> {
       );
       erpCusInfoList = result;
       setState(() {});
-      print("erpCusInfoList: ${erpCusInfoList}");
+      //print("erpCusInfoList: ${erpCusInfoList}");
     } catch (e) {
-      print("API 호출 오류: $e");
+      //print("API 호출 오류: $e");
     }
     print('api호출함');
   }
@@ -98,7 +98,7 @@ class _ERPCusInfoState extends State<ERPCusInfo> {
             phoneCode,
           );
           erpCusInfoList = result;
-          print("erpCusInfoList: ${erpCusInfoList}");
+          //print("erpCusInfoList: ${erpCusInfoList}");
         }
       }
     } catch (e) {

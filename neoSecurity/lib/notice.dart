@@ -20,9 +20,9 @@ class _NoticeState extends State<Notice> {
     try {
       final result = await noticeRequest(syscode, phoneCode);
       noticeList = result;
-      print("noticeList: ${noticeList}");
+      //print("noticeList: ${noticeList}");
     } catch (e) {
-      print("API 호출 오류: $e");
+      //print("API 호출 오류: $e");
     }
     print('api호출함');
   }

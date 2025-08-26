@@ -33,37 +33,43 @@ class _ClaimInfoState extends State<ClaimInfo> {
   }
 
   void _initializeFilters() {
-    filterPeriod = (periodList.isNotEmpty && claimPeriodIndex < periodList.length)
-        ? periodList[claimPeriodIndex]
-        : '전체기간';
+    filterPeriod =
+        (periodList.isNotEmpty && claimPeriodIndex < periodList.length)
+            ? periodList[claimPeriodIndex]
+            : '전체기간';
 
-    filterSortOrder = (sortOrderList.isNotEmpty && claimSortOrderIndex < sortOrderList.length)
-        ? sortOrderList[claimSortOrderIndex]
-        : '최신순';
+    filterSortOrder =
+        (sortOrderList.isNotEmpty && claimSortOrderIndex < sortOrderList.length)
+            ? sortOrderList[claimSortOrderIndex]
+            : '최신순';
 
-    filterDepositClass = (depositList.isNotEmpty && depositClassIndex < depositList.length)
-        ? depositList[depositClassIndex]
-        : '전체';
+    filterDepositClass =
+        (depositList.isNotEmpty && depositClassIndex < depositList.length)
+            ? depositList[depositClassIndex]
+            : '전체';
 
-    filterSalesClass = (salesList.isNotEmpty && salesClassIndex < salesList.length)
-        ? salesList[salesClassIndex]
-        : '전체';
+    filterSalesClass =
+        (salesList.isNotEmpty && salesClassIndex < salesList.length)
+            ? salesList[salesClassIndex]
+            : '전체';
 
-    filterClaimClass = (claimClassList.isNotEmpty && claimClassIndex < claimClassList.length)
-        ? claimClassList[claimClassIndex]
-        : '전체';
+    filterClaimClass =
+        (claimClassList.isNotEmpty && claimClassIndex < claimClassList.length)
+            ? claimClassList[claimClassIndex]
+            : '전체';
   }
 
   Future<List<Map<String, String>>> fetchClaim() async {
     try {
       print('청구 API 호출 시작');
 
-      List<Map<String, String>> tempClaimList = await RestApiService().claimListRequest(
-        syscode,
-        yongnum,
-        mi_checkChanger(claimClassIndex),
-        phoneCode,
-      );
+      List<Map<String, String>> tempClaimList = await RestApiService()
+          .claimListRequest(
+            syscode,
+            yongnum,
+            mi_checkChanger(claimClassIndex),
+            phoneCode,
+          );
 
       if (filterSortOrder == '과거순') {
         tempClaimList = List.from(tempClaimList.reversed);
@@ -71,22 +77,24 @@ class _ClaimInfoState extends State<ClaimInfo> {
       }
 
       if (filterDepositClass != '전체') {
-        tempClaimList = tempClaimList
-            .where((item) => item["way"] == filterDepositClass)
-            .toList();
+        tempClaimList =
+            tempClaimList
+                .where((item) => item["way"] == filterDepositClass)
+                .toList();
       }
 
       if (filterSalesClass != '전체') {
-        tempClaimList = tempClaimList
-            .where((item) => item["type"] == filterSalesClass)
-            .toList();
+        tempClaimList =
+            tempClaimList
+                .where((item) => item["type"] == filterSalesClass)
+                .toList();
       }
 
       print('청구 API 호출 완료: ${tempClaimList.length}개 항목');
       print('tempClaimList: $tempClaimList');
       return tempClaimList;
     } catch (e) {
-      print("청구 API 호출 오류: $e");
+      //print("청구 API 호출 오류: $e");
       throw e; // FutureBuilder에서 에러 상태로 처리
     }
   }
@@ -307,7 +315,10 @@ class _ClaimInfoState extends State<ClaimInfo> {
                   const SizedBox(width: 4),
                   const Text("·", style: TextStyle(fontSize: 16)),
                   const SizedBox(width: 4),
-                  Text(filterDepositClass, style: const TextStyle(fontSize: 16)),
+                  Text(
+                    filterDepositClass,
+                    style: const TextStyle(fontSize: 16),
+                  ),
                   const SizedBox(width: 4),
                   const Text("·", style: TextStyle(fontSize: 16)),
                   const SizedBox(width: 4),
@@ -339,7 +350,7 @@ class _ClaimInfoState extends State<ClaimInfo> {
       final date = item['date'] ?? '';
       if (date.length < 7) {
         // 'date'가 비었거나 너무 짧으면 그냥 '기타' 같은 분류로 묶거나 건너뜀
-        print("⚠️ 잘못된 날짜 형식: '$date'");
+        //print("⚠️ 잘못된 날짜 형식: '$date'");
         result.add({'type': 'item', 'data': item});
         continue;
       }

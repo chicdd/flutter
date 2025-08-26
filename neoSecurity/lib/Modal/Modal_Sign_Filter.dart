@@ -257,7 +257,7 @@ class _ModalSignFilterState extends State<ModalSignFilter> {
         onTap: () {
           setState(() {
             _periodIndex = index; //전역변수의 상태값을 바꿔줌.
-            print("조회기간인덱스 : " + _periodIndex.toString());
+            //print("조회기간인덱스 : " + _periodIndex.toString());
           });
         },
         child: Container(
@@ -289,7 +289,7 @@ class _ModalSignFilterState extends State<ModalSignFilter> {
         onTap: () {
           setState(() {
             _sortOrderIndex = index;
-            print("정렬순서인덱스 : " + _sortOrderIndex.toString());
+            //print("정렬순서인덱스 : " + _sortOrderIndex.toString());
           });
         },
         child: Container(

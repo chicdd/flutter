@@ -121,7 +121,8 @@ class _LoginState extends State<Login> {
                   // 데모 계정 체크 (987654321 + 인증번호 1234)
                   if (phoneNumber == '987654321' && inputCode == '1234') {
                     // 데모 계정으로 바로 로그인
-                    saveToken(phoneNumber); // 데모 계정 번호를 토큰으로 저장
+                    phoneCode = '987654321';
+                    saveToken(phoneCode); // 데모 계정 번호를 토큰으로 저장
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('데모 계정으로 로그인되었습니다.')),
                     );

@@ -28,28 +28,28 @@ class _BillInfoState extends State<BillInfo> {
   }
 
   void _initializeFilters() {
-    filterPeriod = (periodList.isNotEmpty && billPeriodIndex < periodList.length)
-        ? periodList[billPeriodIndex]
-        : '전체기간';
+    filterPeriod =
+        (periodList.isNotEmpty && billPeriodIndex < periodList.length)
+            ? periodList[billPeriodIndex]
+            : '전체기간';
 
-    filterSortOrder = (sortOrderList.isNotEmpty && billSortOrderIndex < sortOrderList.length)
-        ? sortOrderList[billSortOrderIndex]
-        : '최신순';
+    filterSortOrder =
+        (sortOrderList.isNotEmpty && billSortOrderIndex < sortOrderList.length)
+            ? sortOrderList[billSortOrderIndex]
+            : '최신순';
 
-    filterClass = (billClassList.isNotEmpty && billClassIndex < billClassList.length)
-        ? billClassList[billClassIndex]
-        : '전체';
+    filterClass =
+        (billClassList.isNotEmpty && billClassIndex < billClassList.length)
+            ? billClassList[billClassIndex]
+            : '전체';
   }
 
   Future<List<Map<String, String>>> fetchBill() async {
     try {
       print('계산서 API 호출 시작');
 
-      List<Map<String, String>> tempBillList = await RestApiService().billListRequest(
-        syscode,
-        yongnum,
-        phoneCode,
-      );
+      List<Map<String, String>> tempBillList = await RestApiService()
+          .billListRequest(syscode, yongnum, phoneCode);
 
       if (filterSortOrder == '과거순') {
         tempBillList = List.from(tempBillList.reversed);
@@ -57,16 +57,15 @@ class _BillInfoState extends State<BillInfo> {
       }
 
       if (filterClass != '전체') {
-        tempBillList = tempBillList
-            .where((item) => item["type"] == filterClass)
-            .toList();
+        tempBillList =
+            tempBillList.where((item) => item["type"] == filterClass).toList();
       }
 
       print('계산서 API 호출 완료: ${tempBillList.length}개 항목');
       print('tempBillList: $tempBillList');
       return tempBillList;
     } catch (e) {
-      print("계산서 API 호출 오류: $e");
+      //print("계산서 API 호출 오류: $e");
       throw e; // FutureBuilder에서 에러 상태로 처리
     }
   }

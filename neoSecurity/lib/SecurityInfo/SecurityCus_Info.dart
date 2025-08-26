@@ -49,9 +49,9 @@ class _SecurityCusInfoState extends State<SecurityCusInfo> {
         }
       }
 
-      print("globals.secuBasicList: ${secuBasicList}");
+      //print("globals.secuBasicList: ${secuBasicList}");
     } catch (e) {
-      print("API 호출 오류: $e");
+      //print("API 호출 오류: $e");
     }
     print('api호출함');
   }

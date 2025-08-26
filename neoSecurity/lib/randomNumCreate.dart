@@ -7,6 +7,6 @@ String random4Number() {
   int number = random.nextInt(10000); // 0 ~ 9999
   certNumber = number.toString().padLeft(4, '0');
 
-  print("certNumber : " + certNumber);
+  //print("certNumber : " + certNumber);
   return certNumber;
 }

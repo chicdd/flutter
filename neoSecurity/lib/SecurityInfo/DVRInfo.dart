@@ -30,7 +30,7 @@ class _DvrInfostate extends State<DvrInfo> {
 
       setState(() {});
     } catch (e) {
-      print("API 호출 오류: $e");
+      //print("API 호출 오류: $e");
     }
     dvrList = dvrList;
   }
@@ -43,7 +43,7 @@ class _DvrInfostate extends State<DvrInfo> {
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20,vertical: 5),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
             child: Column(
               children: [
                 CusSelect(

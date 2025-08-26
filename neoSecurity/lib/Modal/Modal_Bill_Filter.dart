@@ -263,7 +263,7 @@ class _ModalBillFilterState extends State<ModalBillFilter> {
         onTap: () {
           setState(() {
             _sortOrderIndex = index;
-            print("정렬순서인덱스 : " + _sortOrderIndex.toString());
+            //print("정렬순서인덱스 : " + _sortOrderIndex.toString());
           });
         },
         child: Container(
