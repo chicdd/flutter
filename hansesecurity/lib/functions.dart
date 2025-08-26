@@ -48,10 +48,10 @@ Future<void> getState() async {
     monnum,
     phoneCode,
   );
-  print('globals.stateList현재값${stateList}');
-  print('새로고침됨');
-  state = stateList['state'] ?? '';
-  print('stateList[state]$state');
+  //print('globals.stateList현재값${stateList}');
+  //print('새로고침됨');
+  //state = stateList['state'] ?? '';
+  //print('stateList[state]$state');
 }
 
 Future<void> getCenterPhone() async {
