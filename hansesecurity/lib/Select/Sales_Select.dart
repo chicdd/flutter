@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hansesecurity/Modal/Modal_Sales_List.dart';
-import 'package:hansesecurity/Modal/Modal_Customer_List.dart';
-import 'package:hansesecurity/Modal/Modal_Signal_List.dart';
-import 'package:hansesecurity/globals.dart' as globals;
+import 'package:hansesecurity/globals.dart';
 
 //청구내역 필터의 모달 내 매출종류 셀렉트
 class SalesSelect extends StatefulWidget {
@@ -15,7 +13,7 @@ class SalesSelect extends StatefulWidget {
 }
 
 class _SalesSelectState extends State<SalesSelect> {
-  String sales = globals.salesList[globals.salesIndex]; //신호 드롭다운 처음 상태
+  String sales = salesList[salesIndex]; //신호 드롭다운 처음 상태
 
   void onPressed() async {
     final result = await showModalBottomSheet(
@@ -30,7 +28,7 @@ class _SalesSelectState extends State<SalesSelect> {
 
     if (result != null && result is int) {
       setState(() {
-        sales = globals.salesList[result];
+        sales = salesList[result];
         print(result);
         widget.onPressed(result); // 부모에 전달
         //Navigator.pop(context, result);

@@ -1,11 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:hansesecurity/Modal/Modal_Signal_List.dart';
 import 'package:hansesecurity/Select/Claim_Select.dart';
 import 'package:hansesecurity/Select/Deposit_Select.dart';
 import 'package:hansesecurity/Select/Sales_Select.dart';
-import 'package:hansesecurity/globals.dart' as globals;
-import 'package:hansesecurity/Select/Sign_Select.dart';
+import 'package:hansesecurity/globals.dart';
 
 class ModalClaimFilter extends StatefulWidget {
   const ModalClaimFilter({super.key});
@@ -15,11 +13,11 @@ class ModalClaimFilter extends StatefulWidget {
 }
 
 class _ModalClaimFilterState extends State<ModalClaimFilter> {
-  int _periodIndex = globals.claimPeriodIndex; // 라디오 버튼 기본 상태
-  int _sortOrderIndex = globals.claimSortOrderIndex; // 라디오 버튼 기본 상태
-  int _depositclassIndex = globals.depositClassIndex;
-  int _salesclassIndex = globals.salesClassIndex;
-  int _claimclassIndex = globals.claimClassIndex;
+  int _periodIndex = claimPeriodIndex; // 라디오 버튼 기본 상태
+  int _sortOrderIndex = claimSortOrderIndex; // 라디오 버튼 기본 상태
+  int _depositclassIndex = depositClassIndex;
+  int _salesclassIndex = salesClassIndex;
+  int _claimclassIndex = claimClassIndex;
 
   // List<String> periodFilter = [];
   // List<String> sortOrderFilter = [];
@@ -28,17 +26,17 @@ class _ModalClaimFilterState extends State<ModalClaimFilter> {
   DateTime startDate = DateTime.now().subtract(Duration(days: 7)); // 시작 날짜
   DateTime endDate = DateTime.now(); // 종료 날짜
   void onPressed() async {
-    globals.claimPeriodIndex = _periodIndex;
-    globals.claimSortOrderIndex = _sortOrderIndex;
+    claimPeriodIndex = _periodIndex;
+    claimSortOrderIndex = _sortOrderIndex;
 
-    globals.depositClassIndex = _depositclassIndex;
-    globals.depositIndex = _depositclassIndex;
+    depositClassIndex = _depositclassIndex;
+    depositIndex = _depositclassIndex;
 
-    globals.salesClassIndex = _salesclassIndex;
-    globals.salesIndex = _salesclassIndex;
+    salesClassIndex = _salesclassIndex;
+    salesIndex = _salesclassIndex;
 
-    globals.claimClassIndex = _claimclassIndex; //적용버튼 눌렀을때의
-    globals.claimIndex = _claimclassIndex; //신호를 고르기만했을 때에도 적용
+    claimClassIndex = _claimclassIndex; //적용버튼 눌렀을때의
+    claimIndex = _claimclassIndex; //신호를 고르기만했을 때에도 적용
 
     //print(globals.claimPeriodIndex);
     //print(globals.claimSortOrderIndex);
@@ -49,11 +47,11 @@ class _ModalClaimFilterState extends State<ModalClaimFilter> {
     setState(() {});
 
     Navigator.pop(context, [
-      globals.claimPeriodIndex,
-      globals.claimSortOrderIndex,
-      globals.depositClassIndex,
-      globals.salesClassIndex,
-      globals.claimClassIndex,
+      claimPeriodIndex,
+      claimSortOrderIndex,
+      depositClassIndex,
+      salesClassIndex,
+      claimClassIndex,
     ]);
   }
 
@@ -253,7 +251,7 @@ class _ModalClaimFilterState extends State<ModalClaimFilter> {
           ),
           alignment: Alignment.center,
           child: Text(
-            globals.periodList[index],
+            periodList[index],
             style: TextStyle(
               color: isSelected ? Colors.white : Colors.black54,
               fontWeight: FontWeight.w500,
@@ -285,7 +283,7 @@ class _ModalClaimFilterState extends State<ModalClaimFilter> {
           ),
           alignment: Alignment.center,
           child: Text(
-            globals.sortOrderList[index],
+            sortOrderList[index],
             style: TextStyle(
               color: isSelected ? Colors.white : Colors.black54,
               fontWeight: FontWeight.w500,

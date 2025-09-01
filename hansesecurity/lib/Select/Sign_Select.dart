@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:hansesecurity/Modal/Modal_Customer_List.dart';
 import 'package:hansesecurity/Modal/Modal_Signal_List.dart';
-import 'package:hansesecurity/globals.dart' as globals;
+import 'package:hansesecurity/globals.dart';
 
 class SignSelect extends StatefulWidget {
   final String signal;
@@ -13,7 +12,7 @@ class SignSelect extends StatefulWidget {
 }
 
 class _SignSelectState extends State<SignSelect> {
-  String signal = globals.signList[globals.signIndex]; //신호 드롭다운 처음 상태
+  String signal = signList[signIndex]; //신호 드롭다운 처음 상태
 
   void onPressed() async {
     final result = await showModalBottomSheet(
@@ -28,7 +27,7 @@ class _SignSelectState extends State<SignSelect> {
 
     if (result != null && result is int) {
       setState(() {
-        signal = globals.signList[result];
+        signal = signList[result];
         print(result);
         widget.onPressed(result); // 부모에 전달
         //Navigator.pop(context, result);

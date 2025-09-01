@@ -1,10 +1,6 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hansesecurity/Display.dart'; // Main 대신 Display import
-import 'package:hansesecurity/globals.dart';
-
-import 'Home.dart';
 import 'Login.dart';
 
 class AuthGate extends StatefulWidget {

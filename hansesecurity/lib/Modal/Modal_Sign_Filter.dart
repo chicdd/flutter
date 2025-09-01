@@ -1,8 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:hansesecurity/Modal/Modal_Signal_List.dart';
-import 'package:hansesecurity/globals.dart' as globals;
-import 'package:hansesecurity/Select/Sign_Select.dart';
+import 'package:hansesecurity/globals.dart';
 
 class ModalSignFilter extends StatefulWidget {
   const ModalSignFilter({super.key});
@@ -12,46 +10,46 @@ class ModalSignFilter extends StatefulWidget {
 }
 
 class _ModalSignFilterState extends State<ModalSignFilter> {
-  int _periodIndex = globals.periodIndex; // 라디오 버튼 기본 상태
-  int _sortOrderIndex = globals.sortOrderIndex; // 라디오 버튼 기본 상태
-  int _classIndex = globals.signIndex;
+  int _periodIndex = periodIndex; // 라디오 버튼 기본 상태
+  int _sortOrderIndex = sortOrderIndex; // 라디오 버튼 기본 상태
+  int _classIndex = signIndex;
 
-  DateTime startDate = globals.day_start; // 시작 날짜
-  DateTime endDate = globals.day_end; // 종료 날짜
+  DateTime startDate = day_start; // 시작 날짜
+  DateTime endDate = day_end; // 종료 날짜
   void onPressed() async {
-    globals.periodIndex = _periodIndex;
-    globals.sortOrderIndex = _sortOrderIndex;
-    globals.signalClassIndex = _classIndex; //적용버튼 눌렀을때의
-    globals.signIndex = _classIndex; //신호를 고르기만했을 때에도 적용
-    globals.day_start = startDate;
-    globals.day_end = endDate;
+    periodIndex = _periodIndex;
+    sortOrderIndex = _sortOrderIndex;
+    signalClassIndex = _classIndex; //적용버튼 눌렀을때의
+    signIndex = _classIndex; //신호를 고르기만했을 때에도 적용
+    day_start = startDate;
+    day_end = endDate;
     Navigator.pop(context, [
-      globals.periodIndex,
-      globals.sortOrderIndex,
-      globals.signalClassIndex,
+      periodIndex,
+      sortOrderIndex,
+      signalClassIndex,
       startDate,
       endDate,
     ]);
-    print(globals.signIndex);
+    print(signIndex);
   }
 
-  // int _periodIndex = globals.periodIndex; // 라디오 버튼 기본 상태
-  // int _sortOrderIndex = globals.sortOrderIndex; // 라디오 버튼 기본 상태// 라디오 버튼 기본 상태
+  // int _periodIndex = periodIndex; // 라디오 버튼 기본 상태
+  // int _sortOrderIndex = sortOrderIndex; // 라디오 버튼 기본 상태// 라디오 버튼 기본 상태
   //
   // DateTime startDate = DateTime.now().subtract(Duration(days: 7)); // 시작 날짜
   // DateTime endDate = DateTime.now(); // 종료 날짜
   // void onPressed() async {
-  //   globals.periodIndex = _periodIndex;
-  //   globals.sortOrderIndex = _sortOrderIndex;
-  //   String signalClassIndex = globals.signList[globals.signalClassIndex];
+  //   periodIndex = _periodIndex;
+  //   sortOrderIndex = _sortOrderIndex;
+  //   String signalClassIndex = signList[signalClassIndex];
   //   setState(() {});
   //   Navigator.pop(context, {
-  //     globals.periodIndex,
-  //     globals.sortOrderIndex,
+  //     periodIndex,
+  //     sortOrderIndex,
   //     signalClassIndex,
   //   });
-  //   print(globals.periodIndex);
-  //   print(globals.sortOrderIndex);
+  //   print(periodIndex);
+  //   print(sortOrderIndex);
   //   print(signalClassIndex);
   // }
 
@@ -268,7 +266,7 @@ class _ModalSignFilterState extends State<ModalSignFilter> {
           ),
           alignment: Alignment.center,
           child: Text(
-            globals.periodList[index],
+            periodList[index],
             style: TextStyle(
               color: isSelected ? Colors.white : Colors.black54,
               fontWeight: FontWeight.w500,
@@ -300,7 +298,7 @@ class _ModalSignFilterState extends State<ModalSignFilter> {
           ),
           alignment: Alignment.center,
           child: Text(
-            globals.sortOrderList[index],
+            sortOrderList[index],
             style: TextStyle(
               color: isSelected ? Colors.white : Colors.black54,
               fontWeight: FontWeight.w500,

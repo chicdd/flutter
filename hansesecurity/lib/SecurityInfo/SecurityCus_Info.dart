@@ -1,8 +1,5 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
-import 'package:hansesecurity/Modal/Modal_Customer_List.dart';
-import '../Modal/Modal_page_List.dart';
 import '../RestAPI.dart';
 import '../Select/Cus_Select.dart';
 import 'package:hansesecurity/globals.dart';
@@ -21,6 +18,12 @@ class _SecurityCusInfoState extends State<SecurityCusInfo> {
     fetchSecuBasic();
     fetchUserList();
     _startDataMonitoring();
+  }
+
+  @override
+  void dispose() {
+    _dataCheckTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> fetchSecuBasic() async {

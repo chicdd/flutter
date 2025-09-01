@@ -1,5 +1,4 @@
 import 'package:xml/xml.dart';
-
 import 'RestAPI.dart';
 import 'globals.dart';
 
@@ -108,9 +107,9 @@ String getImagePath(String? state) {
     case '해제':
       return 'image/disalert.jpg';
     //case '문열림':
-      //return 'image/문열림3.jpg';
+    //return 'image/문열림3.jpg';
     //case '문닫힘':
-      //return 'image/문닫힘3.jpg';
+    //return 'image/문닫힘3.jpg';
     default:
       return 'image/default.jpg'; // fallback 이미지
   }

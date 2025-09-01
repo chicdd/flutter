@@ -4,9 +4,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hansesecurity/AuthGate.dart';
 import 'dart:io';
-import 'Login.dart';
-import 'RestAPI.dart';
-import 'functions.dart';
+
 import 'globals.dart';
 import 'Display.dart';
 

@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hansesecurity/Modal/Modal_Deposit_List.dart';
-import 'package:hansesecurity/Modal/Modal_Customer_List.dart';
-import 'package:hansesecurity/Modal/Modal_Signal_List.dart';
-import 'package:hansesecurity/globals.dart' as globals;
+import 'package:hansesecurity/globals.dart';
 
 //청구내역 필터의 모달 내 입금방법 셀렉트
 class DepositSelect extends StatefulWidget {
@@ -19,7 +17,7 @@ class DepositSelect extends StatefulWidget {
 }
 
 class _DepositSelectState extends State<DepositSelect> {
-  String deposit = globals.depositList[globals.depositIndex]; //신호 드롭다운 처음 상태
+  String deposit = depositList[depositIndex]; //신호 드롭다운 처음 상태
 
   void onPressed() async {
     final result = await showModalBottomSheet(
@@ -34,7 +32,7 @@ class _DepositSelectState extends State<DepositSelect> {
 
     if (result != null && result is int) {
       setState(() {
-        deposit = globals.depositList[result];
+        deposit = depositList[result];
         print(result);
         widget.onPressed(result); // 부모에 전달
         //Navigator.pop(context, result);

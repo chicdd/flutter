@@ -1,13 +1,10 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_sticky_header/flutter_sticky_header.dart';
-import 'package:hansesecurity/Modal/Modal_Customer_List.dart';
 import 'package:hansesecurity/Modal/Modal_Sign_Filter.dart';
 import 'package:hansesecurity/globals.dart';
 import '../RestAPI.dart';
 import '../Select/Cus_Select.dart';
-import '../functions.dart';
 
 class SignInfo extends StatefulWidget {
   const SignInfo({super.key});
@@ -32,6 +29,12 @@ class _SignInfoState extends State<SignInfo> {
     _initializeFilters();
     _refreshData();
     _startDataMonitoring();
+  }
+
+  @override
+  void dispose() {
+    _dataCheckTimer?.cancel();
+    super.dispose();
   }
 
   void _startDataMonitoring() {
@@ -139,7 +142,6 @@ class _SignInfoState extends State<SignInfo> {
     });
   }
 
-  @override
   void onPressed() async {
     final result = await showModalBottomSheet(
       context: context,

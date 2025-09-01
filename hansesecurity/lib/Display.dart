@@ -3,10 +3,7 @@ import 'package:hansesecurity/ERPInfo/ERP_Home.dart';
 import 'package:hansesecurity/SecurityInfo/Security_Home.dart';
 import 'package:hansesecurity/Home.dart';
 import 'package:hansesecurity/Setting.dart';
-import 'package:hansesecurity/RestAPI.dart';
-
 import 'functions.dart';
-import 'globals.dart';
 
 class Display extends StatefulWidget {
   const Display({super.key});

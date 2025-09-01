@@ -4,10 +4,7 @@ import 'package:hansesecurity/Home.dart';
 import 'package:hansesecurity/SecurityInfo/SecurityCus_Info.dart';
 import 'package:hansesecurity/SecurityInfo/DvrInfo.dart';
 import 'package:hansesecurity/SecurityInfo/Sign_Info.dart';
-import 'package:hansesecurity/Modal/Modal_page_List.dart';
 import 'package:hansesecurity/globals.dart';
-
-import '../functions.dart';
 
 class SecurityHome extends StatefulWidget {
   const SecurityHome({super.key});

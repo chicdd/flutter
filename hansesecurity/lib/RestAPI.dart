@@ -1,11 +1,7 @@
 import 'dart:async';
-import 'dart:convert';
-import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
 import 'package:xml/xml.dart';
-
 import 'functions.dart';
-import 'globals.dart';
 
 class RestApiService {
   static final RestApiService _instance = RestApiService._internal();

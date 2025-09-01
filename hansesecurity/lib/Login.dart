@@ -4,9 +4,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hansesecurity/Display.dart';
 import 'package:hansesecurity/Main.dart';
 import 'package:hansesecurity/randomNumCreate.dart';
-
 import 'RestAPI.dart';
-import 'functions.dart';
 import 'globals.dart';
 
 class Login extends StatefulWidget {

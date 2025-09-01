@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hansesecurity/Modal/Modal_Claim_List.dart';
-import 'package:hansesecurity/Modal/Modal_Customer_List.dart';
-import 'package:hansesecurity/Modal/Modal_Signal_List.dart';
-import 'package:hansesecurity/globals.dart' as globals;
+import 'package:hansesecurity/globals.dart';
 
 //청구내역 필터의 모달 내 청구구분 셀렉트
 class ClaimSelect extends StatefulWidget {
@@ -15,7 +13,7 @@ class ClaimSelect extends StatefulWidget {
 }
 
 class _ClaimSelectState extends State<ClaimSelect> {
-  String claim = globals.claimClassList[globals.claimIndex]; //신호 드롭다운 처음 상태
+  String claim = claimClassList[claimIndex]; //신호 드롭다운 처음 상태
   void onPressed() async {
     final result = await showModalBottomSheet(
       context: context,
@@ -26,10 +24,10 @@ class _ClaimSelectState extends State<ClaimSelect> {
       backgroundColor: Colors.white,
       builder: (context) => const ClaimList(),
     );
-    print('globals.claimIndex : ' + globals.claimIndex.toString());
+    print('claimIndex : ' + claimIndex.toString());
     if (result != null && result is int) {
       setState(() {
-        claim = globals.claimClassList[result];
+        claim = claimClassList[result];
         print(result);
         widget.onPressed(result); // 부모에 전달
         //Navigator.pop(context, result);

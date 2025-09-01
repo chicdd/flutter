@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hansesecurity/Modal/Modal_Bill_List.dart';
-import 'package:hansesecurity/Modal/Modal_Customer_List.dart';
-import 'package:hansesecurity/Modal/Modal_Signal_List.dart';
-import 'package:hansesecurity/globals.dart' as globals;
+import 'package:hansesecurity/globals.dart';
 
 //계산서내역 필터의 모달 내 계산서종류 셀렉트
 class BillSelect extends StatefulWidget {
@@ -15,7 +13,7 @@ class BillSelect extends StatefulWidget {
 }
 
 class _BillSelectState extends State<BillSelect> {
-  String bill = globals.billClassList[globals.billIndex]; //신호 드롭다운 처음 상태
+  String bill = billClassList[billIndex]; //신호 드롭다운 처음 상태
 
   void onPressed() async {
     final result = await showModalBottomSheet(
@@ -30,7 +28,7 @@ class _BillSelectState extends State<BillSelect> {
 
     if (result != null && result is int) {
       setState(() {
-        bill = globals.billClassList[result];
+        bill = billClassList[result];
         print(result);
         widget.onPressed(result); // 부모에 전달
         //Navigator.pop(context, result);

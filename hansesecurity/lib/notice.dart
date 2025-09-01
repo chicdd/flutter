@@ -27,6 +27,12 @@ class _NoticeState extends State<Notice> {
     print('api호출함');
   }
 
+  @override
+  void dispose() {
+    _dataCheckTimer?.cancel();
+    super.dispose();
+  }
+
   void _startDataMonitoring() {
     int attemptCount = 0; // 시도 횟수 카운터 추가
     const int maxAttempts = 20; // 최대 시도 횟수

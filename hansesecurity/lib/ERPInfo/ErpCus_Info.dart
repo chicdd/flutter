@@ -1,14 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:hansesecurity/Modal/Modal_Customer_List.dart';
 import 'package:hansesecurity/Select/ERP_Select.dart';
-import '../Modal/Modal_page_List.dart';
 import '../RestAPI.dart';
-import '../Select/Cus_Select.dart';
 import 'package:hansesecurity/globals.dart';
-
-import '../functions.dart';
 
 class ERPCusInfo extends StatefulWidget {
   const ERPCusInfo({super.key});
@@ -24,6 +19,12 @@ class _ERPCusInfoState extends State<ERPCusInfo> {
     erpinitializeData();
     _startDataMonitoring();
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    _dataCheckTimer?.cancel();
+    super.dispose();
   }
 
   void _startDataMonitoring() {
