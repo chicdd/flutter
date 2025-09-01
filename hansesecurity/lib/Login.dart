@@ -95,6 +95,7 @@ class _LoginState extends State<Login> {
             ),
             const SizedBox(height: 15),
             TextField(
+              keyboardType: TextInputType.number,
               controller: _password,
               decoration: const InputDecoration(
                 labelText: '인증번호',
