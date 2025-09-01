@@ -88,8 +88,6 @@ class _SecurityCusInfoState extends State<SecurityCusInfo> {
         timer.cancel();
         print('모든 데이터 감지됨, Select 업데이트');
         print('cusList 개수: ${cusList.length}');
-        print('stateList: $stateList');
-        print('state: $state');
       } else if (attemptCount >= maxAttempts) {
         // 20번 시도 후에도 데이터가 없으면 타이머 중지
         timer.cancel();

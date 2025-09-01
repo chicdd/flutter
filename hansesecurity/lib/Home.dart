@@ -76,7 +76,7 @@ class _HomeState extends State<Home> {
     _startDataMonitoring();
     setState(() {});
 
-    //5초마다 setState 호출
+    //10초마다 setState 호출
     _timer = Timer.periodic(const Duration(seconds: 10), (timer) {
       setState(() {
         getState();
@@ -301,12 +301,13 @@ class _HomeState extends State<Home> {
                           width: double.infinity,
                           child: ElevatedButton(
                             onPressed: () async {
-                              Navigator.pushReplacement(
+                              Navigator.push(
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) => const SecurityHome(),
                                 ),
                               );
+                              dispose();
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.white,
@@ -349,12 +350,13 @@ class _HomeState extends State<Home> {
                           width: double.infinity,
                           child: ElevatedButton(
                             onPressed: () async {
-                              Navigator.pushReplacement(
+                              Navigator.push(
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) => const ErpHome(),
                                 ),
                               );
+                              dispose();
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.white,
@@ -403,13 +405,13 @@ class _HomeState extends State<Home> {
                           width: double.infinity,
                           child: ElevatedButton(
                             onPressed: () async {
-                              Navigator.pushReplacement(
+                              Navigator.push(
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) => const Notice(),
                                 ),
                               );
-                              //fetchErpCusInfo();
+                              dispose();
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.white,
@@ -452,12 +454,13 @@ class _HomeState extends State<Home> {
                           width: double.infinity,
                           child: ElevatedButton(
                             onPressed: () async {
-                              Navigator.pushReplacement(
+                              Navigator.push(
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) => const Setting(),
                                 ),
                               );
+                              dispose();
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.white,
