@@ -532,7 +532,7 @@ class RestApiService {
       "$baseUrl/$page?syscode=$syscode&phonecode=$phonecode",
     );
     final response = await http.get(url);
-    //print(url);
+    print(url);
 
     if (response.statusCode == 200) {
       final document = XmlDocument.parse(response.body);
