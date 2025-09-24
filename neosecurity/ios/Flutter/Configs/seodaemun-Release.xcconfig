@@ -1,0 +1,16 @@
+#include "../Release.xcconfig"
+
+// 서대문포콤 Release Flavor 설정
+FLUTTER_APP_NAME = 서대문포콤
+FLUTTER_GAETONG_CODE = 02111112
+PRODUCT_BUNDLE_IDENTIFIER = com.neo.seodaemunPocom
+PRODUCT_NAME = 서대문포콤
+
+// App Store 업로드 설정
+CODE_SIGN_STYLE = Manual
+CODE_SIGN_IDENTITY = iPhone Distribution
+PROVISIONING_PROFILE_SPECIFIER = Seodaemun App Store
+
+// Release 최적화 설정
+SWIFT_COMPILATION_MODE = wholemodule
+SWIFT_OPTIMIZATION_LEVEL = -O

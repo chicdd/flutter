@@ -45,6 +45,14 @@
 		0311374B0688DB953C4579F5 /* Pods-Runner.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.profile.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.profile.xcconfig"; sourceTree = "<group>"; };
 		1498D2321E8E86230040F4C2 /* GeneratedPluginRegistrant.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GeneratedPluginRegistrant.h; sourceTree = "<group>"; };
 		1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GeneratedPluginRegistrant.m; sourceTree = "<group>"; };
+		1E3B60952E83D4350019E194 /* flutter_lldb_helper.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = flutter_lldb_helper.py; sourceTree = "<group>"; };
+		1E3B60962E83D4350019E194 /* flutter_lldbinit */ = {isa = PBXFileReference; lastKnownFileType = text; path = flutter_lldbinit; sourceTree = "<group>"; };
+		1E3B60982E83D4350019E194 /* AppFrameworkInfo.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = AppFrameworkInfo.plist; sourceTree = "<group>"; };
+		1E3B60992E83D4350019E194 /* Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Debug.xcconfig; sourceTree = "<group>"; };
+		1E3B609A2E83D4350019E194 /* Flutter.podspec */ = {isa = PBXFileReference; lastKnownFileType = text; path = Flutter.podspec; sourceTree = "<group>"; };
+		1E3B609B2E83D4350019E194 /* flutter_export_environment.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = flutter_export_environment.sh; sourceTree = "<group>"; };
+		1E3B609C2E83D4350019E194 /* Generated.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Generated.xcconfig; sourceTree = "<group>"; };
+		1E3B609D2E83D4350019E194 /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Release.xcconfig; sourceTree = "<group>"; };
 		1E7C77762E4DDE22009F6498 /* ko */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ko; path = ko.lproj/Main.strings; sourceTree = "<group>"; };
 		1E7C77772E4DDE22009F6498 /* ko */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ko; path = ko.lproj/LaunchScreen.strings; sourceTree = "<group>"; };
 		2909FE72CAF5EB2D1EA2F894 /* Pods-RunnerTests.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.profile.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.profile.xcconfig"; sourceTree = "<group>"; };
@@ -89,6 +97,29 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		1E3B60972E83D4350019E194 /* ephemeral */ = {
+			isa = PBXGroup;
+			children = (
+				1E3B60952E83D4350019E194 /* flutter_lldb_helper.py */,
+				1E3B60962E83D4350019E194 /* flutter_lldbinit */,
+			);
+			path = ephemeral;
+			sourceTree = "<group>";
+		};
+		1E3B609E2E83D4350019E194 /* Flutter */ = {
+			isa = PBXGroup;
+			children = (
+				1E3B60972E83D4350019E194 /* ephemeral */,
+				1E3B60982E83D4350019E194 /* AppFrameworkInfo.plist */,
+				1E3B60992E83D4350019E194 /* Debug.xcconfig */,
+				1E3B609A2E83D4350019E194 /* Flutter.podspec */,
+				1E3B609B2E83D4350019E194 /* flutter_export_environment.sh */,
+				1E3B609C2E83D4350019E194 /* Generated.xcconfig */,
+				1E3B609D2E83D4350019E194 /* Release.xcconfig */,
+			);
+			path = Flutter;
+			sourceTree = "<group>";
+		};
 		2E52631F3BF880412A965D83 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
@@ -126,6 +157,7 @@
 				331C8082294A63A400263BE5 /* RunnerTests */,
 				F003D03D8A70F211C8153188 /* Pods */,
 				2E52631F3BF880412A965D83 /* Frameworks */,
+				1E3B609E2E83D4350019E194 /* Flutter */,
 			);
 			sourceTree = "<group>";
 		};
@@ -333,9 +365,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
