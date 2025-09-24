@@ -56,5 +56,11 @@
 
 	<key>ITSAppUsesNonExemptEncryption</key>
     <false/>
+
+    <key>LSApplicationQueriesSchemes</key>
+    <array>
+        <string>skyrex</string>
+        <!-- Add more schemes as needed -->
+    </array>
 </dict>
 </plist>
