@@ -26,6 +26,7 @@ class _SelectState extends State<Select> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
+      backgroundColor: Colors.white,
       builder: (context) => SelectList(
         selectClass: widget.selectClass,
         selectDefault: widget.selectDefault,
@@ -57,12 +58,16 @@ class _SelectState extends State<Select> {
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
           padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.black,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
+            side: const BorderSide(
+              color: Colors.black12, // 테두리 색상
+              width: 1.0, // 테두리 두께
+            ),
           ),
           elevation: 0,
-          backgroundColor: Theme.of(context).colorScheme.outline, // ← 카드/버튼 배경
-
           shadowColor: Colors.transparent,
         ),
         onPressed: onPressed,
@@ -71,13 +76,13 @@ class _SelectState extends State<Select> {
           children: [
             Text(
               selectClass,
-              style: TextStyle(color: Theme.of(context).colorScheme.primary),
+              style: const TextStyle(
+                color: Colors.black,
+                fontWeight: FontWeight.w700,
+              ),
             ),
             const SizedBox(width: 8),
-            Icon(
-              Icons.arrow_forward_ios,
-              color: Theme.of(context).colorScheme.primary,
-            ),
+            const Icon(Icons.expand_more),
           ],
         ),
       ),
