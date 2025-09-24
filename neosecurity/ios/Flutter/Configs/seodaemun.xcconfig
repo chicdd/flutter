@@ -1,0 +1,10 @@
+#include "Generated.xcconfig"
+
+// 서대문포콤 Flavor 설정
+FLUTTER_APP_NAME = 서대문포콤
+FLUTTER_GAETONG_CODE = 02111112
+PRODUCT_BUNDLE_IDENTIFIER = com.neo.seodaemunPocom
+PRODUCT_NAME = 서대문포콤
+
+// Flutter에서 사용할 환경 변수
+DART_DEFINES = FLUTTER_APP_NAME=서대문포콤,FLUTTER_GAETONG_CODE=02111112
