@@ -224,10 +224,8 @@ class _HomeState extends State<Home> {
                               ),
                             ),
                           ),
-                        ],
-
-                        if ((isremote == 'true') && (centerPhone != ""))
                           const SizedBox(width: 10),
+                        ],
 
                         if (centerPhone != "")
                           Expanded(

@@ -127,7 +127,7 @@ class _ModalSignFilterState extends State<ModalSignFilter> {
                         child: Padding(
                           padding: const EdgeInsets.symmetric(
                             vertical: 8,
-                            horizontal: 25,
+                            horizontal: 30,
                           ),
                           child: Text(
                             '${startDate.year}-${startDate.month.toString().padLeft(2, '0')}-${startDate.day.toString().padLeft(2, '0')}',
@@ -148,7 +148,7 @@ class _ModalSignFilterState extends State<ModalSignFilter> {
                         child: Padding(
                           padding: const EdgeInsets.symmetric(
                             vertical: 8,
-                            horizontal: 25,
+                            horizontal: 30,
                           ),
                           child: Text(
                             '${endDate.year}-${endDate.month.toString().padLeft(2, '0')}-${endDate.day.toString().padLeft(2, '0')}',
