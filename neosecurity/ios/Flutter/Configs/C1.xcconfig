@@ -1,0 +1,10 @@
+#include "Generated.xcconfig"
+
+// 순천씨원 Flavor 설정
+FLUTTER_APP_NAME = 순천씨원
+FLUTTER_GAETONG_CODE = 61062298
+PRODUCT_BUNDLE_IDENTIFIER = com.neo.C1
+PRODUCT_NAME = 순천씨원
+
+// Flutter에서 사용할 환경 변수
+DART_DEFINES = FLUTTER_APP_NAME=순천씨원,FLUTTER_GAETONG_CODE=61062298
