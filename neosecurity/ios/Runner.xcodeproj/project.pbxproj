@@ -58,6 +58,7 @@
 		31BB6D23810BF94152257916 /* Pods-Runner.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.release.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig"; sourceTree = "<group>"; };
 		331C807B294A618700263BE5 /* RunnerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunnerTests.swift; sourceTree = "<group>"; };
 		331C8081294A63A400263BE5 /* RunnerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RunnerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		34F4A398ED4DC0CA4285FF7E /* Pods-Runner.hansesecurity-debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.hansesecurity-debug.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.hansesecurity-debug.xcconfig"; sourceTree = "<group>"; };
 		3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = AppFrameworkInfo.plist; path = Flutter/AppFrameworkInfo.plist; sourceTree = "<group>"; };
 		4CADBE6E888846B8E94A20BC /* Pods-Runner.seodaemun-release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.seodaemun-release.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.seodaemun-release.xcconfig"; sourceTree = "<group>"; };
 		4D3407892B6FFF196D571A5C /* Pods-RunnerTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.release.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.release.xcconfig"; sourceTree = "<group>"; };
@@ -80,10 +81,13 @@
 		97C147021CF9000F007C117D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		99152B6E369108F19D9D95E2 /* Pods-RunnerTests.seodaemun-release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.seodaemun-release.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.seodaemun-release.xcconfig"; sourceTree = "<group>"; };
 		9A8924FF8A25C43936FE57E0 /* Pods-RunnerTests.kone-debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.kone-debug.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.kone-debug.xcconfig"; sourceTree = "<group>"; };
+		9F8F981AD9A6D718A73AD280 /* Pods-RunnerTests.hansesecurity-release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.hansesecurity-release.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.hansesecurity-release.xcconfig"; sourceTree = "<group>"; };
 		AA3F3F6873F4B7ACF2413832 /* Pods-Runner.kone-release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.kone-release.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.kone-release.xcconfig"; sourceTree = "<group>"; };
+		AA96D52985DCFFD889F2EDC2 /* Pods-Runner.hansesecurity-release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.hansesecurity-release.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.hansesecurity-release.xcconfig"; sourceTree = "<group>"; };
 		B7A57BA322A2619AAC8B8121 /* Pods-Runner.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.debug.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.debug.xcconfig"; sourceTree = "<group>"; };
 		BE6E35E7E0DBF1FEA4E37808 /* Pods-RunnerTests.seodaemun-debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.seodaemun-debug.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.seodaemun-debug.xcconfig"; sourceTree = "<group>"; };
 		EE6C3351A70E9BDF9F3FFE7E /* Pods-Runner.seodaemun-debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.seodaemun-debug.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.seodaemun-debug.xcconfig"; sourceTree = "<group>"; };
+		F7273F9FA3A500612A7D71DD /* Pods-RunnerTests.hansesecurity-debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.hansesecurity-debug.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.hansesecurity-debug.xcconfig"; sourceTree = "<group>"; };
 		FA4726BC5EDA61A57496B799 /* Pods-RunnerTests.kone-release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.kone-release.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.kone-release.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -214,6 +218,10 @@
 				4F186B260AE6225393702F04 /* Pods-RunnerTests.c1-release.xcconfig */,
 				FA4726BC5EDA61A57496B799 /* Pods-RunnerTests.kone-release.xcconfig */,
 				99152B6E369108F19D9D95E2 /* Pods-RunnerTests.seodaemun-release.xcconfig */,
+				34F4A398ED4DC0CA4285FF7E /* Pods-Runner.hansesecurity-debug.xcconfig */,
+				AA96D52985DCFFD889F2EDC2 /* Pods-Runner.hansesecurity-release.xcconfig */,
+				F7273F9FA3A500612A7D71DD /* Pods-RunnerTests.hansesecurity-debug.xcconfig */,
+				9F8F981AD9A6D718A73AD280 /* Pods-RunnerTests.hansesecurity-release.xcconfig */,
 			);
 			path = Pods;
 			sourceTree = "<group>";
@@ -385,9 +393,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -475,6 +487,8 @@
 				ALLOW_TARGET_PLATFORM_SPECIALIZATION = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
 				DEVELOPMENT_TEAM = B6R8X2V5QD;
 				ENABLE_BITCODE = NO;
@@ -488,6 +502,7 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.neo.Kone;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SUPPORTED_PLATFORMS = "driverkit iphoneos iphonesimulator macosx watchos watchsimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
@@ -612,7 +627,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.neo.Kone;
+				PRODUCT_BUNDLE_IDENTIFIER = com.neo.Konedebug;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SUPPORTED_PLATFORMS = "driverkit iphoneos iphonesimulator macosx watchos watchsimulator";
@@ -785,7 +800,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.neo.C1;
+				PRODUCT_BUNDLE_IDENTIFIER = com.neo.C1debug;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SUPPORTED_PLATFORMS = "driverkit iphoneos iphonesimulator macosx watchos watchsimulator";
@@ -882,6 +897,8 @@
 				ALLOW_TARGET_PLATFORM_SPECIALIZATION = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
 				DEVELOPMENT_TEAM = B6R8X2V5QD;
 				ENABLE_BITCODE = NO;
@@ -895,6 +912,7 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.neo.C1;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SUPPORTED_PLATFORMS = "driverkit iphoneos iphonesimulator macosx watchos watchsimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
@@ -987,7 +1005,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.neo.seodaemun;
+				PRODUCT_BUNDLE_IDENTIFIER = com.neo.seodaemundebug;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SUPPORTED_PLATFORMS = "driverkit iphoneos iphonesimulator macosx watchos watchsimulator";
@@ -1084,6 +1102,8 @@
 				ALLOW_TARGET_PLATFORM_SPECIALIZATION = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
 				DEVELOPMENT_TEAM = B6R8X2V5QD;
 				ENABLE_BITCODE = NO;
@@ -1097,6 +1117,7 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.neo.seodaemun;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SUPPORTED_PLATFORMS = "driverkit iphoneos iphonesimulator macosx watchos watchsimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
@@ -1399,7 +1420,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.neo.seodaemun;
+				PRODUCT_BUNDLE_IDENTIFIER = com.default.debug;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SUPPORTED_PLATFORMS = "driverkit iphoneos iphonesimulator macosx watchos watchsimulator";
@@ -1419,8 +1440,10 @@
 				ALLOW_TARGET_PLATFORM_SPECIALIZATION = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
-				DEVELOPMENT_TEAM = B6R8X2V5QD;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_BITCODE = NO;
 				FLUTTER_BUILD_NAME = 1.0.1;
 				FLUTTER_BUILD_NUMBER = 2;
@@ -1430,8 +1453,9 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.neo.seodaemun;
+				PRODUCT_BUNDLE_IDENTIFIER = com.default.release;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SUPPORTED_PLATFORMS = "driverkit iphoneos iphonesimulator macosx watchos watchsimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
