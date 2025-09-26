@@ -59,13 +59,6 @@ android {
             buildConfigField("String", "APP_NAME", "\"한국안전시스템\"")
             buildConfigField("String", "GAETONG_CODE", "\"53220129\"")
         }
-        create("HanseSecurity") {
-            dimension = "company-class"
-            applicationId = "com.neo.hansesecurity"
-            manifestPlaceholders["appName"] = "한세시큐리티"
-            buildConfigField("String", "APP_NAME", "\"한세시큐리티\"")
-            buildConfigField("String", "GAETONG_CODE", "\"62083651\"")
-        }
 
     }
 
