@@ -176,6 +176,8 @@ String getImageForGaetongCode(String syscode) {
       return 'image/C1_Logo.png';
     case '53220129':
       return 'image/Kone_Logo.png';
+    case '62083651':
+      return 'image/Hanse_Logo.png';
     default:
       return 'image/default.png';
   }

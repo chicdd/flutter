@@ -5,7 +5,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:neosecurity/Login.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-
+import 'package:package_info_plus/package_info_plus.dart';
 import 'Home.dart';
 import 'globals.dart';
 
@@ -41,7 +41,25 @@ void logout(BuildContext context) async {
   stateList = {};
 }
 
+
 class _SettingState extends State<Setting> {
+
+  String version = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _getVersion();
+  }
+
+
+  Future<void> _getVersion() async {
+    PackageInfo packageInfo = await PackageInfo.fromPlatform();
+    setState(() {
+      version = packageInfo.version; // FLUTTER_BUILD_NAME
+      // packageInfo.buildNumber; // FLUTTER_BUILD_NUMBER
+    });
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -227,7 +245,7 @@ class _SettingState extends State<Setting> {
                                   ),
                                 ),
 
-                                Text('1.0.04', style: TextStyle(fontSize: 18)),
+                                Text(version, style: TextStyle(fontSize: 18)),
                               ],
                             ),
                           ),

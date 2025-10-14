@@ -7,9 +7,11 @@ import 'package:neosecurity/Setting.dart';
 
 import 'package:url_launcher/url_launcher.dart';
 
+import 'ERPInfo/ERP_Home.dart';
 import 'Select/Cus_Select.dart';
 import 'functions.dart';
 import 'globals.dart';
+import 'notice.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -172,17 +174,21 @@ class _HomeState extends State<Home> {
 
                     const SizedBox(height: 10),
 
-                    // Padding(
-                    //   padding: const EdgeInsets.symmetric(horizontal: 0.0),
-                    //   child: Row(
-                    //     children: [
-                    //       command('문열림'),
-                    //       const SizedBox(width: 10),
-                    //       command('문닫힘'),
-                    //     ],
-                    //   ),
-                    // ),
-                    // const SizedBox(height: 10),
+                    if (syscode == '62083651') ...[
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 0.0),
+                        child: Row(
+                          children: [
+                            command('문열림'),
+                            const SizedBox(width: 10),
+                            command('문닫힘'),
+                          ],
+                        ),
+                      ),
+
+                    ],
+
+                    const SizedBox(height: 10),
                     Row(
                       children: [
                         if (isremote == 'true') ...[
@@ -279,6 +285,8 @@ class _HomeState extends State<Home> {
             ),
 
             const SizedBox(height: 20),
+
+          if (syscode != '62083651') ...[
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
@@ -521,6 +529,233 @@ class _HomeState extends State<Home> {
                 ],
               ),
             ),
+            ] else ...[
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black12,
+                    blurRadius: 8,
+                    offset: Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () async {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const SecurityHome(),
+                                ),
+                              );
+                              dispose();
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                //side: BorderSide(color: Color(0xff545454)),
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 0),
+                              textStyle: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              shadowColor: Colors.transparent,
+                              elevation: 4,
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.security,
+                                  size: 30,
+                                  color: Colors.black54,
+                                ),
+                                SizedBox(width: 12),
+                                Text(
+                                  "관제정보",
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.black54,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () async {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const ErpHome(),
+                                ),
+                              );
+                              dispose();
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                //side: BorderSide(color: Color(0xff545454)),
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 0),
+                              textStyle: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              shadowColor: Colors.transparent,
+                              elevation: 4,
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.bar_chart,
+                                  size: 30,
+                                  color: Colors.black54,
+                                ),
+                                SizedBox(width: 12),
+                                Text(
+                                  "영업정보",
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.black54,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  Row(
+                    children: [
+                      Expanded(
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () async {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const Notice(),
+                                ),
+                              );
+                              dispose();
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                //side: BorderSide(color: Color(0xff545454)),
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 0),
+                              textStyle: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              shadowColor: Colors.transparent,
+                              elevation: 4,
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.campaign,
+                                  size: 30,
+                                  color: Colors.black54,
+                                ),
+                                SizedBox(width: 12),
+                                Text(
+                                  "공지사항",
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.black54,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () async {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const Setting(),
+                                ),
+                              );
+                              dispose();
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                //side: BorderSide(color: Color(0xff545454)),
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 0),
+                              textStyle: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              shadowColor: Colors.transparent,
+                              elevation: 4,
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.settings,
+                                  size: 30,
+                                  color: Colors.black54,
+                                ),
+                                SizedBox(width: 12),
+                                Text(
+                                  "환경설정",
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.black54,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+
             const SizedBox(height: 20),
           ],
         ),
