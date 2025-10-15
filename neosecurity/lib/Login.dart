@@ -76,16 +76,18 @@ class _LoginState extends State<Login> {
                     // 일반 계정 로직
                     if (phoneNumber.length == 11) {
                       // 인증번호 발송 로직
-
-                      // RestApiService().sendSMS(
-                      //   syscode,
-                      //   sendPhone,
-                      //   phoneNumber, // 하이픈 제거된 순수 숫자만 전달
-                      //   "[인증번호:${random4Number()}] 인증번호를 입력해주세요.($company)",
-                      // );
-                      print(
+                      //배포할 때는 이 줄을 사용
+                      RestApiService().sendSMS(
+                        syscode,
+                        sendPhone,
+                        phoneNumber, // 하이픈 제거된 순수 숫자만 전달
                         "[인증번호:${random4Number()}] 인증번호를 입력해주세요.($company)",
                       );
+
+                      // //테스트 할 때는 이 줄을 사용
+                      // print(
+                      //   "[인증번호:${random4Number()}] 인증번호를 입력해주세요.($company)",
+                      // );
                       phoneCode = phoneNumber;
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('인증번호가 발송되었습니다.')),
