@@ -60,6 +60,7 @@
 		331C807B294A618700263BE5 /* RunnerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunnerTests.swift; sourceTree = "<group>"; };
 		331C8081294A63A400263BE5 /* RunnerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RunnerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		34F4A398ED4DC0CA4285FF7E /* Pods-Runner.hansesecurity-debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.hansesecurity-debug.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.hansesecurity-debug.xcconfig"; sourceTree = "<group>"; };
+		35D9BA75A8E23FEC0394FDCE /* Pods-RunnerTests.hanse-release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.hanse-release.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.hanse-release.xcconfig"; sourceTree = "<group>"; };
 		3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = AppFrameworkInfo.plist; path = Flutter/AppFrameworkInfo.plist; sourceTree = "<group>"; };
 		4CADBE6E888846B8E94A20BC /* Pods-Runner.seodaemun-release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.seodaemun-release.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.seodaemun-release.xcconfig"; sourceTree = "<group>"; };
 		4D3407892B6FFF196D571A5C /* Pods-RunnerTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.release.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.release.xcconfig"; sourceTree = "<group>"; };
@@ -75,6 +76,7 @@
 		7D23ADC70F31031DA533CB5E /* Pods_Runner.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Runner.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		7EA267A685CD86FEC8FB6277 /* Pods-Runner.hanse-debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.hanse-debug.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.hanse-debug.xcconfig"; sourceTree = "<group>"; };
 		8024605B46BB0FAF5398E557 /* Pods-RunnerTests.c1-debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.c1-debug.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.c1-debug.xcconfig"; sourceTree = "<group>"; };
+		938EB4323E5841796FFCA69C /* Pods-Runner.hanse-release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.hanse-release.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.hanse-release.xcconfig"; sourceTree = "<group>"; };
 		9740EEB21CF90195004384FC /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = Flutter/Debug.xcconfig; sourceTree = "<group>"; };
 		9740EEB31CF90195004384FC /* Generated.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Generated.xcconfig; path = Flutter/Generated.xcconfig; sourceTree = "<group>"; };
 		97C146EE1CF9000F007C117D /* Runner.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Runner.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -214,6 +216,8 @@
 				9F8F981AD9A6D718A73AD280 /* Pods-RunnerTests.hansesecurity-release.xcconfig */,
 				7EA267A685CD86FEC8FB6277 /* Pods-Runner.hanse-debug.xcconfig */,
 				57F25E415395AC2DF8DC9652 /* Pods-RunnerTests.hanse-debug.xcconfig */,
+				938EB4323E5841796FFCA69C /* Pods-Runner.hanse-release.xcconfig */,
+				35D9BA75A8E23FEC0394FDCE /* Pods-RunnerTests.hanse-release.xcconfig */,
 			);
 			path = Pods;
 			sourceTree = "<group>";
@@ -386,9 +390,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -496,7 +504,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = B6R8X2V5QD;
 				ENABLE_BITCODE = NO;
-				FLUTTER_BUILD_NAME = 1.0.1;
+				FLUTTER_BUILD_NAME = 1.0.2;
 				FLUTTER_BUILD_NUMBER = 1;
 				INFOPLIST_FILE = Runner/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "한국안전시스템";
@@ -625,7 +633,7 @@
 				DEVELOPMENT_TEAM = B6R8X2V5QD;
 				ENABLE_BITCODE = NO;
 				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = arm64;
-				FLUTTER_BUILD_NAME = 1.0.1;
+				FLUTTER_BUILD_NAME = 1.0.2;
 				FLUTTER_BUILD_NUMBER = 1;
 				INFOPLIST_FILE = Runner/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "한국안전시스템";
@@ -801,7 +809,7 @@
 				ENABLE_BITCODE = NO;
 				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = arm64;
 				FLUTTER_APP_NAME = "씨원시큐리티";
-				FLUTTER_BUILD_NAME = 1.0.1;
+				FLUTTER_BUILD_NAME = 1.0.2;
 				FLUTTER_BUILD_NUMBER = 1;
 				INFOPLIST_FILE = Runner/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "씨원시큐리티";
@@ -914,7 +922,7 @@
 				DEVELOPMENT_TEAM = B6R8X2V5QD;
 				ENABLE_BITCODE = NO;
 				FLUTTER_APP_NAME = "씨원시큐리티";
-				FLUTTER_BUILD_NAME = 1.0.1;
+				FLUTTER_BUILD_NAME = 1.0.2;
 				FLUTTER_BUILD_NUMBER = 1;
 				INFOPLIST_FILE = Runner/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "씨원시큐리티";
@@ -1011,7 +1019,7 @@
 				DEVELOPMENT_TEAM = B6R8X2V5QD;
 				ENABLE_BITCODE = NO;
 				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = arm64;
-				FLUTTER_BUILD_NAME = 1.0.1;
+				FLUTTER_BUILD_NAME = 1.0.2;
 				FLUTTER_BUILD_NUMBER = 1;
 				INFOPLIST_FILE = Runner/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "서대문포콤";
@@ -1123,7 +1131,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = B6R8X2V5QD;
 				ENABLE_BITCODE = NO;
-				FLUTTER_BUILD_NAME = 1.0.1;
+				FLUTTER_BUILD_NAME = 1.0.2;
 				FLUTTER_BUILD_NUMBER = 1;
 				INFOPLIST_FILE = Runner/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "서대문포콤";
@@ -1227,7 +1235,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = B6R8X2V5QD;
 				ENABLE_BITCODE = NO;
-				FLUTTER_BUILD_NAME = 1.0.1;
+				FLUTTER_BUILD_NAME = 1.0.2;
 				FLUTTER_BUILD_NUMBER = 1;
 				INFOPLIST_FILE = Runner/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = default;
@@ -1432,7 +1440,7 @@
 				DEVELOPMENT_TEAM = B6R8X2V5QD;
 				ENABLE_BITCODE = NO;
 				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = arm64;
-				FLUTTER_BUILD_NAME = 1.0.1;
+				FLUTTER_BUILD_NAME = 1.0.2;
 				FLUTTER_BUILD_NUMBER = 1;
 				INFOPLIST_FILE = Runner/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = default;
@@ -1467,7 +1475,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_BITCODE = NO;
-				FLUTTER_BUILD_NAME = 1.0.1;
+				FLUTTER_BUILD_NAME = 1.0.2;
 				FLUTTER_BUILD_NUMBER = 1;
 				INFOPLIST_FILE = Runner/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = default;
@@ -1502,7 +1510,7 @@
 				DEVELOPMENT_TEAM = B6R8X2V5QD;
 				ENABLE_BITCODE = NO;
 				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = arm64;
-				FLUTTER_BUILD_NAME = 1.0.1;
+				FLUTTER_BUILD_NAME = 1.0.2;
 				FLUTTER_BUILD_NUMBER = 1;
 				INFOPLIST_FILE = Runner/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "한세시큐리티";
@@ -1512,7 +1520,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.neo.Hansedebug;
+				PRODUCT_BUNDLE_IDENTIFIER = com.neo.hansesecuritydebug;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SUPPORTED_PLATFORMS = "driverkit iphoneos iphonesimulator macosx watchos watchsimulator";
@@ -1524,6 +1532,40 @@
 				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = "Hanse-Debug";
+		};
+		B2C3D4E5F6789012345678A1 /* Hanse-Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 1E4111A1CA954B03B413AF2F /* Hanse-Release.xcconfig */;
+			buildSettings = {
+				ALLOW_TARGET_PLATFORM_SPECIALIZATION = YES;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = B6R8X2V5QD;
+				ENABLE_BITCODE = NO;
+				FLUTTER_BUILD_NAME = 1.0.2;
+				FLUTTER_BUILD_NUMBER = 1;
+				INFOPLIST_FILE = Runner/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "한세시큐리티";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.neo.hansesecurity;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SUPPORTED_PLATFORMS = "driverkit iphoneos iphonesimulator macosx watchos watchsimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				VERSIONING_SYSTEM = "apple-generic";
+			};
+			name = "Hanse-Release";
 		};
 		C3D4E5F6789012345678A1B2 /* Hanse-Debug */ = {
 			isa = XCBuildConfiguration;
@@ -1543,6 +1585,22 @@
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Runner.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Runner";
 			};
 			name = "Hanse-Debug";
+		};
+		D4E5F6789012345678A1B2C3 /* Hanse-Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 35D9BA75A8E23FEC0394FDCE /* Pods-RunnerTests.hanse-release.xcconfig */;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.neosecurity.RunnerTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Runner.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Runner";
+			};
+			name = "Hanse-Release";
 		};
 		E5F6789012345678A1B2C3D4 /* Hanse-Debug */ = {
 			isa = XCBuildConfiguration;
@@ -1606,6 +1664,64 @@
 			};
 			name = "Hanse-Debug";
 		};
+		F6789012345678A1B2C3D4E5 /* Hanse-Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALLOW_TARGET_PLATFORM_SPECIALIZATION = YES;
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "xrsimulator xros watchsimulator watchos macosx iphonesimulator iphoneos driverkit appletvsimulator appletvos";
+				SUPPORTS_MACCATALYST = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = "Hanse-Release";
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -1619,6 +1735,7 @@
 				1E3B60A12E83D4FB0019E194 /* seodaemun-Debug */,
 				331C8089294A63A400263BE5 /* Release */,
 				1E3B60952E83D4F80019E194 /* C1-Release */,
+				D4E5F6789012345678A1B2C3 /* Hanse-Release */,
 				1E3B60942E83D4F80019E194 /* Kone-Release */,
 				1E3B60A42E83D58F0019E194 /* seodaemun-Release */,
 				331C808A294A63A400263BE5 /* Profile */,
@@ -1636,6 +1753,7 @@
 				1E3B609F2E83D4FB0019E194 /* seodaemun-Debug */,
 				97C147041CF9000F007C117D /* Release */,
 				1E3B609D2E83D4FA0019E194 /* C1-Release */,
+				F6789012345678A1B2C3D4E5 /* Hanse-Release */,
 				1E3B60992E83D4F90019E194 /* Kone-Release */,
 				1E3B60A22E83D58F0019E194 /* seodaemun-Release */,
 				249021D3217E4FDB00AE95B9 /* Profile */,
@@ -1653,6 +1771,7 @@
 				1E3B60A02E83D4FB0019E194 /* seodaemun-Debug */,
 				97C147071CF9000F007C117D /* Release */,
 				1E3B609E2E83D4FA0019E194 /* C1-Release */,
+				B2C3D4E5F6789012345678A1 /* Hanse-Release */,
 				1E3B60932E83D4F80019E194 /* Kone-Release */,
 				1E3B60A32E83D58F0019E194 /* seodaemun-Release */,
 				249021D4217E4FDB00AE95B9 /* Profile */,
