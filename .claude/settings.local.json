@@ -1,9 +1,6 @@
 {
   "permissions": {
     "allow": [
-      "Bash(find:*)",
-      "Bash(flutter build:*)",
-      "Bash(adb:*)",
       "Bash(flutter run:*)"
     ],
     "deny": [],

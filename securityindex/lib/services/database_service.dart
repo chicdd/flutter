@@ -7,11 +7,11 @@ class DatabaseService {
   static MssqlConnection? _connection;
 
   // 데이터베이스 연결 설정
-  static const String _server = 'myip';
+  static const String _server = '112.219.138.170';
   static const String _database = 'neosecurity_Ring';
   static const String _username = 'neo';
-  static const String _password = '1234';
-  static const int _port = 1433;
+  static const String _password = 'neo01579#';
+  static const int _port = 41433;
 
   // 데이터베이스 연결 초기화
   static Future<MssqlConnection> _getConnection() async {
@@ -51,7 +51,8 @@ class DatabaseService {
     try {
       final conn = await _getConnection();
 
-      final query = '''
+      final query =
+          '''
         SELECT TOP $count
           관제관리번호,
           관제상호,
@@ -128,7 +129,8 @@ class DatabaseService {
             break;
           case '사용자HP':
             // 사용자마스터 테이블과 JOIN 필요
-            final userQuery = '''
+            final userQuery =
+                '''
               SELECT DISTINCT 관제관리번호
               FROM 사용자마스터
               WHERE 휴대전화 LIKE '%$searchQuery%'
@@ -154,7 +156,8 @@ class DatabaseService {
             whereClause = "WHERE 관제관리번호 IN ($managementNumbers)";
             break;
           default:
-            whereClause = '''
+            whereClause =
+                '''
               WHERE 관제관리번호 LIKE '%$searchQuery%'
                  OR 관제상호 LIKE '%$searchQuery%'
                  OR 대표자 LIKE '%$searchQuery%'
@@ -167,7 +170,8 @@ class DatabaseService {
           ? 'ORDER BY 관제상호'
           : 'ORDER BY 관제관리번호';
 
-      final sqlQuery = '''
+      final sqlQuery =
+          '''
         SELECT TOP $count
           관제관리번호,
           관제상호,
@@ -214,13 +218,19 @@ class DatabaseService {
   }
 
   // 관제관리번호로 고객 상세 정보 조회
-  static Future<CustomerDetail?> getCustomerDetail(String managementNumber) async {
+  static Future<CustomerDetail?> getCustomerDetail(
+    String managementNumber,
+  ) async {
     try {
       final conn = await _getConnection();
 
-      final searchNumber = managementNumber.replaceAll("'", "''"); // SQL Injection 방지
+      final searchNumber = managementNumber.replaceAll(
+        "'",
+        "''",
+      ); // SQL Injection 방지
 
-      final query = '''
+      final query =
+          '''
         SELECT *
         FROM 관제고객마스터뷰
         WHERE 관제관리번호 = '$searchNumber'
@@ -360,7 +370,8 @@ class DatabaseService {
           return [];
       }
 
-      final query = '''
+      final query =
+          '''
         SELECT $codeColumn AS code, $nameColumn AS name
         FROM $tableName
         ORDER BY $codeColumn

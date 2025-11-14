@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:tabbed_view/tabbed_view.dart';
+import 'package:docking/docking.dart';
 import 'package:neoerp/screens/login_screen.dart';
 import 'package:neoerp/screens/file/login_company_change_screen.dart';
 import 'package:neoerp/screens/file/code_setting_screen.dart';
@@ -19,69 +19,64 @@ class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
   int _selectedSubMenuIndex = -1;
 
-  late TabbedViewController _tabbedViewController;
+  late DockingLayout _dockingLayout;
+  int _tabIdCounter = 0;
+
+  // 간단한 탭 그룹 관리 (DockingTabs 직접 추적)
+  DockingTabs? _focusedTabGroup; // 현재 포커스된 탭 그룹
+  final Map<String, DockingTabs> _itemToTabGroupMap = {}; // 탭 이름 -> DockingTabs 매핑
 
   @override
   void initState() {
     super.initState();
-    _tabbedViewController = TabbedViewController([]);
-  }
-
-  void _handleTabClose(int index, TabData tabData) {
-    setState(() {
-      final newTabs = List<TabData>.from(_tabbedViewController.tabs);
-      newTabs.removeAt(index);
-      _tabbedViewController = TabbedViewController(newTabs);
-      if (newTabs.isNotEmpty) {
-        // 닫은 탭 이전 탭 선택
-        _tabbedViewController.selectedIndex = index > 0 ? index - 1 : 0;
-      }
-    });
-  }
-
-  List<TabbedViewMenuItem> _buildTabMenu(TabData tabData, int index) {
-    return [
-      TabbedViewMenuItem(
-        text: '다른 탭 삭제',
-        onSelection: () => _closeOtherTabs(index),
-      ),
-      TabbedViewMenuItem(
-        text: '오른쪽 탭 삭제',
-        onSelection: () => _closeTabsToRight(index),
-      ),
-      TabbedViewMenuItem(
-        text: '모두 닫기',
-        onSelection: () => _closeAllTabs(),
-      ),
-    ];
-  }
-
-  void _closeOtherTabs(int keepIndex) {
-    setState(() {
-      final currentTab = _tabbedViewController.tabs[keepIndex];
-      _tabbedViewController = TabbedViewController([currentTab]);
-      _tabbedViewController.selectedIndex = 0;
-    });
-  }
-
-  void _closeTabsToRight(int fromIndex) {
-    setState(() {
-      final newTabs = _tabbedViewController.tabs.sublist(0, fromIndex + 1);
-      _tabbedViewController = TabbedViewController(newTabs);
-      _tabbedViewController.selectedIndex = fromIndex;
-    });
-  }
-
-  void _closeAllTabs() {
-    setState(() {
-      _tabbedViewController = TabbedViewController([]);
+    _dockingLayout = DockingLayout(root: null);
+    _dockingLayout.addListener(() {
+      setState(() {
+        _updateTabGroupMapping();
+      });
     });
   }
 
   @override
   void dispose() {
-    _tabbedViewController.dispose();
+    _dockingLayout.dispose();
     super.dispose();
+  }
+
+  // 레이아웃의 모든 DockingTabs를 찾아서 탭-그룹 매핑 업데이트
+  void _updateTabGroupMapping() {
+    _itemToTabGroupMap.clear();
+
+    final areas = _dockingLayout.layoutAreas();
+    debugPrint('═══════════════════════════════════════');
+    debugPrint('🔄 Updating tab-group mapping...');
+
+    int tabGroupCount = 0;
+    for (var area in areas) {
+      if (area is DockingTabs && area.childrenCount > 0) {
+        tabGroupCount++;
+        // 이 DockingTabs의 모든 탭을 매핑
+        for (int i = 0; i < area.childrenCount; i++) {
+          final item = area.childAt(i);
+          if (item.name != null) {
+            _itemToTabGroupMap[item.name!] = area;
+          }
+        }
+
+        // 디버그: 이 그룹의 탭 출력
+        final tabNames = <String>[];
+        for (int i = 0; i < area.childrenCount; i++) {
+          if (area.childAt(i).name != null) {
+            tabNames.add(area.childAt(i).name!);
+          }
+        }
+        debugPrint('   TabGroup ${area.hashCode}: ${tabNames.join(", ")}');
+      }
+    }
+
+    debugPrint('   Total tab groups: $tabGroupCount');
+    debugPrint('   Focused group: ${_focusedTabGroup?.hashCode ?? "none"}');
+    debugPrint('═══════════════════════════════════════\n');
   }
 
   final List<MenuItem> _menuItems = [
@@ -407,7 +402,7 @@ class _MainScreenState extends State<MainScreen> {
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.2),
+                color: Colors.black.withValues(alpha: 0.2),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
@@ -466,44 +461,102 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   void _openTab(String title) {
-    // 이미 열려있는 탭인지 확인
-    int existingIndex = -1;
-    final currentTabs = _tabbedViewController.tabs;
-    for (int i = 0; i < currentTabs.length; i++) {
-      if (currentTabs[i].text == title) {
-        existingIndex = i;
-        break;
+    debugPrint('\n🖱️  USER ACTION: Menu clicked - Opening tab "$title"');
+
+    // 1. 포커스된 그룹에서 이미 존재하는 탭인지 확인
+    if (_focusedTabGroup != null) {
+      for (int i = 0; i < _focusedTabGroup!.childrenCount; i++) {
+        final item = _focusedTabGroup!.childAt(i);
+        if (item.name == title) {
+          // 이미 있으면 해당 탭으로 포커스
+          setState(() {
+            _focusedTabGroup!.selectedIndex = i;
+            _dockingLayout.rebuild();
+          });
+          debugPrint('✅ Tab already exists in focused group! Switched to it.');
+          return;
+        }
       }
     }
 
-    if (existingIndex >= 0) {
-      // 이미 열려있으면 해당 탭 선택
+    // 2. 새 DockingItem 생성
+    final newItem = DockingItem(
+      name: title,
+      id: 'tab_${_tabIdCounter++}_$title',
+      closable: true,
+      maximizable: false,
+      keepAlive: true,
+      widget: _getScreenForTitle(title),
+    );
+
+    // 3. 첫 번째 탭 그룹 생성 (root가 null인 경우)
+    if (_dockingLayout.root == null) {
+      debugPrint('   Creating first tab group...');
       setState(() {
-        _tabbedViewController.selectedIndex = existingIndex;
+        final newTabs = DockingTabs([newItem], maximizable: false);
+        newTabs.selectedIndex = 0;
+        _dockingLayout.root = newTabs;
+        _focusedTabGroup = newTabs;
       });
-    } else {
-      // 새 탭 생성
-      final newTab = TabData(
-        text: title,
-        closable: true,
-        keepAlive: true,
-        content: _getScreenForTitle(title),
+      debugPrint('✅ Created first tab group with tab: "$title"');
+      return;
+    }
+
+    // 4. 포커스된 그룹에 탭 추가
+    if (_focusedTabGroup != null) {
+      final targetIndex = _focusedTabGroup!.childrenCount;
+      debugPrint('   Adding to focused group (${_focusedTabGroup!.hashCode}) at index $targetIndex');
+
+      _dockingLayout.addItemOn(
+        newItem: newItem,
+        targetArea: _focusedTabGroup!,
+        dropIndex: targetIndex,
       );
 
-      setState(() {
-        // 현재 선택된 탭 바로 다음에 추가
-        int insertIndex = _tabbedViewController.selectedIndex != null
-            ? _tabbedViewController.selectedIndex! + 1
-            : currentTabs.length;
-
-        // 새 리스트 생성
-        final newTabs = List<TabData>.from(currentTabs);
-        newTabs.insert(insertIndex, newTab);
-
-        // 새 컨트롤러 생성
-        _tabbedViewController = TabbedViewController(newTabs);
-        _tabbedViewController.selectedIndex = insertIndex;
+      // 다음 프레임에서 탭 선택
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        // 레이아웃이 변경되었으므로 _focusedTabGroup 참조가 유효한지 확인
+        final tabGroup = _itemToTabGroupMap[title];
+        if (tabGroup != null) {
+          setState(() {
+            tabGroup.selectedIndex = targetIndex;
+            _dockingLayout.rebuild();
+          });
+        }
       });
+
+      debugPrint('✅ Added tab "$title" to focused group');
+    } else {
+      // 5. 포커스된 그룹이 없으면 첫 번째 그룹에 추가
+      debugPrint('   No focused group, finding first available group...');
+      final areas = _dockingLayout.layoutAreas();
+      for (var area in areas) {
+        if (area is DockingTabs && area.childrenCount > 0) {
+          _focusedTabGroup = area;
+          final targetIndex = area.childrenCount;
+          debugPrint('   Found group (${area.hashCode}), adding tab at index $targetIndex');
+
+          _dockingLayout.addItemOn(
+            newItem: newItem,
+            targetArea: area,
+            dropIndex: targetIndex,
+          );
+
+          // 다음 프레임에서 탭 선택
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            final tabGroup = _itemToTabGroupMap[title];
+            if (tabGroup != null) {
+              setState(() {
+                tabGroup.selectedIndex = targetIndex;
+                _dockingLayout.rebuild();
+              });
+            }
+          });
+
+          debugPrint('✅ Added tab "$title" to group ${area.hashCode}');
+          break;
+        }
+      }
     }
   }
 
@@ -555,23 +608,140 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 
+  // 디버그 정보 패널 빌드
+  Widget _buildDebugPanel() {
+    // 모든 탭 그룹 정보 수집
+    final allTabGroups = <int, List<String>>{};
+    _itemToTabGroupMap.forEach((tabName, tabGroup) {
+      final groupHash = tabGroup.hashCode;
+      if (!allTabGroups.containsKey(groupHash)) {
+        allTabGroups[groupHash] = [];
+      }
+      allTabGroups[groupHash]!.add(tabName);
+    });
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.8),
+        border: Border(
+          bottom: BorderSide(color: Colors.orange.shade700, width: 2),
+        ),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.bug_report, color: Colors.orange, size: 16),
+          const SizedBox(width: 8),
+          Text(
+            'DEBUG MODE',
+            style: TextStyle(
+              color: Colors.orange.shade300,
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Text(
+            'TabGroups: ${allTabGroups.length}',
+            style: const TextStyle(color: Colors.white70, fontSize: 11),
+          ),
+          const SizedBox(width: 12),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+              color: Colors.green.shade900,
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Text(
+              'Focused: ${_focusedTabGroup?.hashCode ?? "none"}',
+              style: const TextStyle(
+                color: Colors.greenAccent,
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: allTabGroups.entries.map((entry) {
+                  final isFocused = entry.key == _focusedTabGroup?.hashCode;
+                  return Container(
+                    margin: const EdgeInsets.only(right: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: isFocused
+                          ? Colors.blue.shade900
+                          : Colors.grey.shade800,
+                      borderRadius: BorderRadius.circular(4),
+                      border: isFocused
+                          ? Border.all(color: Colors.blueAccent, width: 1)
+                          : null,
+                    ),
+                    child: Text(
+                      'Group${entry.key}: [${entry.value.join(", ")}]',
+                      style: TextStyle(
+                        color: isFocused ? Colors.lightBlueAccent : Colors.white60,
+                        fontSize: 10,
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    // kDebugMode를 사용하여 디버그 모드인지 확인
+    const bool showDebugPanel = true; // 필요시 false로 변경
+
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F7),
       body: Column(
         children: [
+          if (showDebugPanel) _buildDebugPanel(),
           _buildMacOSTitleBar(),
           Expanded(
             child: Row(
               children: [
                 _buildSidebar(),
                 Expanded(
-                  child: _tabbedViewController.tabs.isEmpty
+                  child: _dockingLayout.root == null
                       ? _buildWelcomeScreen()
                       : TabbedViewTheme(
                           data: _buildTabTheme(),
-                          child: TabbedView(controller: _tabbedViewController),
+                          child: Docking(
+                            layout: _dockingLayout,
+                            onItemSelection: (DockingItem item) {
+                              // 탭 선택 시 해당 탭이 속한 그룹으로 포커스 변경
+                              debugPrint('\n🖱️  USER ACTION: Tab clicked');
+                              debugPrint('   Tab: ${item.name}');
+
+                              if (item.name != null) {
+                                final tabGroup = _itemToTabGroupMap[item.name!];
+                                if (tabGroup != null) {
+                                  setState(() {
+                                    _focusedTabGroup = tabGroup;
+                                  });
+                                  debugPrint('   ✅ Focused group changed to: ${tabGroup.hashCode}');
+                                } else {
+                                  debugPrint('   ⚠️  Item not mapped to any group!');
+                                }
+                              }
+                            },
+                            onItemClose: (DockingItem item) {
+                              // 탭 닫기 시 정보만 출력
+                              debugPrint('❌ Tab closed: ${item.name}');
+                              // 레이아웃 리스너가 자동으로 _updateTabGroupMapping() 호출
+                            },
+                          ),
                         ),
                 ),
               ],
@@ -795,20 +965,22 @@ class _MainScreenState extends State<MainScreen> {
         border: Border(
           bottom: BorderSide(color: Colors.grey.shade300, width: 1),
         ),
+        middleGap: 4, // 탭 간 간격
       ),
       tab: TabThemeData(
         textStyle: const TextStyle(
           fontSize: 12,
-          fontWeight: FontWeight.w400,
+          fontWeight: FontWeight.w500,
           color: Color(0xFF86868B),
         ),
         decoration: BoxDecoration(
           color: const Color(0xFFE5E5EA),
-          border: Border(
-            right: BorderSide(color: Colors.grey.shade300, width: 1),
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(8),
+            topRight: Radius.circular(8),
           ),
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         buttonsOffset: 8,
         normalButtonColor: const Color(0xFF86868B),
         hoverButtonColor: const Color(0xFF1D1D1F),
@@ -816,9 +988,17 @@ class _MainScreenState extends State<MainScreen> {
           fontColor: const Color(0xFF1D1D1F),
           decoration: BoxDecoration(
             color: Colors.white,
-            border: Border(
-              right: BorderSide(color: Colors.grey.shade300, width: 1),
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(8),
+              topRight: Radius.circular(8),
             ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 4,
+                offset: const Offset(0, -2),
+              ),
+            ],
           ),
           normalButtonColor: const Color(0xFF86868B),
           hoverButtonColor: const Color(0xFF1D1D1F),
@@ -826,10 +1006,16 @@ class _MainScreenState extends State<MainScreen> {
         highlightedStatus: TabStatusThemeData(
           decoration: BoxDecoration(
             color: const Color(0xFFD1D1D6),
-            border: Border(
-              right: BorderSide(color: Colors.grey.shade300, width: 1),
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(8),
+              topRight: Radius.circular(8),
             ),
           ),
+        ),
+      ),
+      contentArea: ContentAreaThemeData(
+        decoration: const BoxDecoration(
+          color: Colors.white,
         ),
       ),
     );

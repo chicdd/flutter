@@ -52,8 +52,8 @@ class CodeDataCache {
     }
 
     // 캐시에 없으면 API에서 가져오기
-    print('API에서 로드: $codeType');
-    final jsonData = await api.fetchCodeData(codeType);
+    print('API에서 로드:$codeType');
+    final jsonData = await DatabaseService.fetchCodeData(codeType);
 
     // JSON 데이터를 CodeData 객체로 변환
     final codeDataList = jsonData
