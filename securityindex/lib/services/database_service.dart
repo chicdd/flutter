@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:mssql_connection/mssql_connection.dart';
 import '../models/customer.dart';
 import '../models/customer_detail.dart';
@@ -67,11 +68,14 @@ class DatabaseService {
 
       final result = await conn.getData(query);
 
-      if (result == null || result.isEmpty) {
+      if (result.isEmpty) {
         return [];
       }
 
-      return result.map((row) {
+      // result는 String (JSON 형식)이므로 파싱 필요
+      final List<dynamic> data = json.decode(result);
+
+      return data.map((row) {
         return Customer.fromJson({
           '관제관리번호': row['관제관리번호'],
           '관제상호': row['관제상호'],
@@ -132,11 +136,18 @@ class DatabaseService {
 
             final userResult = await conn.getData(userQuery);
 
-            if (userResult == null || userResult.isEmpty) {
+            if (userResult.isEmpty) {
               return [];
             }
 
-            final managementNumbers = userResult
+            // userResult는 String (JSON 형식)이므로 파싱 필요
+            final List<dynamic> userData = json.decode(userResult);
+
+            if (userData.isEmpty) {
+              return [];
+            }
+
+            final managementNumbers = userData
                 .map((row) => "'${row['관제관리번호']}'")
                 .join(',');
 
@@ -176,11 +187,14 @@ class DatabaseService {
 
       final result = await conn.getData(sqlQuery);
 
-      if (result == null || result.isEmpty) {
+      if (result.isEmpty) {
         return [];
       }
 
-      return result.map((row) {
+      // result는 String (JSON 형식)이므로 파싱 필요
+      final List<dynamic> data = json.decode(result);
+
+      return data.map((row) {
         return Customer.fromJson({
           '관제관리번호': row['관제관리번호'],
           '관제상호': row['관제상호'],
@@ -216,12 +230,20 @@ class DatabaseService {
 
       final result = await conn.getData(query);
 
-      if (result == null || result.isEmpty) {
+      if (result.isEmpty) {
         print('고객 상세 정보를 찾을 수 없음: $managementNumber');
         return null;
       }
 
-      final row = result.first;
+      // result는 String (JSON 형식)이므로 파싱 필요
+      final List<dynamic> data = json.decode(result);
+
+      if (data.isEmpty) {
+        print('고객 상세 정보를 찾을 수 없음: $managementNumber');
+        return null;
+      }
+
+      final row = data.first;
 
       // CustomerDetail.fromJson에 필요한 모든 필드를 매핑
       return CustomerDetail.fromJson({
@@ -348,11 +370,14 @@ class DatabaseService {
 
       final result = await conn.getData(query);
 
-      if (result == null || result.isEmpty) {
+      if (result.isEmpty) {
         return [];
       }
 
-      return result.map((row) {
+      // result는 String (JSON 형식)이므로 파싱 필요
+      final List<dynamic> data = json.decode(result);
+
+      return data.map((row) {
         return CodeData(
           code: row['code']?.toString() ?? '',
           name: row['name']?.toString() ?? '',
