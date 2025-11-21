@@ -54,6 +54,7 @@ class _ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
   int? _holidayUnauthorizedEndHour;
   int? _holidayUnauthorizedEndMinute;
   bool _isHolidayUsed = false;
+  bool _isH2olidayUsed = false;
 
   // 주간 휴일설정 - 5주 x 7일
   final List<List<bool>> _weeklyHolidays = List.generate(
