@@ -1,9 +1,28 @@
 {
   "permissions": {
     "allow": [
-      "Bash(flutter run:*)"
+      "Bash(find:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nAPI 서버 없이 MSSQL 직접 연결로 변경\n\n주요 변경사항:\n- mssql_connection 패키지 추가\n- DatabaseService 클래스 구현 (MSSQL 직접 연결)\n- ApiService를 DatabaseService로 전환\n- CodeDataCache를 database_service로 통합\n- 관제고객 목록/검색/상세 조회 기능 DB 직접 호출로 구현\n- 드롭다운 코드 데이터 DB 직접 조회로 변경\n\n데이터베이스 연결 정보:\n- Server: myip\n- Database: neosecurity_Ring\n- 모든 API 호출이 DB 직접 쿼리로 대체됨\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git commit:*)",
+      "Bash(flutter pub get:*)",
+      "Bash(flutter clean:*)",
+      "Bash(git reset:*)",
+      "Bash(git checkout:*)",
+      "Bash(securityindex/pubspec.yaml)",
+      "Bash(git ls-tree:*)",
+      "Bash(flutter analyze:*)",
+      "Bash(if exist .git rmdir /s /q .git)",
+      "Bash(git init:*)",
+      "Bash(git remote add:*)",
+      "Bash(git add:*)",
+      "Bash(git rm:*)",
+      "Bash(git branch:*)",
+      "Bash(git remote set-url:*)",
+      "Bash(git push:*)"
     ],
-    "deny": [],
+    "deny": [
+      "Read(./securityindexAPI/appsettings.json)"
+    ],
     "ask": []
   }
 }
