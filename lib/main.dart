@@ -7,7 +7,7 @@ void main() {
 }
 
 class SecurityIndexApp extends StatelessWidget {
-  const SecurityIndexApp({Key? key}) : super(key: key);
+  const SecurityIndexApp({super.key});
 
   @override
   Widget build(BuildContext context) {

@@ -79,13 +79,11 @@ class _ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
   final _gpsY2Controller = TextEditingController();
   final _companyTypeController = TextEditingController();
   final _branchTypeController = TextEditingController();
-  final _dedicatedLineController = TextEditingController();
-  final _dedicatedLineMemoController = TextEditingController();
+  final _dedicatedNumberController = TextEditingController();
+  final _dedicatedMemoController = TextEditingController();
 
   String? _companyType; // 회사구분
   String? _branchType; // 지사구분
-  String? _dedicatedNumber; // 전용회선 번호  (DB열 전용자번호)
-  String? _dedicatedMemo; // 추가메모 (DB열 전용자메모)
 
   // 드롭다운 데이터 목록
   List<CodeData> _companyTypeList = [];
@@ -103,8 +101,8 @@ class _ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
     _gpsY2Controller.dispose();
     _companyTypeController.dispose();
     _branchTypeController.dispose();
-    _dedicatedLineController.dispose();
-    _dedicatedLineMemoController.dispose();
+    _dedicatedNumberController.dispose();
+    _dedicatedMemoController.dispose();
     super.dispose();
   }
 
@@ -121,8 +119,8 @@ class _ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
     _gpsY2Controller.clear();
     _companyTypeController.clear();
     _branchTypeController.clear();
-    _dedicatedLineController.clear();
-    _dedicatedLineMemoController.clear();
+    _dedicatedNumberController.clear();
+    _dedicatedMemoController.clear();
 
     if (mounted) {
       setState(() {
@@ -156,6 +154,8 @@ class _ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
     _gpsY1Controller.text = detail.gpsY1 ?? '';
     _gpsX2Controller.text = detail.gpsX2 ?? '';
     _gpsY2Controller.text = detail.gpsY2 ?? '';
+    _dedicatedNumberController.text = detail.dedicatedNumber ?? '';
+    _dedicatedMemoController.text = detail.dedicatedMemo ?? '';
 
     //드롭다운
     _companyType = isValidCode(detail.companyTypeCode)
@@ -1257,13 +1257,10 @@ class _ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
           const SizedBox(height: 16),
           CommonTextField(
             label: '전용회선 번호',
-            controller: _dedicatedLineController,
+            controller: _dedicatedNumberController,
           ),
           const SizedBox(height: 12),
-          CommonTextField(
-            label: '추가메모',
-            controller: _dedicatedLineMemoController,
-          ),
+          CommonTextField(label: '추가메모', controller: _dedicatedMemoController),
         ],
       ),
     );

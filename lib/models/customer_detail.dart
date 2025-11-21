@@ -90,6 +90,8 @@ class CustomerDetail {
   final String? companyTypeName;
   final String? branchTypeCode;
   final String? branchTypeName;
+  final String? dedicatedNumber;
+  final String? dedicatedMemo;
 
   CustomerDetail({
     required this.controlManagementNumber,
@@ -167,6 +169,8 @@ class CustomerDetail {
     this.companyTypeName,
     this.branchTypeCode,
     this.branchTypeName,
+    this.dedicatedNumber,
+    this.dedicatedMemo,
   });
 
   factory CustomerDetail.fromJson(Map<String, dynamic> json) {
@@ -247,6 +251,8 @@ class CustomerDetail {
       companyTypeName: json['회사구분코드명']?.toString(),
       branchTypeCode: json['지사구분코드']?.toString(),
       branchTypeName: json['지사구분코드명']?.toString(),
+      dedicatedNumber: json['전용자번호']?.toString(),
+      dedicatedMemo: json['전용자메모']?.toString(),
     );
   }
 
