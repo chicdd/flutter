@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../screens/smartphone_app_auth_registration.dart';
+import '../screens/document_support.dart';
 import '../style.dart';
 import '../theme.dart';
 import '../models/search_panel.dart';
@@ -28,6 +29,11 @@ class ContentArea extends StatefulWidget {
 class _ContentAreaState extends State<ContentArea> {
   String _pageSearchQuery = '';
   final GlobalKey<BasicCustomerInfoState> _basicCustomerInfoKey = GlobalKey();
+  final GlobalKey<ExtendedCustomerInfoState> _extendedCustomerInfoKey =
+      GlobalKey();
+  final GlobalKey<SmartphoneAppAuthRegistrationState> _smartphoneAuthKey =
+      GlobalKey();
+  final GlobalKey<DocumentSupportState> _documentSupportKey = GlobalKey();
   final GlobalKey<CustomTopBarState> _topBarKey = GlobalKey();
 
   @override
@@ -63,6 +69,19 @@ class _ContentAreaState extends State<ContentArea> {
     return false; // 이벤트 처리 안 됨
   }
 
+  /// 현재 화면의 검색 쿼리 업데이트
+  void _updateSearchForCurrentScreen(String query) {
+    if (widget.selectedSubMenu == '기본고객정보') {
+      _basicCustomerInfoKey.currentState?.updateSearchQuery(query);
+    } else if (widget.selectedSubMenu == '확장고객정보') {
+      _extendedCustomerInfoKey.currentState?.updateSearchQuery(query);
+    } else if (widget.selectedSubMenu == '스마트어플인증등록') {
+      _smartphoneAuthKey.currentState?.updateSearchQuery(query);
+    } else if (widget.selectedSubMenu == '문서지원') {
+      _documentSupportKey.currentState?.updateSearchQuery(query);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     // 화면별로 다른 버튼 구성을 사용하기 위한 로직
@@ -81,8 +100,8 @@ class _ContentAreaState extends State<ContentArea> {
               setState(() {
                 _pageSearchQuery = query;
               });
-              // BasicCustomerInfo의 상태 업데이트
-              _basicCustomerInfoKey.currentState?.updateSearchQuery(query);
+              // 현재 화면에 따라 해당 화면의 검색 쿼리 업데이트
+              _updateSearchForCurrentScreen(query);
             },
           ),
           Expanded(child: _buildContent(context)),
@@ -108,6 +127,14 @@ class _ContentAreaState extends State<ContentArea> {
     // 확장고객정보 화면
     else if (widget.selectedSubMenu == '확장고객정보') {
       return TopBarConfig.extendedCustomerInfoButtons(context);
+    }
+    // 스마트어플인증등록 화면
+    else if (widget.selectedSubMenu == '스마트어플인증등록') {
+      return TopBarConfig.smartPhoneRegisterButtons(context);
+    }
+    // 문서지원 화면
+    else if (widget.selectedSubMenu == '문서지원') {
+      return TopBarConfig.defaultButtons(context);
     }
     // 기타 화면
     else {
@@ -159,12 +186,24 @@ class _ContentAreaState extends State<ContentArea> {
 
     // 확장고객정보
     if (widget.selectedSubMenu == '확장고객정보') {
-      return ExtendedCustomerInfo(searchpanel: widget.selectedCustomer!);
+      return ExtendedCustomerInfo(
+        key: _extendedCustomerInfoKey,
+        searchpanel: widget.selectedCustomer!,
+      );
     }
 
-    // 확장고객정보
+    // 스마트어플인증등록
     if (widget.selectedSubMenu == '스마트어플인증등록') {
       return SmartphoneAppAuthRegistration(
+        key: _smartphoneAuthKey,
+        searchpanel: widget.selectedCustomer!,
+      );
+    }
+
+    // 문서지원
+    if (widget.selectedSubMenu == '문서지원') {
+      return DocumentSupport(
+        key: _documentSupportKey,
         searchpanel: widget.selectedCustomer!,
       );
     }

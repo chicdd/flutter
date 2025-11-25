@@ -381,5 +381,35 @@ namespace securityindexAPI.Controllers
                 return StatusCode(500, new { message = "서버 오류가 발생했습니다.", error = ex.Message });
             }
         }
+
+        /// <summary>
+        /// 관제관리번호로 문서 정보 조회
+        /// </summary>
+        /// <param name="관제관리번호">관제관리번호</param>
+        /// <returns>문서 정보 리스트</returns>
+        [HttpGet("{관제관리번호}/documents")]
+        public async Task<ActionResult<IEnumerable<문서정보>>> Get문서정보(string 관제관리번호)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(관제관리번호))
+                {
+                    return BadRequest(new { message = "관제관리번호는 필수입니다." });
+                }
+
+                var 문서리스트 = await _context.문서관리마스터
+                    .Where(d => d.관제관리번호 == 관제관리번호)
+                    .Take(1000)
+                    .ToListAsync();
+
+                _logger.LogInformation($"문서 정보 조회 완료: 관제관리번호={관제관리번호}, 결과수={문서리스트.Count}");
+                return Ok(문서리스트);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"문서 정보 조회 중 오류 발생: 관제관리번호={관제관리번호}");
+                return StatusCode(500, new { message = "서버 오류가 발생했습니다.", error = ex.Message });
+            }
+        }
     }
 }

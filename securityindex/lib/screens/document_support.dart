@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../models/AuthRegist.dart';
+import '../models/document_info.dart';
 import '../models/search_panel.dart';
 import '../models/customer_detail.dart';
 import '../services/api_service.dart';
@@ -10,24 +10,22 @@ import '../widgets/custom_top_bar.dart';
 import '../config/topbar_config.dart';
 import '../widgets/component.dart';
 
-/// 스마트폰 어플 인증 등록 화면
-class SmartphoneAppAuthRegistration extends StatefulWidget {
+/// 문서지원 화면
+class DocumentSupport extends StatefulWidget {
   final SearchPanel? searchpanel;
-  const SmartphoneAppAuthRegistration({super.key, this.searchpanel});
+  const DocumentSupport({super.key, this.searchpanel});
 
   @override
-  State<SmartphoneAppAuthRegistration> createState() =>
-      SmartphoneAppAuthRegistrationState();
+  State<DocumentSupport> createState() => DocumentSupportState();
 }
 
-class SmartphoneAppAuthRegistrationState
-    extends State<SmartphoneAppAuthRegistration>
+class DocumentSupportState extends State<DocumentSupport>
     with CustomerServiceHandler {
   // 검색 컨트롤러
   final TextEditingController _searchController = TextEditingController();
 
-  // 스마트폰 인증 데이터 목록
-  List<AuthRegist> _authPhoneNumber = [];
+  // 문서 데이터 목록
+  List<DocumentInfo> _documents = [];
 
   // 페이지 내 검색
   String _pageSearchQuery = '';
@@ -67,10 +65,10 @@ class SmartphoneAppAuthRegistrationState
     final customer = customerService.selectedCustomer;
 
     if (customer != null) {
-      await _loadSmartphoneAuthData(customer.controlManagementNumber);
+      await _loadDocumentData(customer.controlManagementNumber);
     } else {
       setState(() {
-        _authPhoneNumber = [];
+        _documents = [];
       });
     }
   }
@@ -79,41 +77,41 @@ class SmartphoneAppAuthRegistrationState
   @override
   void onCustomerChanged(SearchPanel? customer, CustomerDetail? detail) {
     if (customer != null) {
-      _loadSmartphoneAuthData(customer.controlManagementNumber);
+      _loadDocumentData(customer.controlManagementNumber);
     } else {
       setState(() {
-        _authPhoneNumber = [];
+        _documents = [];
       });
     }
   }
 
-  /// 스마트폰 인증 데이터 로드
-  Future<void> _loadSmartphoneAuthData(String managementNumber) async {
+  /// 문서 데이터 로드
+  Future<void> _loadDocumentData(String managementNumber) async {
     try {
-      final authList = await DatabaseService.getSmartphoneAuthInfo(
+      final documentList = await DatabaseService.getDocumentInfo(
         managementNumber,
       );
 
       if (mounted) {
         setState(() {
-          _authPhoneNumber = authList;
+          _documents = documentList;
         });
       }
 
-      print('스마트폰 인증 데이터 로드 완료: ${authList.length}개');
+      print('문서 데이터 로드 완료: ${documentList.length}개');
     } catch (e) {
-      print('스마트폰 인증 데이터 로드 오류: $e');
+      print('문서 데이터 로드 오류: $e');
       if (mounted) {
         setState(() {
-          _authPhoneNumber = [];
+          _documents = [];
         });
       }
     }
   }
 
-  /// 인증 고객 정보 입력 모달 표시
-  void _showAddAuthModal() {
-    showDialog(context: context, builder: (context) => _AddAuthModal());
+  /// 문서 추가 모달 표시
+  void _showAddDocumentModal() {
+    showDialog(context: context, builder: (context) => _AddDocumentModal());
   }
 
   @override
@@ -153,7 +151,7 @@ class SmartphoneAppAuthRegistrationState
           Row(
             children: [
               const Text(
-                '인증 허용 전화번호',
+                '첨부 데이터 리스트',
                 style: TextStyle(
                   color: Color(0xFF252525),
                   fontSize: 18,
@@ -164,7 +162,7 @@ class SmartphoneAppAuthRegistrationState
               const SizedBox(width: 12),
               // 추가 버튼
               ElevatedButton(
-                onPressed: _showAddAuthModal,
+                onPressed: _showAddDocumentModal,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF007AFF),
                   foregroundColor: Colors.white,
@@ -198,61 +196,9 @@ class SmartphoneAppAuthRegistrationState
             child: Row(
               children: [
                 Expanded(
-                  flex: 2,
-                  child: Text(
-                    '휴대폰번호',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Color(0xFF252525),
-                      fontSize: 15,
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-                Expanded(
                   flex: 1,
                   child: Text(
-                    '사용자이름',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Color(0xFF252525),
-                      fontSize: 15,
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-                Expanded(
-                  flex: 1,
-                  child: Text(
-                    '원격경계여부',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Color(0xFF252525),
-                      fontSize: 15,
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-                Expanded(
-                  flex: 1,
-                  child: Text(
-                    '원격해제여부',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Color(0xFF252525),
-                      fontSize: 15,
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-                Expanded(
-                  flex: 1,
-                  child: Text(
-                    '등록일자',
+                    '문서일련번호',
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       color: Color(0xFF252525),
@@ -265,7 +211,72 @@ class SmartphoneAppAuthRegistrationState
                 Expanded(
                   flex: 2,
                   child: Text(
-                    '상호명',
+                    '문서명',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Color(0xFF252525),
+                      fontSize: 15,
+                      fontFamily: 'Inter',
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: 1,
+                  child: Text(
+                    '문서확장자',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Color(0xFF252525),
+                      fontSize: 15,
+                      fontFamily: 'Inter',
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: 1,
+                  child: Text(
+                    '문서종류',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Color(0xFF252525),
+                      fontSize: 15,
+                      fontFamily: 'Inter',
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: 2,
+                  child: Text(
+                    '문서설명',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Color(0xFF252525),
+                      fontSize: 15,
+                      fontFamily: 'Inter',
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: 1,
+                  child: Text(
+                    '첨부일자',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Color(0xFF252525),
+                      fontSize: 15,
+                      fontFamily: 'Inter',
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: 1,
+                  child: Text(
+                    '첨부자',
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       color: Color(0xFF252525),
@@ -279,7 +290,7 @@ class SmartphoneAppAuthRegistrationState
             ),
           ),
           // 테이블 내용 (실제 데이터)
-          if (_authPhoneNumber.isEmpty)
+          if (_documents.isEmpty)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
               decoration: BoxDecoration(
@@ -290,9 +301,9 @@ class SmartphoneAppAuthRegistrationState
               ),
               child: Center(
                 child: Text(
-                  '스마트폰 인증 데이터가 없습니다.',
+                  '문서 데이터가 없습니다.',
                   style: const TextStyle(
-                    color: Color(0xFFCBCBCB),
+                    color: Color(0xFF999999),
                     fontSize: 15,
                     fontFamily: 'Inter',
                     fontWeight: FontWeight.w400,
@@ -301,9 +312,9 @@ class SmartphoneAppAuthRegistrationState
               ),
             )
           else
-            ..._authPhoneNumber.asMap().entries.map((entry) {
+            ..._documents.asMap().entries.map((entry) {
               final index = entry.key;
-              final authRegist = entry.value;
+              final document = entry.value;
               return Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
@@ -320,70 +331,10 @@ class SmartphoneAppAuthRegistrationState
                 child: Row(
                   children: [
                     Expanded(
-                      flex: 2,
-                      child: Center(
-                        child: HighlightedText(
-                          text: authRegist.phoneNumber ?? '-',
-                          query: _pageSearchQuery,
-                          style: const TextStyle(
-                            color: Color(0xFF252525),
-                            fontSize: 15,
-                            fontFamily: 'Inter',
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Expanded(
                       flex: 1,
                       child: Center(
                         child: HighlightedText(
-                          text: authRegist.userName ?? '-',
-                          query: _pageSearchQuery,
-                          style: const TextStyle(
-                            color: Color(0xFF252525),
-                            fontSize: 15,
-                            fontFamily: 'Inter',
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      flex: 1,
-                      child: Center(
-                        child: HighlightedText(
-                          text: authRegist.armaStatusText,
-                          query: _pageSearchQuery,
-                          style: const TextStyle(
-                            color: Color(0xFF252525),
-                            fontSize: 15,
-                            fontFamily: 'Inter',
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      flex: 1,
-                      child: Center(
-                        child: HighlightedText(
-                          text: authRegist.disarmaStatusText,
-                          query: _pageSearchQuery,
-                          style: const TextStyle(
-                            color: Color(0xFF252525),
-                            fontSize: 15,
-                            fontFamily: 'Inter',
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      flex: 1,
-                      child: Center(
-                        child: HighlightedText(
-                          text: authRegist.registrationDate ?? '-',
+                          text: document.documentSerialNumber ?? '-',
                           query: _pageSearchQuery,
                           style: const TextStyle(
                             color: Color(0xFF252525),
@@ -398,7 +349,82 @@ class SmartphoneAppAuthRegistrationState
                       flex: 2,
                       child: Center(
                         child: HighlightedText(
-                          text: authRegist.customerName ?? '-',
+                          text: document.documentName ?? '-',
+                          query: _pageSearchQuery,
+                          style: const TextStyle(
+                            color: Color(0xFF252525),
+                            fontSize: 15,
+                            fontFamily: 'Inter',
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      flex: 1,
+                      child: Center(
+                        child: HighlightedText(
+                          text: document.documentExtension ?? '-',
+                          query: _pageSearchQuery,
+                          style: const TextStyle(
+                            color: Color(0xFF252525),
+                            fontSize: 15,
+                            fontFamily: 'Inter',
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      flex: 1,
+                      child: Center(
+                        child: HighlightedText(
+                          text: document.documentType ?? '-',
+                          query: _pageSearchQuery,
+                          style: const TextStyle(
+                            color: Color(0xFF252525),
+                            fontSize: 15,
+                            fontFamily: 'Inter',
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      flex: 2,
+                      child: Center(
+                        child: HighlightedText(
+                          text: document.documentDescription ?? '-',
+                          query: _pageSearchQuery,
+                          style: const TextStyle(
+                            color: Color(0xFF252525),
+                            fontSize: 15,
+                            fontFamily: 'Inter',
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      flex: 1,
+                      child: Center(
+                        child: HighlightedText(
+                          text: document.attachmentDate ?? '-',
+                          query: _pageSearchQuery,
+                          style: const TextStyle(
+                            color: Color(0xFF252525),
+                            fontSize: 15,
+                            fontFamily: 'Inter',
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      flex: 1,
+                      child: Center(
+                        child: HighlightedText(
+                          text: document.attacher ?? '-',
                           query: _pageSearchQuery,
                           style: const TextStyle(
                             color: Color(0xFF252525),
@@ -419,36 +445,44 @@ class SmartphoneAppAuthRegistrationState
   }
 }
 
-/// 인증 고객 정보 입력 모달
-class _AddAuthModal extends StatefulWidget {
-  const _AddAuthModal({Key? key}) : super(key: key);
+/// 문서 추가 모달
+class _AddDocumentModal extends StatefulWidget {
+  const _AddDocumentModal({Key? key}) : super(key: key);
 
   @override
-  State<_AddAuthModal> createState() => _AddAuthModalState();
+  State<_AddDocumentModal> createState() => _AddDocumentModalState();
 }
 
-class _AddAuthModalState extends State<_AddAuthModal> {
+class _AddDocumentModalState extends State<_AddDocumentModal> {
   // 폼 컨트롤러
-  final TextEditingController _companyController = TextEditingController();
-  final TextEditingController _managementNumberController =
+  final TextEditingController _documentNameController =
       TextEditingController();
-  final TextEditingController _businessNumberController =
+  final TextEditingController _documentDescriptionController =
       TextEditingController();
-  final TextEditingController _authPhoneController = TextEditingController();
-  final TextEditingController _userNameController = TextEditingController();
+
+  // 문서종류 드롭다운
+  String? _selectedDocumentType;
+  final List<CodeData> _documentTypes = []; // TODO: API에서 로드
 
   // 체크박스 상태
-  bool _remoteGuardAllowed = false;
-  bool _remoteReleaseAllowed = false;
+  bool _saveFilter = false;
+
+  // 선택된 파일 이름
+  String? _selectedFileName;
 
   @override
   void dispose() {
-    _companyController.dispose();
-    _managementNumberController.dispose();
-    _businessNumberController.dispose();
-    _authPhoneController.dispose();
-    _userNameController.dispose();
+    _documentNameController.dispose();
+    _documentDescriptionController.dispose();
     super.dispose();
+  }
+
+  // 파일 선택 (실제 구현은 file_picker 패키지 필요)
+  void _selectFile() {
+    // TODO: file_picker 패키지를 사용하여 파일 선택
+    setState(() {
+      _selectedFileName = '관제프로그램 매뉴얼.docx'; // 임시 예시
+    });
   }
 
   @override
@@ -456,7 +490,7 @@ class _AddAuthModalState extends State<_AddAuthModal> {
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
-        width: 400,
+        width: 500,
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -464,7 +498,7 @@ class _AddAuthModalState extends State<_AddAuthModal> {
           children: [
             // 모달 제목
             const Text(
-              '인증 고객 정보 입력',
+              '문서형식',
               style: TextStyle(
                 color: Color(0xFF252525),
                 fontSize: 18,
@@ -473,41 +507,222 @@ class _AddAuthModalState extends State<_AddAuthModal> {
               ),
             ),
             const SizedBox(height: 20),
-            // 폼 필드들
-            _buildTextField('관제상호명', _companyController),
+            // 문서명 필드
+            _buildTextField('문서명', _documentNameController),
             const SizedBox(height: 12),
-            _buildTextField('관제 관리번호', _managementNumberController),
-            const SizedBox(height: 12),
-            _buildTextField('영업 관리번호', _businessNumberController),
-            const SizedBox(height: 12),
-            _buildTextField('인증 휴대전화번호', _authPhoneController),
-            const SizedBox(height: 12),
-            _buildTextField('사용자 이름', _userNameController),
-            const SizedBox(height: 16),
-            // 체크박스
+            // 문서 선택 버튼
             Row(
               children: [
-                _buildCheckbox('원격경계허용', _remoteGuardAllowed, (value) {
-                  setState(() {
-                    _remoteGuardAllowed = value ?? false;
-                  });
-                }),
-                const SizedBox(width: 20),
-                _buildCheckbox('원격해제허용', _remoteReleaseAllowed, (value) {
-                  setState(() {
-                    _remoteReleaseAllowed = value ?? false;
-                  });
-                }),
+                Expanded(
+                  child: Container(
+                    height: 40,
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF5F5F5),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        _selectedFileName ?? '',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Color(0xFF252525),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                SizedBox(
+                  height: 40,
+                  child: ElevatedButton(
+                    onPressed: _selectFile,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF007AFF),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: const Text(
+                      '문서 선택',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            // 문서종류 드롭다운
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        '문서종류',
+                        style: TextStyle(
+                          color: Color(0xFF666666),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Container(
+                        height: 40,
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF5F5F5),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            value: _selectedDocumentType,
+                            hint: const Text(
+                              '-',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Color(0xFF999999),
+                              ),
+                            ),
+                            isExpanded: true,
+                            icon: const Icon(
+                              Icons.arrow_drop_down,
+                              color: Color(0xFF666666),
+                            ),
+                            items: _documentTypes
+                                .map((type) => DropdownMenuItem<String>(
+                                      value: type.code,
+                                      child: Text(
+                                        type.name,
+                                        style: const TextStyle(fontSize: 14),
+                                      ),
+                                    ))
+                                .toList(),
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedDocumentType = value;
+                              });
+                            },
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                // 문서 종류 추가 버튼
+                Padding(
+                  padding: const EdgeInsets.only(top: 26),
+                  child: SizedBox(
+                    height: 40,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        // TODO: 문서 종류 추가 기능
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF007AFF),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: const Text(
+                        '문서 종류 추가',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            // 문서설명 필드 (멀티라인)
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  '문서설명',
+                  style: TextStyle(
+                    color: Color(0xFF666666),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Container(
+                  height: 120,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF5F5F5),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: TextField(
+                    controller: _documentDescriptionController,
+                    maxLines: null,
+                    expands: true,
+                    decoration: const InputDecoration(
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.all(12),
+                    ),
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Color(0xFF252525),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            // 저장 필터 체크박스
+            Row(
+              children: [
+                SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: Checkbox(
+                    value: _saveFilter,
+                    onChanged: (value) {
+                      setState(() {
+                        _saveFilter = value ?? false;
+                      });
+                    },
+                    activeColor: const Color(0xFF007AFF),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                const Text(
+                  '저장필터열기',
+                  style: TextStyle(
+                    color: Color(0xFF252525),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 24),
-            // 등록 버튼
+            // 문서첨부저장 버튼
             SizedBox(
               width: double.infinity,
               height: 44,
               child: ElevatedButton(
                 onPressed: () {
-                  // TODO: 인증 정보 등록 API 호출
+                  // TODO: 문서 저장 API 호출
                   Navigator.of(context).pop();
                 },
                 style: ElevatedButton.styleFrom(
@@ -519,7 +734,7 @@ class _AddAuthModalState extends State<_AddAuthModal> {
                   elevation: 0,
                 ),
                 child: const Text(
-                  '스마트폰 사용 인증 등록',
+                  '문서첨부저장',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                 ),
               ),
@@ -560,35 +775,6 @@ class _AddAuthModalState extends State<_AddAuthModal> {
               ),
             ),
             style: const TextStyle(fontSize: 14, color: Color(0xFF252525)),
-          ),
-        ),
-      ],
-    );
-  }
-
-  /// 체크박스 빌더
-  Widget _buildCheckbox(String label, bool value, Function(bool?) onChanged) {
-    return Row(
-      children: [
-        SizedBox(
-          width: 20,
-          height: 20,
-          child: Checkbox(
-            value: value,
-            onChanged: onChanged,
-            activeColor: const Color(0xFF007AFF),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(4),
-            ),
-          ),
-        ),
-        const SizedBox(width: 8),
-        Text(
-          label,
-          style: const TextStyle(
-            color: Color(0xFF252525),
-            fontSize: 14,
-            fontWeight: FontWeight.w400,
           ),
         ),
       ],

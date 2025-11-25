@@ -33,6 +33,9 @@ namespace securityindexAPI.Data
         // 스마트폰 인증 테이블 매핑
         public DbSet<스마트정보조회마스터> 스마트정보조회마스터 { get; set; }
 
+        // 문서관리 테이블 매핑
+        public DbSet<문서정보> 문서관리마스터 { get; set; }
+
         // 코드 테이블들 (드롭다운용)
         public DbSet<관리구역코드모델> 관리구역코드 { get; set; }
         public DbSet<출동권역코드모델> 출동권역코드 { get; set; }
@@ -90,6 +93,11 @@ namespace securityindexAPI.Data
             // 스마트폰 인증 테이블 매핑
             modelBuilder.Entity<스마트정보조회마스터>()
                 .HasKey(s => s.휴대폰번호);
+
+            // 문서관리 테이블 매핑
+            modelBuilder.Entity<문서정보>()
+                .ToTable("문서관리마스터")
+                .HasKey(d => d.문서일련번호);
 
             // 코드 테이블 매핑 (모델의 [Table] 어트리뷰트를 사용하므로 키만 설정)
             modelBuilder.Entity<관리구역코드모델>()

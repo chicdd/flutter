@@ -117,6 +117,26 @@ Widget buildDropdownField({
   required Function(String?) onChanged,
   String searchQuery = '',
 }) {
+  // 검색 쿼리 매칭 확인 함수
+  bool containsQuery() {
+    if (searchQuery.isEmpty) return false;
+    final query = searchQuery.toLowerCase();
+    // 라벨이 검색어를 포함하는지 확인
+    if (label.toLowerCase().contains(query)) return true;
+    // 선택된 값이 검색어를 포함하는지 확인
+    if (value != null) {
+      final selectedItem = items.firstWhere(
+        (item) => item.code == value,
+        orElse: () => CodeData(code: '', name: ''),
+      );
+      final selectedText = '[${selectedItem.code}] ${selectedItem.name}';
+      if (selectedText.toLowerCase().contains(query)) return true;
+    }
+    return false;
+  }
+
+  final hasMatch = containsQuery();
+
   // 데이터가 로드되지 않았으면 빈 드롭다운 표시
   if (items.isEmpty) {
     return Column(
@@ -124,10 +144,15 @@ Widget buildDropdownField({
       children: [
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 12,
             color: AppTheme.textSecondary,
             fontWeight: FontWeight.w500,
+            backgroundColor:
+                hasMatch &&
+                    label.toLowerCase().contains(searchQuery.toLowerCase())
+                ? Colors.yellow.shade300
+                : Colors.transparent,
           ),
         ),
         const SizedBox(height: 6),
@@ -159,10 +184,15 @@ Widget buildDropdownField({
     children: [
       Text(
         label,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 12,
           color: AppTheme.textSecondary,
           fontWeight: FontWeight.w500,
+          backgroundColor:
+              hasMatch &&
+                  label.toLowerCase().contains(searchQuery.toLowerCase())
+              ? Colors.yellow.shade300
+              : Colors.transparent,
         ),
       ),
       const SizedBox(height: 6),
@@ -178,20 +208,28 @@ Widget buildDropdownField({
             bottom: 9,
           ),
           filled: true,
-          fillColor: AppTheme.backgroundColor,
+          fillColor: hasMatch
+              ? Colors.yellow.shade100
+              : AppTheme.backgroundColor,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(color: AppTheme.dividerColor),
+            borderSide: BorderSide(
+              color: hasMatch ? Colors.yellow.shade700 : AppTheme.dividerColor,
+              width: hasMatch ? 2 : 1,
+            ),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(color: AppTheme.dividerColor),
+            borderSide: BorderSide(
+              color: hasMatch ? Colors.yellow.shade700 : AppTheme.dividerColor,
+              width: hasMatch ? 2 : 1,
+            ),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(
-              color: AppTheme.selectedColor,
-              width: 1,
+            borderSide: BorderSide(
+              color: hasMatch ? Colors.yellow.shade700 : AppTheme.selectedColor,
+              width: 2,
             ),
           ),
         ),

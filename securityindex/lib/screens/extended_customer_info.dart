@@ -16,13 +16,13 @@ import '../config/topbar_config.dart';
 class ExtendedCustomerInfo extends StatefulWidget {
   final SearchPanel? searchpanel;
 
-  const ExtendedCustomerInfo({Key? key, this.searchpanel}) : super(key: key);
+  const ExtendedCustomerInfo({super.key, this.searchpanel});
 
   @override
-  State<ExtendedCustomerInfo> createState() => _ExtendedCustomerInfoState();
+  State<ExtendedCustomerInfo> createState() => ExtendedCustomerInfoState();
 }
 
-class _ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
+class ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
   final _customerService = SelectedCustomerService();
   // 경계약정 및 무단해제 설정 - 평일
   int? _weekdayGuardStartHour;
@@ -1511,56 +1511,62 @@ class _ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
                   children: [
                     Expanded(
                       flex: 2,
-                      child: Text(
-                        service.serviceName ?? '-',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: Color(0xFF252525),
-                          fontSize: 15,
-                          fontFamily: 'Inter',
-                          fontWeight: FontWeight.w400,
+                      child: Center(
+                        child: HighlightedText(
+                          text: service.serviceName ?? '-',
+                          query: _pageSearchQuery,
+                          style: const TextStyle(
+                            color: Color(0xFF252525),
+                            fontSize: 15,
+                            fontFamily: 'Inter',
+                            fontWeight: FontWeight.w400,
+                          ),
                         ),
                       ),
                     ),
                     Expanded(
                       flex: 2,
-                      child: Text(
-                        service.provisionType ?? '-',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: Color(0xFF252525),
-                          fontSize: 15,
-                          fontFamily: 'Inter',
-                          fontWeight: FontWeight.w400,
+                      child: Center(
+                        child: HighlightedText(
+                          text: service.provisionType ?? '-',
+                          query: _pageSearchQuery,
+                          style: const TextStyle(
+                            color: Color(0xFF252525),
+                            fontSize: 15,
+                            fontFamily: 'Inter',
+                            fontWeight: FontWeight.w400,
+                          ),
                         ),
                       ),
                     ),
                     Expanded(
                       flex: 2,
-                      child: Text(
-                        service.provisionDate ?? '-',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: Color(0xFF252525),
-                          fontSize: 15,
-                          fontFamily: 'Inter',
-                          fontWeight: FontWeight.w400,
+                      child: Center(
+                        child: HighlightedText(
+                          text: service.provisionDate ?? '-',
+                          query: _pageSearchQuery,
+                          style: const TextStyle(
+                            color: Color(0xFF252525),
+                            fontSize: 15,
+                            fontFamily: 'Inter',
+                            fontWeight: FontWeight.w400,
+                          ),
                         ),
                       ),
                     ),
                     Expanded(
                       flex: 3,
-                      child: Text(
-                        service.memo ?? '-',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: Color(0xFF252525),
-                          fontSize: 15,
-                          fontFamily: 'Inter',
-                          fontWeight: FontWeight.w400,
+                      child: Center(
+                        child: HighlightedText(
+                          text: service.memo ?? '-',
+                          query: _pageSearchQuery,
+                          style: const TextStyle(
+                            color: Color(0xFF252525),
+                            fontSize: 15,
+                            fontFamily: 'Inter',
+                            fontWeight: FontWeight.w400,
+                          ),
                         ),
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 2,
                       ),
                     ),
                   ],
@@ -1584,7 +1590,7 @@ class _ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'DVR설치현황',
+            'DVR 설치현황',
             style: TextStyle(
               color: Color(0xFF252525),
               fontSize: 18,
@@ -1647,98 +1653,114 @@ class _ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
                 child: Row(
                   children: [
                     Expanded(
-                      child: Text(
-                        dvr.connectionMethodText,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: Color(0xFF252525),
-                          fontSize: 15,
-                          fontFamily: 'Inter',
-                          fontWeight: FontWeight.w400,
+                      child: Center(
+                        child: HighlightedText(
+                          text: dvr.connectionMethodText,
+                          query: _pageSearchQuery,
+                          style: const TextStyle(
+                            color: Color(0xFF252525),
+                            fontSize: 15,
+                            fontFamily: 'Inter',
+                            fontWeight: FontWeight.w400,
+                          ),
                         ),
                       ),
                     ),
                     Expanded(
-                      child: Text(
-                        dvr.dvrTypeCode ?? '-',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: Color(0xFF252525),
-                          fontSize: 15,
-                          fontFamily: 'Inter',
-                          fontWeight: FontWeight.w400,
+                      child: Center(
+                        child: HighlightedText(
+                          text: dvr.dvrTypeCode ?? '-',
+                          query: _pageSearchQuery,
+                          style: const TextStyle(
+                            color: Color(0xFF252525),
+                            fontSize: 15,
+                            fontFamily: 'Inter',
+                            fontWeight: FontWeight.w400,
+                          ),
                         ),
                       ),
                     ),
                     Expanded(
-                      child: Text(
-                        dvr.dvrTypeName ?? '-',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: Color(0xFF252525),
-                          fontSize: 15,
-                          fontFamily: 'Inter',
-                          fontWeight: FontWeight.w400,
+                      child: Center(
+                        child: HighlightedText(
+                          text: dvr.dvrTypeName ?? '-',
+                          query: _pageSearchQuery,
+                          style: const TextStyle(
+                            color: Color(0xFF252525),
+                            fontSize: 15,
+                            fontFamily: 'Inter',
+                            fontWeight: FontWeight.w400,
+                          ),
                         ),
                       ),
                     ),
                     Expanded(
-                      child: Text(
-                        dvr.connectionAddress ?? '-',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: Color(0xFF252525),
-                          fontSize: 15,
-                          fontFamily: 'Inter',
-                          fontWeight: FontWeight.w400,
+                      child: Center(
+                        child: HighlightedText(
+                          text: dvr.connectionAddress ?? '-',
+                          query: _pageSearchQuery,
+                          style: const TextStyle(
+                            color: Color(0xFF252525),
+                            fontSize: 15,
+                            fontFamily: 'Inter',
+                            fontWeight: FontWeight.w400,
+                          ),
                         ),
                       ),
                     ),
                     Expanded(
-                      child: Text(
-                        dvr.connectionPort ?? '-',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: Color(0xFF252525),
-                          fontSize: 15,
-                          fontFamily: 'Inter',
-                          fontWeight: FontWeight.w400,
+                      child: Center(
+                        child: HighlightedText(
+                          text: dvr.connectionPort ?? '-',
+                          query: _pageSearchQuery,
+                          style: const TextStyle(
+                            color: Color(0xFF252525),
+                            fontSize: 15,
+                            fontFamily: 'Inter',
+                            fontWeight: FontWeight.w400,
+                          ),
                         ),
                       ),
                     ),
                     Expanded(
-                      child: Text(
-                        dvr.connectionId ?? '-',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: Color(0xFF252525),
-                          fontSize: 15,
-                          fontFamily: 'Inter',
-                          fontWeight: FontWeight.w400,
+                      child: Center(
+                        child: HighlightedText(
+                          text: dvr.connectionId ?? '-',
+                          query: _pageSearchQuery,
+                          style: const TextStyle(
+                            color: Color(0xFF252525),
+                            fontSize: 15,
+                            fontFamily: 'Inter',
+                            fontWeight: FontWeight.w400,
+                          ),
                         ),
                       ),
                     ),
                     Expanded(
-                      child: Text(
-                        dvr.connectionPassword ?? '-',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: Color(0xFF252525),
-                          fontSize: 15,
-                          fontFamily: 'Inter',
-                          fontWeight: FontWeight.w400,
+                      child: Center(
+                        child: HighlightedText(
+                          text: dvr.connectionPassword ?? '-',
+                          query: _pageSearchQuery,
+                          style: const TextStyle(
+                            color: Color(0xFF252525),
+                            fontSize: 15,
+                            fontFamily: 'Inter',
+                            fontWeight: FontWeight.w400,
+                          ),
                         ),
                       ),
                     ),
                     Expanded(
-                      child: Text(
-                        dvr.addedDate ?? '-',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: Color(0xFF252525),
-                          fontSize: 15,
-                          fontFamily: 'Inter',
-                          fontWeight: FontWeight.w400,
+                      child: Center(
+                        child: HighlightedText(
+                          text: dvr.addedDate ?? '-',
+                          query: _pageSearchQuery,
+                          style: const TextStyle(
+                            color: Color(0xFF252525),
+                            fontSize: 15,
+                            fontFamily: 'Inter',
+                            fontWeight: FontWeight.w400,
+                          ),
                         ),
                       ),
                     ),

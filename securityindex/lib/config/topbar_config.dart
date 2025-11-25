@@ -19,9 +19,6 @@ class TopBarButton {
 
 /// 각 화면별 상단바 버튼 구성 정의
 class TopBarConfig {
-  /// 화면 제목 상수
-  static const String smartphoneAppAuthTitle = '스마트폰 어플 인증 등록';
-
   /// 기본고객정보 화면 버튼
   static List<TopBarButton> basicCustomerInfoButtons(BuildContext context) {
     return [
@@ -81,16 +78,7 @@ class TopBarConfig {
 
   /// 기타 화면 버튼 (공통)
   static List<TopBarButton> defaultButtons(BuildContext context) {
-    return [
-      TopBarButton(
-        label: '편집',
-        onPressed: () => TopBarActions.onEditPressed(context),
-      ),
-      TopBarButton(
-        label: '저장',
-        onPressed: () => TopBarActions.onSavePressed(context),
-      ),
-    ];
+    return [];
   }
 }
 

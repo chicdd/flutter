@@ -35,11 +35,11 @@ class PageSearchState extends InheritedWidget {
   final VoidCallback clearSearch;
 
   const PageSearchState({
-    Key? key,
+    super.key,
     required this.searchQuery,
     required this.clearSearch,
-    required Widget child,
-  }) : super(key: key, child: child);
+    required super.child,
+  });
 
   static PageSearchState? of(BuildContext context) {
     return context.dependOnInheritedWidgetOfExactType<PageSearchState>();
@@ -164,7 +164,8 @@ class CustomTopBarState extends State<CustomTopBar>
   void _handleKeyEvent(RawKeyEvent event) {
     // Ctrl+F: 검색바 열기
     if (event is RawKeyDownEvent) {
-      if (event.isControlPressed && event.logicalKey == LogicalKeyboardKey.keyF) {
+      if (event.isControlPressed &&
+          event.logicalKey == LogicalKeyboardKey.keyF) {
         openSearch();
       }
       // ESC: 검색바 닫기
@@ -186,23 +187,23 @@ class CustomTopBarState extends State<CustomTopBar>
       ),
       child: Row(
         children: [
-          Flexible(
-            child: Text(
-              widget.title,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              overflow: TextOverflow.ellipsis,
-            ),
+          Text(
+            widget.title,
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(width: 16),
           // 버튼들
-          ...widget.buttons.map((button) => Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: buildStatusChip(
-                  button.label,
-                  button.backgroundColor ?? AppTheme.selectedColor,
-                  onTap: button.onPressed,
-                ),
-              )),
+          ...widget.buttons.map(
+            (button) => Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: buildStatusChip(
+                button.label,
+                button.backgroundColor ?? AppTheme.selectedColor,
+                onTap: button.onPressed,
+              ),
+            ),
+          ),
           const Spacer(),
           // 검색 영역
           if (widget.showSearch) _buildSearchArea(),
@@ -353,7 +354,8 @@ class HighlightedText extends StatelessWidget {
       spans.add(
         TextSpan(
           text: text.substring(index, index + query.length),
-          style: highlightStyle ??
+          style:
+              highlightStyle ??
               TextStyle(
                 backgroundColor: Colors.yellow.shade300,
                 fontWeight: FontWeight.bold,

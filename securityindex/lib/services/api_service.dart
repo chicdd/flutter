@@ -7,6 +7,7 @@ import '../models/customerHoliday.dart';
 import '../models/additional_service.dart';
 import '../models/dvr_info.dart';
 import '../models/AuthRegist.dart';
+import '../models/document_info.dart';
 
 class DatabaseService {
   static const String baseUrl = 'https://localhost:5001/api';
@@ -262,6 +263,38 @@ class DatabaseService {
       }
     } catch (e) {
       print('스마트폰 인증 정보 조회 API 호출 오류: $e');
+      return [];
+    }
+  }
+
+  // 관제관리번호로 문서 정보 조회
+  static Future<List<DocumentInfo>> getDocumentInfo(
+    String managementNumber,
+  ) async {
+    try {
+      final httpClient = _createHttpClient();
+      final encodedNumber = Uri.encodeComponent(managementNumber);
+      final uri = Uri.parse(
+        'https://localhost:7088/api/관제고객/$encodedNumber/documents',
+      );
+
+      print('문서 정보 조회 API 호출: $uri');
+
+      final request = await httpClient.getUrl(uri);
+      final response = await request.close();
+
+      if (response.statusCode == 200) {
+        final String responseBody = await response
+            .transform(utf8.decoder)
+            .join();
+        final List<dynamic> jsonList = json.decode(responseBody);
+        return jsonList.map((json) => DocumentInfo.fromJson(json)).toList();
+      } else {
+        print('문서 정보 조회 오류: ${response.statusCode}');
+        return [];
+      }
+    } catch (e) {
+      print('문서 정보 조회 API 호출 오류: $e');
       return [];
     }
   }
