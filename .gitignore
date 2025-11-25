@@ -1,0 +1,5 @@
+# Claude Code settings - ignore all .claude folders in subdirectories
+**/.claude/
+
+# API settings - ignore appsettings.json files
+**/appsettings.json
