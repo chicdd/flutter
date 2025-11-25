@@ -19,6 +19,9 @@ class TopBarButton {
 
 /// 각 화면별 상단바 버튼 구성 정의
 class TopBarConfig {
+  /// 화면 제목 상수
+  static const String smartphoneAppAuthTitle = '스마트폰 어플 인증 등록';
+
   /// 기본고객정보 화면 버튼
   static List<TopBarButton> basicCustomerInfoButtons(BuildContext context) {
     return [
@@ -71,6 +74,11 @@ class TopBarConfig {
     ];
   }
 
+  /// 스마트어플인증등록 화면 버튼
+  static List<TopBarButton> smartPhoneRegisterButtons(BuildContext context) {
+    return [];
+  }
+
   /// 기타 화면 버튼 (공통)
   static List<TopBarButton> defaultButtons(BuildContext context) {
     return [
@@ -90,49 +98,49 @@ class TopBarConfig {
 class TopBarActions {
   /// 원격 버튼 클릭
   static void onRemotePressed(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('원격 기능이 실행됩니다.')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('원격 기능이 실행됩니다.')));
     // TODO: 원격 기능 구현
   }
 
   /// NEOERP 버튼 클릭
   static void onNeoerpPressed(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('NEOERP 기능이 실행됩니다.')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('NEOERP 기능이 실행됩니다.')));
     // TODO: NEOERP 기능 구현
   }
 
   /// 영상조회 버튼 클릭
   static void onVideoSearchPressed(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('영상조회 기능이 실행됩니다.')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('영상조회 기능이 실행됩니다.')));
     // TODO: 영상조회 기능 구현
   }
 
   /// 내보내기 버튼 클릭
   static void onExportPressed(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('내보내기 기능이 실행됩니다.')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('내보내기 기능이 실행됩니다.')));
     // TODO: 내보내기 기능 구현
   }
 
   /// 편집 버튼 클릭
   static void onEditPressed(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('편집 모드가 활성화되었습니다.')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('편집 모드가 활성화되었습니다.')));
     // TODO: 편집 모드 구현
   }
 
   /// 저장 버튼 클릭
   static void onSavePressed(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('저장되었습니다.')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('저장되었습니다.')));
     // TODO: 저장 기능 구현
   }
 }

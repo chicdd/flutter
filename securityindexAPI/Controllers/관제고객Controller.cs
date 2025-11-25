@@ -265,5 +265,120 @@ namespace securityindexAPI.Controllers
                 return StatusCode(500, new { message = "서버 오류가 발생했습니다.", error = ex.Message });
             }
         }
+
+        /// <summary>
+        /// 관제관리번호로 부가서비스 정보 조회
+        /// </summary>
+        /// <param name="관제관리번호">관제관리번호</param>
+        /// <returns>부가서비스 리스트</returns>
+        [HttpGet("{관제관리번호}/service")]
+        public async Task<ActionResult<IEnumerable<부가서비스마스터>>> Get부가서비스(string 관제관리번호)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(관제관리번호))
+                {
+                    return BadRequest(new { message = "관제관리번호는 필수입니다." });
+                }
+
+                var 부가서비스리스트 = await (from a in _context.부가서비스마스터
+                                       join b in _context.부가서비스코드마스터 on a.부가서비스코드 equals b.부가서비스코드 into bGroup
+                                       from b in bGroup.DefaultIfEmpty()
+                                       join c in _context.부가서비스제공마스터 on a.부가서비스제공코드 equals c.부가서비스제공코드 into cGroup
+                                       from c in cGroup.DefaultIfEmpty()
+                                       where a.관제관리번호 == 관제관리번호
+                                       select new 부가서비스마스터
+                                       {
+                                           관제관리번호 = a.관제관리번호,
+                                           부가서비스코드명 = b.부가서비스코드명,
+                                           부가서비스제공코드명 = c.부가서비스제공코드명,
+                                           부가서비스일자 = a.부가서비스일자,
+                                           추가메모 = a.추가메모
+                                       })
+                    .Take(1000)
+                    .ToListAsync();
+
+                _logger.LogInformation($"부가서비스 조회 완료: 관제관리번호={관제관리번호}, 결과수={부가서비스리스트.Count}");
+                return Ok(부가서비스리스트);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"부가서비스 조회 중 오류 발생: 관제관리번호={관제관리번호}");
+                return StatusCode(500, new { message = "서버 오류가 발생했습니다.", error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// 관제관리번호로 DVR 연동 정보 조회
+        /// </summary>
+        /// <param name="관제관리번호">관제관리번호</param>
+        /// <returns>DVR 연동 리스트</returns>
+        [HttpGet("{관제관리번호}/dvr")]
+        public async Task<ActionResult<IEnumerable<DVR연동마스터>>> GetDVR정보(string 관제관리번호)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(관제관리번호))
+                {
+                    return BadRequest(new { message = "관제관리번호는 필수입니다." });
+                }
+
+                var dvr리스트 = await (from a in _context.DVR연동마스터
+                                      join b in _context.DVR종류코드마스터 on a.DVR종류코드 equals b.DVR종류코드 into bGroup
+                                      from b in bGroup.DefaultIfEmpty()
+                                      where a.관제관리번호 == 관제관리번호
+                                      select new DVR연동마스터
+                                      {
+                                          관제관리번호 = a.관제관리번호,
+                                          접속방식 = a.접속방식,
+                                          DVR종류코드 = a.DVR종류코드,
+                                          DVR종류코드명 = b.DVR종류코드명,
+                                          접속주소 = a.접속주소,
+                                          접속포트 = a.접속포트,
+                                          접속ID = a.접속ID,
+                                          접속암호 = a.접속암호,
+                                          추가일자 = a.추가일자
+                                      })
+                    .Take(1000)
+                    .ToListAsync();
+
+                _logger.LogInformation($"DVR 정보 조회 완료: 관제관리번호={관제관리번호}, 결과수={dvr리스트.Count}");
+                return Ok(dvr리스트);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"DVR 정보 조회 중 오류 발생: 관제관리번호={관제관리번호}");
+                return StatusCode(500, new { message = "서버 오류가 발생했습니다.", error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// 관제관리번호로 스마트폰 인증 정보 조회
+        /// </summary>
+        /// <param name="관제관리번호">관제관리번호</param>
+        /// <returns>스마트폰 인증 정보 리스트</returns>
+        [HttpGet("{관제관리번호}/smartphone-auth")]
+        public async Task<ActionResult<IEnumerable<스마트정보조회마스터>>> Get스마트폰인증정보(string 관제관리번호)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(관제관리번호))
+                {
+                    return BadRequest(new { message = "관제관리번호는 필수입니다." });
+                }
+
+                var 스마트폰인증리스트 = await _context.스마트정보조회마스터
+                    .Where(s => s.관제관리번호 == 관제관리번호)
+                    .ToListAsync();
+
+                _logger.LogInformation($"스마트폰 인증 정보 조회 완료: 관제관리번호={관제관리번호}, 결과수={스마트폰인증리스트.Count}");
+                return Ok(스마트폰인증리스트);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"스마트폰 인증 정보 조회 중 오류 발생: 관제관리번호={관제관리번호}");
+                return StatusCode(500, new { message = "서버 오류가 발생했습니다.", error = ex.Message });
+            }
+        }
     }
 }

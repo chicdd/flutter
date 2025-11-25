@@ -11,7 +11,7 @@ import '../widgets/component.dart';
 class BasicCustomerInfo extends StatefulWidget {
   final SearchPanel? searchpanel;
 
-  const BasicCustomerInfo({Key? key, this.searchpanel}) : super(key: key);
+  const BasicCustomerInfo({super.key, this.searchpanel});
 
   @override
   State<BasicCustomerInfo> createState() => BasicCustomerInfoState();
@@ -202,7 +202,7 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
     _representativePhoneController.text = detail.representativeHP ?? '';
 
     // 관제 기본 정보
-    _securityStartDateController.text = detail.securityStartDateFormatted;
+    _securityStartDateController.text = detail.securityStartDate ?? '';
     _publicNumberController.text = detail.publicLine ?? '';
     _transmissionNumberController.text = detail.dedicatedLine ?? '';
     _publicTransmissionController.text = detail.internetLine ?? '';

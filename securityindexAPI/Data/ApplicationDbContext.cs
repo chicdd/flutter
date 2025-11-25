@@ -21,6 +21,18 @@ namespace securityindexAPI.Data
         // 관제고객휴일주간 테이블 매핑
         public DbSet<휴일주간> 관제고객휴일주간 { get; set; }
 
+        // 부가서비스 테이블 매핑
+        public DbSet<부가서비스마스터> 부가서비스마스터 { get; set; }
+        public DbSet<부가서비스코드마스터> 부가서비스코드마스터 { get; set; }
+        public DbSet<부가서비스제공마스터> 부가서비스제공마스터 { get; set; }
+
+        // DVR 테이블 매핑
+        public DbSet<DVR연동마스터> DVR연동마스터 { get; set; }
+        public DbSet<DVR종류코드마스터> DVR종류코드마스터 { get; set; }
+
+        // 스마트폰 인증 테이블 매핑
+        public DbSet<스마트정보조회마스터> 스마트정보조회마스터 { get; set; }
+
         // 코드 테이블들 (드롭다운용)
         public DbSet<관리구역코드모델> 관리구역코드 { get; set; }
         public DbSet<출동권역코드모델> 출동권역코드 { get; set; }
@@ -55,7 +67,28 @@ namespace securityindexAPI.Data
             // 관제고객휴일주간 테이블 매핑
             modelBuilder.Entity<휴일주간>()
                 .ToTable("관제고객휴일주간")
-                .HasKey(h => h.관리id);
+                .HasKey(h => h.관제관리번호);
+
+            // 부가서비스 테이블 매핑
+            modelBuilder.Entity<부가서비스마스터>()
+                .HasKey(b => b.관제관리번호);
+
+            modelBuilder.Entity<부가서비스코드마스터>()
+                .HasKey(b => b.부가서비스코드);
+
+            modelBuilder.Entity<부가서비스제공마스터>()
+                .HasKey(b => b.부가서비스제공코드);
+
+            // DVR 테이블 매핑
+            modelBuilder.Entity<DVR연동마스터>()
+                .HasKey(d => d.관제관리번호);
+
+            modelBuilder.Entity<DVR종류코드마스터>()
+                .HasKey(d => d.DVR종류코드);
+
+            // 스마트폰 인증 테이블 매핑
+            modelBuilder.Entity<스마트정보조회마스터>()
+                .HasKey(s => s.휴대폰번호);
 
             // 코드 테이블 매핑 (모델의 [Table] 어트리뷰트를 사용하므로 키만 설정)
             modelBuilder.Entity<관리구역코드모델>()

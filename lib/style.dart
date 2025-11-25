@@ -614,3 +614,22 @@ bool stringToBool(String text) {
   }
   return result;
 }
+
+//datetime 형식을 String으로 가져 와
+String dateToString(String? date) {
+  // null 또는 빈 문자열 체크
+  if (date == null || date.isEmpty) return '';
+
+  try {
+    // ISO 8601 형식 (2015-03-21T00:00:00) 처리
+    if (date.contains('T')) {
+      final dateTime = DateTime.parse(date);
+      return '${dateTime.year}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')}';
+    }
+    // 이미 YYYY-MM-DD 형식이면 그대로 반환
+    return date;
+  } catch (e) {
+    print('날짜 파싱 오류: $e');
+    return date;
+  }
+}

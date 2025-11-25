@@ -1,3 +1,5 @@
+import '../style.dart';
+
 class CustomerDetail {
   // 기본 정보
   final String controlManagementNumber; // 관제관리번호
@@ -190,7 +192,7 @@ class CustomerDetail {
       responsePath1: json['대처경로1']?.toString(),
       representative: json['대표자']?.toString(),
       representativeHP: json['대표자HP']?.toString(),
-      securityStartDate: json['개통일자']?.toString(),
+      securityStartDate: dateToString(json['개통일자']?.toString()),
       managementAreaCode: json['관리구역코드']?.toString(),
       managementAreaName: json['관리구역코드명']?.toString(),
       dispatchAreaCode: json['출동권역코드']?.toString(),
@@ -267,28 +269,4 @@ class CustomerDetail {
 
   // 무선센서설치 여부 (혹시나 null이면 0)
   String get wirelessChecked => wirelessSetStatus ?? '0';
-
-  // 개통일자 포맷 (2025-11-04 형식)
-  String get securityStartDateFormatted {
-    if (securityStartDate == null || securityStartDate!.isEmpty) return '';
-
-    try {
-      // ISO 8601 형식 (2015-03-21T00:00:00) 처리
-      if (securityStartDate!.contains('T')) {
-        final dateTime = DateTime.parse(securityStartDate!);
-        return '${dateTime.year}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')}';
-      }
-
-      // YYYYMMDD 형식 (8자리 숫자) 처리
-      if (securityStartDate!.length == 8 && !securityStartDate!.contains('-')) {
-        return '${securityStartDate!.substring(0, 4)}-${securityStartDate!.substring(4, 6)}-${openingDate!.substring(6, 8)}';
-      }
-
-      // 이미 YYYY-MM-DD 형식이면 그대로 반환
-      return securityStartDate!;
-    } catch (e) {
-      print('날짜 파싱 오류: $e');
-      return securityStartDate!;
-    }
-  }
 }

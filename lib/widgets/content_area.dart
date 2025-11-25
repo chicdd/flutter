@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../screens/smartphone_app_auth_registration.dart';
 import '../style.dart';
 import '../theme.dart';
 import '../models/search_panel.dart';
@@ -14,11 +15,11 @@ class ContentArea extends StatefulWidget {
   final String? selectedSubMenu;
 
   const ContentArea({
-    Key? key,
+    super.key,
     this.selectedCustomer,
     this.selectedMenu,
     this.selectedSubMenu,
-  }) : super(key: key);
+  });
 
   @override
   State<ContentArea> createState() => _ContentAreaState();
@@ -107,6 +108,8 @@ class _ContentAreaState extends State<ContentArea> {
     // 확장고객정보 화면
     else if (widget.selectedSubMenu == '확장고객정보') {
       return TopBarConfig.extendedCustomerInfoButtons(context);
+    } else if (widget.selectedSubMenu == '스마트어플인증동록') {
+      return TopBarConfig.smartPhoneRegisterButtons(context);
     }
     // 기타 화면
     else {
@@ -161,6 +164,12 @@ class _ContentAreaState extends State<ContentArea> {
       return ExtendedCustomerInfo(searchpanel: widget.selectedCustomer!);
     }
 
+    // 확장고객정보
+    if (widget.selectedSubMenu == '스마트어플인증등록') {
+      return SmartphoneAppAuthRegistration(
+        searchpanel: widget.selectedCustomer!,
+      );
+    }
     // 다른 서브메뉴들은 일단 플레이스홀더로 표시
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),

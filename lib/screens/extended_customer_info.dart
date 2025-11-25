@@ -3,6 +3,8 @@ import '../theme.dart';
 import '../models/search_panel.dart';
 import '../models/customer_detail.dart';
 import '../models/customerHoliday.dart';
+import '../models/additional_service.dart';
+import '../models/dvr_info.dart';
 import '../services/api_service.dart';
 import '../services/selected_customer_service.dart';
 import '../widgets/component.dart';
@@ -88,6 +90,13 @@ class _ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
   // 드롭다운 데이터 목록
   List<CodeData> _companyTypeList = [];
   List<CodeData> _branchTypeList = [];
+
+  // 부가서비스 데이터 목록
+  List<AdditionalService> _additionalServices = [];
+
+  // DVR 연동 데이터 목록
+  List<DVRInfo> _dvrInfoList = [];
+
   @override
   void dispose() {
     _customerService.removeListener(_onCustomerServiceChanged);
@@ -126,7 +135,50 @@ class _ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
       setState(() {
         _companyType = null;
         _branchType = null;
-        // 상태 초기화
+
+        // 휴일주간 체크박스 초기화
+        for (var i = 0; i < 5; i++) {
+          for (var j = 0; j < 7; j++) {
+            _weeklyHolidays[i][j] = false;
+          }
+        }
+
+        // 부가서비스 및 DVR 목록 초기화
+        _additionalServices = [];
+        _dvrInfoList = [];
+
+        // 경계/해제 시간 초기화 - 평일
+        _weekdayGuardStartHour = null;
+        _weekdayGuardStartMinute = null;
+        _weekdayGuardEndHour = null;
+        _weekdayGuardEndMinute = null;
+        _weekdayUnauthorizedStartHour = null;
+        _weekdayUnauthorizedStartMinute = null;
+        _weekdayUnauthorizedEndHour = null;
+        _weekdayUnauthorizedEndMinute = null;
+        _isWeekdayUsed = false;
+
+        // 경계/해제 시간 초기화 - 주말
+        _weekendGuardStartHour = null;
+        _weekendGuardStartMinute = null;
+        _weekendGuardEndHour = null;
+        _weekendGuardEndMinute = null;
+        _weekendUnauthorizedStartHour = null;
+        _weekendUnauthorizedStartMinute = null;
+        _weekendUnauthorizedEndHour = null;
+        _weekendUnauthorizedEndMinute = null;
+        _isWeekendUsed = false;
+
+        // 경계/해제 시간 초기화 - 휴일
+        _holidayGuardStartHour = null;
+        _holidayGuardStartMinute = null;
+        _holidayGuardEndHour = null;
+        _holidayGuardEndMinute = null;
+        _holidayUnauthorizedStartHour = null;
+        _holidayUnauthorizedStartMinute = null;
+        _holidayUnauthorizedEndHour = null;
+        _holidayUnauthorizedEndMinute = null;
+        _isHolidayUsed = false;
       });
     }
   }
@@ -272,9 +324,11 @@ class _ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
         _updateFieldsFromDetail(detail);
       });
 
-      // 휴일주간 데이터 로드
+      // 휴일주간, 부가서비스, DVR 데이터 로드
       if (selectedCustomer != null) {
         _loadHolidayData(selectedCustomer.controlManagementNumber);
+        _loadAdditionalServices(selectedCustomer.controlManagementNumber);
+        _loadDVRInfo(selectedCustomer.controlManagementNumber);
       }
     } else {
       _clearAllFields();
@@ -302,8 +356,10 @@ class _ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
           _updateFieldsFromDetail(detail);
         });
 
-        // 휴일주간 데이터 로드
+        // 휴일주간, 부가서비스, DVR 데이터 로드
         await _loadHolidayData(selectedCustomer.controlManagementNumber);
+        await _loadAdditionalServices(selectedCustomer.controlManagementNumber);
+        await _loadDVRInfo(selectedCustomer.controlManagementNumber);
       }
     } catch (e) {
       print('고객 상세 정보 로드 오류: $e');
@@ -362,6 +418,42 @@ class _ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
       print('휴일주간 데이터 로드 완료: ${holidays.length}개');
     } catch (e) {
       print('휴일주간 데이터 로드 오류: $e');
+    }
+  }
+
+  /// 부가서비스 데이터 로드
+  Future<void> _loadAdditionalServices(String managementNumber) async {
+    try {
+      final services = await DatabaseService.getAdditionalServices(
+        managementNumber,
+      );
+
+      if (mounted) {
+        setState(() {
+          _additionalServices = services;
+        });
+      }
+
+      print('부가서비스 데이터 로드 완료: ${services.length}개');
+    } catch (e) {
+      print('부가서비스 데이터 로드 오류: $e');
+    }
+  }
+
+  /// DVR 연동 정보 로드
+  Future<void> _loadDVRInfo(String managementNumber) async {
+    try {
+      final dvrList = await DatabaseService.getDVRInfo(managementNumber);
+
+      if (mounted) {
+        setState(() {
+          _dvrInfoList = dvrList;
+        });
+      }
+
+      print('DVR 정보 로드 완료: ${dvrList.length}개');
+    } catch (e) {
+      print('DVR 정보 로드 오류: $e');
     }
   }
 
@@ -1377,72 +1469,105 @@ class _ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
               ],
             ),
           ),
-          // 테이블 내용 (샘플 데이터 3개)
-          ...List.generate(3, (index) {
-            return Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          // 테이블 내용 (실제 데이터)
+          if (_additionalServices.isEmpty)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
               decoration: BoxDecoration(
-                color: index % 2 == 0
-                    ? const Color(0xFFF5F5F5)
-                    : const Color(0xFFFFFFFF),
+                color: const Color(0xFFFFFFFF),
                 border: const Border(
                   bottom: BorderSide(color: Color(0xFFE5E5E5), width: 0.5),
                 ),
               ),
-              child: Row(
-                children: [
-                  Expanded(
-                    flex: 2,
-                    child: Text(
-                      '출입통제',
-                      style: const TextStyle(
-                        color: Color(0xFF252525),
-                        fontSize: 15,
-                        fontFamily: 'Inter',
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
+              child: Center(
+                child: Text(
+                  '부가서비스 데이터가 없습니다.',
+                  style: const TextStyle(
+                    color: Color(0xFF8D8D8D),
+                    fontSize: 15,
+                    fontFamily: 'Inter',
+                    fontWeight: FontWeight.w400,
                   ),
-                  Expanded(
-                    flex: 2,
-                    child: Text(
-                      '임대',
-                      style: const TextStyle(
-                        color: Color(0xFF252525),
-                        fontSize: 15,
-                        fontFamily: 'Inter',
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    flex: 2,
-                    child: Text(
-                      '2015-09-21',
-                      style: const TextStyle(
-                        color: Color(0xFF252525),
-                        fontSize: 15,
-                        fontFamily: 'Inter',
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    flex: 3,
-                    child: Text(
-                      '메모메모메모메모메모메모',
-                      style: const TextStyle(
-                        color: Color(0xFF252525),
-                        fontSize: 15,
-                        fontFamily: 'Inter',
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
-            );
-          }),
+            )
+          else
+            ..._additionalServices.asMap().entries.map((entry) {
+              final index = entry.key;
+              final service = entry.value;
+              return Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                decoration: BoxDecoration(
+                  color: index % 2 == 0
+                      ? const Color(0xFFF5F5F5)
+                      : const Color(0xFFFFFFFF),
+                  border: const Border(
+                    bottom: BorderSide(color: Color(0xFFE5E5E5), width: 0.5),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 2,
+                      child: Text(
+                        service.serviceName ?? '-',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Color(0xFF252525),
+                          fontSize: 15,
+                          fontFamily: 'Inter',
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      flex: 2,
+                      child: Text(
+                        service.provisionType ?? '-',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Color(0xFF252525),
+                          fontSize: 15,
+                          fontFamily: 'Inter',
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      flex: 2,
+                      child: Text(
+                        service.provisionDate ?? '-',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Color(0xFF252525),
+                          fontSize: 15,
+                          fontFamily: 'Inter',
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      flex: 3,
+                      child: Text(
+                        service.memo ?? '-',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Color(0xFF252525),
+                          fontSize: 15,
+                          fontFamily: 'Inter',
+                          fontWeight: FontWeight.w400,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 2,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
         ],
       ),
     );
@@ -1492,36 +1617,136 @@ class _ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
               ],
             ),
           ),
-          // 테이블 내용 (샘플 데이터)
-          ...List.generate(2, (index) {
-            return Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: index % 2 == 0
-                    ? const Color(0xFFF5F5F5)
-                    : const Color(0xFFFFFFFF),
-                border: const Border(
-                  bottom: BorderSide(color: Color(0xFFE5E5E5), width: 0.5),
+          // 테이블 내용 (실제 DVR 데이터)
+          if (_dvrInfoList.isEmpty)
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 30),
+              child: const Center(
+                child: Text(
+                  'DVR 정보가 없습니다.',
+                  style: TextStyle(color: Color(0xFF999999), fontSize: 14),
                 ),
               ),
-              child: Row(
-                children: const [
-                  Expanded(child: Text('웹', textAlign: TextAlign.center)),
-                  Expanded(child: Text('DVR01', textAlign: TextAlign.center)),
-                  Expanded(child: Text('하이크비전', textAlign: TextAlign.center)),
-                  Expanded(
-                    child: Text('192.168.0.1', textAlign: TextAlign.center),
+            )
+          else
+            ..._dvrInfoList.asMap().entries.map((entry) {
+              final index = entry.key;
+              final dvr = entry.value;
+              return Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                decoration: BoxDecoration(
+                  color: index % 2 == 0
+                      ? const Color(0xFFF5F5F5)
+                      : const Color(0xFFFFFFFF),
+                  border: const Border(
+                    bottom: BorderSide(color: Color(0xFFE5E5E5), width: 0.5),
                   ),
-                  Expanded(child: Text('8000', textAlign: TextAlign.center)),
-                  Expanded(child: Text('admin', textAlign: TextAlign.center)),
-                  Expanded(child: Text('****', textAlign: TextAlign.center)),
-                  Expanded(
-                    child: Text('2023-01-15', textAlign: TextAlign.center),
-                  ),
-                ],
-              ),
-            );
-          }),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        dvr.connectionMethodText,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Color(0xFF252525),
+                          fontSize: 15,
+                          fontFamily: 'Inter',
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(
+                        dvr.dvrTypeCode ?? '-',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Color(0xFF252525),
+                          fontSize: 15,
+                          fontFamily: 'Inter',
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(
+                        dvr.dvrTypeName ?? '-',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Color(0xFF252525),
+                          fontSize: 15,
+                          fontFamily: 'Inter',
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(
+                        dvr.connectionAddress ?? '-',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Color(0xFF252525),
+                          fontSize: 15,
+                          fontFamily: 'Inter',
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(
+                        dvr.connectionPort ?? '-',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Color(0xFF252525),
+                          fontSize: 15,
+                          fontFamily: 'Inter',
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(
+                        dvr.connectionId ?? '-',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Color(0xFF252525),
+                          fontSize: 15,
+                          fontFamily: 'Inter',
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(
+                        dvr.connectionPassword ?? '-',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Color(0xFF252525),
+                          fontSize: 15,
+                          fontFamily: 'Inter',
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(
+                        dvr.addedDate ?? '-',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Color(0xFF252525),
+                          fontSize: 15,
+                          fontFamily: 'Inter',
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
         ],
       ),
     );
