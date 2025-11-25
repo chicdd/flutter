@@ -5,10 +5,8 @@ import '../models/customer_detail.dart';
 import '../services/api_service.dart';
 import '../functions.dart';
 import '../theme.dart';
-import '../style.dart';
 import '../widgets/custom_top_bar.dart';
-import '../config/topbar_config.dart';
-import '../widgets/component.dart';
+import '../widgets/common_table.dart';
 
 /// 스마트폰 어플 인증 등록 화면
 class SmartphoneAppAuthRegistration extends StatefulWidget {
@@ -140,280 +138,132 @@ class SmartphoneAppAuthRegistrationState
 
   /// 테이블 섹션
   Widget _buildTableSection() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: AppTheme.cardShadow,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Text(
-                '인증 허용 전화번호',
-                style: TextStyle(
-                  color: Color(0xFF252525),
-                  fontSize: 18,
-                  fontFamily: 'Inter',
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(width: 12),
-              // 추가 버튼
-              ElevatedButton(
-                onPressed: _showAddAuthModal,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF007AFF),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 8,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  elevation: 0,
-                ),
-                child: const Text(
-                  '추가',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          // 테이블 헤더
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF5F5F5),
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(8),
-                topRight: Radius.circular(8),
+    return CommonDataTable(
+      title: '인증 허용 전화번호',
+      columns: [
+        TableColumnConfig(
+          header: '휴대폰번호',
+          flex: 2,
+          valueBuilder: (data) => data.phoneNumber ?? '-',
+          cellBuilder: (data, value) => Center(
+            child: HighlightedText(
+              text: value,
+              query: _pageSearchQuery,
+              style: const TextStyle(
+                color: Color(0xFF252525),
+                fontSize: 15,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w400,
               ),
             ),
-            child: Row(
-              children: [
-                Expanded(
-                  flex: 2,
-                  child: Text(
-                    '휴대폰번호',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Color(0xFF252525),
-                      fontSize: 15,
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-                Expanded(
-                  flex: 1,
-                  child: Text(
-                    '사용자이름',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Color(0xFF252525),
-                      fontSize: 15,
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-                Expanded(
-                  flex: 1,
-                  child: Text(
-                    '원격경계여부',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Color(0xFF252525),
-                      fontSize: 15,
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-                Expanded(
-                  flex: 1,
-                  child: Text(
-                    '원격해제여부',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Color(0xFF252525),
-                      fontSize: 15,
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-                Expanded(
-                  flex: 1,
-                  child: Text(
-                    '등록일자',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Color(0xFF252525),
-                      fontSize: 15,
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-                Expanded(
-                  flex: 2,
-                  child: Text(
-                    '상호명',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Color(0xFF252525),
-                      fontSize: 15,
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ],
+          ),
+        ),
+        TableColumnConfig(
+          header: '사용자이름',
+          flex: 1,
+          valueBuilder: (data) => data.userName ?? '-',
+          cellBuilder: (data, value) => Center(
+            child: HighlightedText(
+              text: value,
+              query: _pageSearchQuery,
+              style: const TextStyle(
+                color: Color(0xFF252525),
+                fontSize: 15,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w400,
+              ),
             ),
           ),
-          // 테이블 내용 (실제 데이터)
-          if (_authPhoneNumber.isEmpty)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFFFFFF),
-                border: const Border(
-                  bottom: BorderSide(color: Color(0xFFE5E5E5), width: 0.5),
-                ),
+        ),
+        TableColumnConfig(
+          header: '원격경계여부',
+          flex: 1,
+          valueBuilder: (data) => data.armaStatusText,
+          cellBuilder: (data, value) => Center(
+            child: HighlightedText(
+              text: value,
+              query: _pageSearchQuery,
+              style: const TextStyle(
+                color: Color(0xFF252525),
+                fontSize: 15,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w400,
               ),
-              child: Center(
-                child: Text(
-                  '스마트폰 인증 데이터가 없습니다.',
-                  style: const TextStyle(
-                    color: Color(0xFFCBCBCB),
-                    fontSize: 15,
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w400,
-                  ),
-                ),
+            ),
+          ),
+        ),
+        TableColumnConfig(
+          header: '원격해제여부',
+          flex: 1,
+          valueBuilder: (data) => data.disarmaStatusText,
+          cellBuilder: (data, value) => Center(
+            child: HighlightedText(
+              text: value,
+              query: _pageSearchQuery,
+              style: const TextStyle(
+                color: Color(0xFF252525),
+                fontSize: 15,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w400,
               ),
-            )
-          else
-            ..._authPhoneNumber.asMap().entries.map((entry) {
-              final index = entry.key;
-              final authRegist = entry.value;
-              return Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                decoration: BoxDecoration(
-                  color: index % 2 == 0
-                      ? const Color(0xFFFFFFFF)
-                      : const Color(0xFFF5F5F5),
-                  border: const Border(
-                    bottom: BorderSide(color: Color(0xFFE5E5E5), width: 0.5),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      flex: 2,
-                      child: Center(
-                        child: HighlightedText(
-                          text: authRegist.phoneNumber ?? '-',
-                          query: _pageSearchQuery,
-                          style: const TextStyle(
-                            color: Color(0xFF252525),
-                            fontSize: 15,
-                            fontFamily: 'Inter',
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      flex: 1,
-                      child: Center(
-                        child: HighlightedText(
-                          text: authRegist.userName ?? '-',
-                          query: _pageSearchQuery,
-                          style: const TextStyle(
-                            color: Color(0xFF252525),
-                            fontSize: 15,
-                            fontFamily: 'Inter',
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      flex: 1,
-                      child: Center(
-                        child: HighlightedText(
-                          text: authRegist.armaStatusText,
-                          query: _pageSearchQuery,
-                          style: const TextStyle(
-                            color: Color(0xFF252525),
-                            fontSize: 15,
-                            fontFamily: 'Inter',
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      flex: 1,
-                      child: Center(
-                        child: HighlightedText(
-                          text: authRegist.disarmaStatusText,
-                          query: _pageSearchQuery,
-                          style: const TextStyle(
-                            color: Color(0xFF252525),
-                            fontSize: 15,
-                            fontFamily: 'Inter',
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      flex: 1,
-                      child: Center(
-                        child: HighlightedText(
-                          text: authRegist.registrationDate ?? '-',
-                          query: _pageSearchQuery,
-                          style: const TextStyle(
-                            color: Color(0xFF252525),
-                            fontSize: 15,
-                            fontFamily: 'Inter',
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      flex: 2,
-                      child: Center(
-                        child: HighlightedText(
-                          text: authRegist.customerName ?? '-',
-                          query: _pageSearchQuery,
-                          style: const TextStyle(
-                            color: Color(0xFF252525),
-                            fontSize: 15,
-                            fontFamily: 'Inter',
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }),
-        ],
+            ),
+          ),
+        ),
+        TableColumnConfig(
+          header: '등록일자',
+          flex: 1,
+          valueBuilder: (data) => data.registrationDate ?? '-',
+          cellBuilder: (data, value) => Center(
+            child: HighlightedText(
+              text: value,
+              query: _pageSearchQuery,
+              style: const TextStyle(
+                color: Color(0xFF252525),
+                fontSize: 15,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ),
+        ),
+        TableColumnConfig(
+          header: '상호명',
+          flex: 2,
+          valueBuilder: (data) => data.customerName ?? '-',
+          cellBuilder: (data, value) => Center(
+            child: HighlightedText(
+              text: value,
+              query: _pageSearchQuery,
+              style: const TextStyle(
+                color: Color(0xFF252525),
+                fontSize: 15,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ),
+        ),
+      ],
+      data: _authPhoneNumber,
+      emptyMessage: '스마트폰 인증 데이터가 없습니다.',
+      headerAction: ElevatedButton(
+        onPressed: _showAddAuthModal,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF007AFF),
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(
+            horizontal: 20,
+            vertical: 8,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(6),
+          ),
+          elevation: 0,
+        ),
+        child: const Text(
+          '추가',
+          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+        ),
       ),
     );
   }

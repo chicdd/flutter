@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../theme.dart';
 import '../models/search_panel.dart';
 import '../models/customer_detail.dart';
-import '../models/customerHoliday.dart';
 import '../models/additional_service.dart';
 import '../models/dvr_info.dart';
 import '../services/api_service.dart';
@@ -11,7 +10,7 @@ import '../widgets/component.dart';
 import '../widgets/time_picker_modal.dart';
 import '../style.dart';
 import '../widgets/custom_top_bar.dart';
-import '../config/topbar_config.dart';
+import '../widgets/common_table.dart';
 
 class ExtendedCustomerInfo extends StatefulWidget {
   final SearchPanel? searchpanel;
@@ -1381,395 +1380,218 @@ class ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
   }
 
   Widget _buildServiceSection() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: AppTheme.cardShadow,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            '부가서비스 제공',
-            style: TextStyle(
-              color: Color(0xFF252525),
-              fontSize: 18,
-              fontFamily: 'Inter',
-              fontWeight: FontWeight.w600,
+    return CommonDataTable(
+      title: '부가서비스 제공',
+      columns: [
+        TableColumnConfig(
+          header: '서비스명',
+          flex: 2,
+          valueBuilder: (data) => data.serviceName ?? '-',
+          cellBuilder: (data, value) => Center(
+            child: HighlightedText(
+              text: value,
+              query: _pageSearchQuery,
+              style: const TextStyle(
+                color: Color(0xFF252525),
+                fontSize: 15,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w400,
+              ),
             ),
           ),
-          const SizedBox(height: 16),
-          // 테이블 헤더
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF5F5F5),
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(8),
-                topRight: Radius.circular(8),
+        ),
+        TableColumnConfig(
+          header: '제공구분',
+          flex: 2,
+          valueBuilder: (data) => data.provisionType ?? '-',
+          cellBuilder: (data, value) => Center(
+            child: HighlightedText(
+              text: value,
+              query: _pageSearchQuery,
+              style: const TextStyle(
+                color: Color(0xFF252525),
+                fontSize: 15,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w400,
               ),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  flex: 2,
-                  child: Text(
-                    '서비스명',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Color(0xFF252525),
-                      fontSize: 15,
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-                Expanded(
-                  flex: 2,
-                  child: Text(
-                    '제공구분',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Color(0xFF252525),
-                      fontSize: 15,
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-                Expanded(
-                  flex: 2,
-                  child: Text(
-                    '제공일자',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Color(0xFF252525),
-                      fontSize: 15,
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-                Expanded(
-                  flex: 3,
-                  child: Text(
-                    '메모',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Color(0xFF252525),
-                      fontSize: 15,
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ],
             ),
           ),
-          // 테이블 내용 (실제 데이터)
-          if (_additionalServices.isEmpty)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFFFFFF),
-                border: const Border(
-                  bottom: BorderSide(color: Color(0xFFE5E5E5), width: 0.5),
-                ),
+        ),
+        TableColumnConfig(
+          header: '제공일자',
+          flex: 2,
+          valueBuilder: (data) => data.provisionDate ?? '-',
+          cellBuilder: (data, value) => Center(
+            child: HighlightedText(
+              text: value,
+              query: _pageSearchQuery,
+              style: const TextStyle(
+                color: Color(0xFF252525),
+                fontSize: 15,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w400,
               ),
-              child: Center(
-                child: Text(
-                  '부가서비스 데이터가 없습니다.',
-                  style: const TextStyle(
-                    color: Color(0xFF8D8D8D),
-                    fontSize: 15,
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w400,
-                  ),
-                ),
+            ),
+          ),
+        ),
+        TableColumnConfig(
+          header: '메모',
+          flex: 3,
+          valueBuilder: (data) => data.memo ?? '-',
+          cellBuilder: (data, value) => Center(
+            child: HighlightedText(
+              text: value,
+              query: _pageSearchQuery,
+              style: const TextStyle(
+                color: Color(0xFF252525),
+                fontSize: 15,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w400,
               ),
-            )
-          else
-            ..._additionalServices.asMap().entries.map((entry) {
-              final index = entry.key;
-              final service = entry.value;
-              return Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                decoration: BoxDecoration(
-                  color: index % 2 == 0
-                      ? const Color(0xFFF5F5F5)
-                      : const Color(0xFFFFFFFF),
-                  border: const Border(
-                    bottom: BorderSide(color: Color(0xFFE5E5E5), width: 0.5),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      flex: 2,
-                      child: Center(
-                        child: HighlightedText(
-                          text: service.serviceName ?? '-',
-                          query: _pageSearchQuery,
-                          style: const TextStyle(
-                            color: Color(0xFF252525),
-                            fontSize: 15,
-                            fontFamily: 'Inter',
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      flex: 2,
-                      child: Center(
-                        child: HighlightedText(
-                          text: service.provisionType ?? '-',
-                          query: _pageSearchQuery,
-                          style: const TextStyle(
-                            color: Color(0xFF252525),
-                            fontSize: 15,
-                            fontFamily: 'Inter',
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      flex: 2,
-                      child: Center(
-                        child: HighlightedText(
-                          text: service.provisionDate ?? '-',
-                          query: _pageSearchQuery,
-                          style: const TextStyle(
-                            color: Color(0xFF252525),
-                            fontSize: 15,
-                            fontFamily: 'Inter',
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      flex: 3,
-                      child: Center(
-                        child: HighlightedText(
-                          text: service.memo ?? '-',
-                          query: _pageSearchQuery,
-                          style: const TextStyle(
-                            color: Color(0xFF252525),
-                            fontSize: 15,
-                            fontFamily: 'Inter',
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }),
-        ],
-      ),
+            ),
+          ),
+        ),
+      ],
+      data: _additionalServices,
+      emptyMessage: '부가서비스 데이터가 없습니다.',
     );
   }
 
   Widget _buildDVRSection() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: AppTheme.cardShadow,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'DVR 설치현황',
-            style: TextStyle(
-              color: Color(0xFF252525),
-              fontSize: 18,
-              fontFamily: 'Inter',
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 16),
-          // 테이블 헤더
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF5F5F5),
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(8),
-                topRight: Radius.circular(8),
+    return CommonDataTable(
+      title: 'DVR 설치현황',
+      columns: [
+        TableColumnConfig(
+          header: '접속방식',
+          valueBuilder: (data) => data.connectionMethodText,
+          cellBuilder: (data, value) => Center(
+            child: HighlightedText(
+              text: value,
+              query: _pageSearchQuery,
+              style: const TextStyle(
+                color: Color(0xFF252525),
+                fontSize: 15,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w400,
               ),
             ),
-            child: Row(
-              children: const [
-                Expanded(child: Text('접속방식', textAlign: TextAlign.center)),
-                Expanded(child: Text('DVR종류코드', textAlign: TextAlign.center)),
-                Expanded(child: Text('종류', textAlign: TextAlign.center)),
-                Expanded(child: Text('접속주소', textAlign: TextAlign.center)),
-                Expanded(child: Text('접속포트', textAlign: TextAlign.center)),
-                Expanded(child: Text('접속ID', textAlign: TextAlign.center)),
-                Expanded(child: Text('접속암호', textAlign: TextAlign.center)),
-                Expanded(child: Text('추가일자', textAlign: TextAlign.center)),
-              ],
+          ),
+        ),
+        TableColumnConfig(
+          header: 'DVR종류코드',
+          valueBuilder: (data) => data.dvrTypeCode ?? '-',
+          cellBuilder: (data, value) => Center(
+            child: HighlightedText(
+              text: value,
+              query: _pageSearchQuery,
+              style: const TextStyle(
+                color: Color(0xFF252525),
+                fontSize: 15,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w400,
+              ),
             ),
           ),
-          // 테이블 내용 (실제 DVR 데이터)
-          if (_dvrInfoList.isEmpty)
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 30),
-              child: const Center(
-                child: Text(
-                  'DVR 정보가 없습니다.',
-                  style: TextStyle(color: Color(0xFF999999), fontSize: 14),
-                ),
+        ),
+        TableColumnConfig(
+          header: '종류',
+          valueBuilder: (data) => data.dvrTypeName ?? '-',
+          cellBuilder: (data, value) => Center(
+            child: HighlightedText(
+              text: value,
+              query: _pageSearchQuery,
+              style: const TextStyle(
+                color: Color(0xFF252525),
+                fontSize: 15,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w400,
               ),
-            )
-          else
-            ..._dvrInfoList.asMap().entries.map((entry) {
-              final index = entry.key;
-              final dvr = entry.value;
-              return Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                decoration: BoxDecoration(
-                  color: index % 2 == 0
-                      ? const Color(0xFFF5F5F5)
-                      : const Color(0xFFFFFFFF),
-                  border: const Border(
-                    bottom: BorderSide(color: Color(0xFFE5E5E5), width: 0.5),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Center(
-                        child: HighlightedText(
-                          text: dvr.connectionMethodText,
-                          query: _pageSearchQuery,
-                          style: const TextStyle(
-                            color: Color(0xFF252525),
-                            fontSize: 15,
-                            fontFamily: 'Inter',
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: Center(
-                        child: HighlightedText(
-                          text: dvr.dvrTypeCode ?? '-',
-                          query: _pageSearchQuery,
-                          style: const TextStyle(
-                            color: Color(0xFF252525),
-                            fontSize: 15,
-                            fontFamily: 'Inter',
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: Center(
-                        child: HighlightedText(
-                          text: dvr.dvrTypeName ?? '-',
-                          query: _pageSearchQuery,
-                          style: const TextStyle(
-                            color: Color(0xFF252525),
-                            fontSize: 15,
-                            fontFamily: 'Inter',
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: Center(
-                        child: HighlightedText(
-                          text: dvr.connectionAddress ?? '-',
-                          query: _pageSearchQuery,
-                          style: const TextStyle(
-                            color: Color(0xFF252525),
-                            fontSize: 15,
-                            fontFamily: 'Inter',
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: Center(
-                        child: HighlightedText(
-                          text: dvr.connectionPort ?? '-',
-                          query: _pageSearchQuery,
-                          style: const TextStyle(
-                            color: Color(0xFF252525),
-                            fontSize: 15,
-                            fontFamily: 'Inter',
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: Center(
-                        child: HighlightedText(
-                          text: dvr.connectionId ?? '-',
-                          query: _pageSearchQuery,
-                          style: const TextStyle(
-                            color: Color(0xFF252525),
-                            fontSize: 15,
-                            fontFamily: 'Inter',
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: Center(
-                        child: HighlightedText(
-                          text: dvr.connectionPassword ?? '-',
-                          query: _pageSearchQuery,
-                          style: const TextStyle(
-                            color: Color(0xFF252525),
-                            fontSize: 15,
-                            fontFamily: 'Inter',
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: Center(
-                        child: HighlightedText(
-                          text: dvr.addedDate ?? '-',
-                          query: _pageSearchQuery,
-                          style: const TextStyle(
-                            color: Color(0xFF252525),
-                            fontSize: 15,
-                            fontFamily: 'Inter',
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }),
-        ],
-      ),
+            ),
+          ),
+        ),
+        TableColumnConfig(
+          header: '접속주소',
+          valueBuilder: (data) => data.connectionAddress ?? '-',
+          cellBuilder: (data, value) => Center(
+            child: HighlightedText(
+              text: value,
+              query: _pageSearchQuery,
+              style: const TextStyle(
+                color: Color(0xFF252525),
+                fontSize: 15,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ),
+        ),
+        TableColumnConfig(
+          header: '접속포트',
+          valueBuilder: (data) => data.connectionPort ?? '-',
+          cellBuilder: (data, value) => Center(
+            child: HighlightedText(
+              text: value,
+              query: _pageSearchQuery,
+              style: const TextStyle(
+                color: Color(0xFF252525),
+                fontSize: 15,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ),
+        ),
+        TableColumnConfig(
+          header: '접속ID',
+          valueBuilder: (data) => data.connectionId ?? '-',
+          cellBuilder: (data, value) => Center(
+            child: HighlightedText(
+              text: value,
+              query: _pageSearchQuery,
+              style: const TextStyle(
+                color: Color(0xFF252525),
+                fontSize: 15,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ),
+        ),
+        TableColumnConfig(
+          header: '접속암호',
+          valueBuilder: (data) => data.connectionPassword ?? '-',
+          cellBuilder: (data, value) => Center(
+            child: HighlightedText(
+              text: value,
+              query: _pageSearchQuery,
+              style: const TextStyle(
+                color: Color(0xFF252525),
+                fontSize: 15,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ),
+        ),
+        TableColumnConfig(
+          header: '추가일자',
+          valueBuilder: (data) => data.addedDate ?? '-',
+          cellBuilder: (data, value) => Center(
+            child: HighlightedText(
+              text: value,
+              query: _pageSearchQuery,
+              style: const TextStyle(
+                color: Color(0xFF252525),
+                fontSize: 15,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ),
+        ),
+      ],
+      data: _dvrInfoList,
+      emptyMessage: 'DVR 정보가 없습니다.',
     );
   }
 }

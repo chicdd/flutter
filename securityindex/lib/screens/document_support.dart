@@ -5,10 +5,8 @@ import '../models/customer_detail.dart';
 import '../services/api_service.dart';
 import '../functions.dart';
 import '../theme.dart';
-import '../style.dart';
 import '../widgets/custom_top_bar.dart';
-import '../config/topbar_config.dart';
-import '../widgets/component.dart';
+import '../widgets/common_table.dart';
 
 /// 문서지원 화면
 class DocumentSupport extends StatefulWidget {
@@ -138,308 +136,149 @@ class DocumentSupportState extends State<DocumentSupport>
 
   /// 테이블 섹션
   Widget _buildTableSection() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: AppTheme.cardShadow,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Text(
-                '첨부 데이터 리스트',
-                style: TextStyle(
-                  color: Color(0xFF252525),
-                  fontSize: 18,
-                  fontFamily: 'Inter',
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(width: 12),
-              // 추가 버튼
-              ElevatedButton(
-                onPressed: _showAddDocumentModal,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF007AFF),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 8,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  elevation: 0,
-                ),
-                child: const Text(
-                  '추가',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          // 테이블 헤더
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF5F5F5),
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(8),
-                topRight: Radius.circular(8),
+    return CommonDataTable(
+      title: '첨부 데이터 리스트',
+      columns: [
+        TableColumnConfig(
+          header: '문서일련번호',
+          flex: 1,
+          valueBuilder: (data) => data.documentSerialNumber ?? '-',
+          cellBuilder: (data, value) => Center(
+            child: HighlightedText(
+              text: value,
+              query: _pageSearchQuery,
+              style: const TextStyle(
+                color: Color(0xFF252525),
+                fontSize: 15,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w400,
               ),
             ),
-            child: Row(
-              children: [
-                Expanded(
-                  flex: 1,
-                  child: Text(
-                    '문서일련번호',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Color(0xFF252525),
-                      fontSize: 15,
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-                Expanded(
-                  flex: 2,
-                  child: Text(
-                    '문서명',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Color(0xFF252525),
-                      fontSize: 15,
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-                Expanded(
-                  flex: 1,
-                  child: Text(
-                    '문서확장자',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Color(0xFF252525),
-                      fontSize: 15,
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-                Expanded(
-                  flex: 1,
-                  child: Text(
-                    '문서종류',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Color(0xFF252525),
-                      fontSize: 15,
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-                Expanded(
-                  flex: 2,
-                  child: Text(
-                    '문서설명',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Color(0xFF252525),
-                      fontSize: 15,
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-                Expanded(
-                  flex: 1,
-                  child: Text(
-                    '첨부일자',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Color(0xFF252525),
-                      fontSize: 15,
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-                Expanded(
-                  flex: 1,
-                  child: Text(
-                    '첨부자',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Color(0xFF252525),
-                      fontSize: 15,
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ],
+          ),
+        ),
+        TableColumnConfig(
+          header: '문서명',
+          flex: 2,
+          valueBuilder: (data) => data.documentName ?? '-',
+          cellBuilder: (data, value) => Center(
+            child: HighlightedText(
+              text: value,
+              query: _pageSearchQuery,
+              style: const TextStyle(
+                color: Color(0xFF252525),
+                fontSize: 15,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w400,
+              ),
             ),
           ),
-          // 테이블 내용 (실제 데이터)
-          if (_documents.isEmpty)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFFFFFF),
-                border: const Border(
-                  bottom: BorderSide(color: Color(0xFFE5E5E5), width: 0.5),
-                ),
+        ),
+        TableColumnConfig(
+          header: '문서확장자',
+          flex: 1,
+          valueBuilder: (data) => data.documentExtension ?? '-',
+          cellBuilder: (data, value) => Center(
+            child: HighlightedText(
+              text: value,
+              query: _pageSearchQuery,
+              style: const TextStyle(
+                color: Color(0xFF252525),
+                fontSize: 15,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w400,
               ),
-              child: Center(
-                child: Text(
-                  '문서 데이터가 없습니다.',
-                  style: const TextStyle(
-                    color: Color(0xFF999999),
-                    fontSize: 15,
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w400,
-                  ),
-                ),
+            ),
+          ),
+        ),
+        TableColumnConfig(
+          header: '문서종류',
+          flex: 1,
+          valueBuilder: (data) => data.documentType ?? '-',
+          cellBuilder: (data, value) => Center(
+            child: HighlightedText(
+              text: value,
+              query: _pageSearchQuery,
+              style: const TextStyle(
+                color: Color(0xFF252525),
+                fontSize: 15,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w400,
               ),
-            )
-          else
-            ..._documents.asMap().entries.map((entry) {
-              final index = entry.key;
-              final document = entry.value;
-              return Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                decoration: BoxDecoration(
-                  color: index % 2 == 0
-                      ? const Color(0xFFFFFFFF)
-                      : const Color(0xFFF5F5F5),
-                  border: const Border(
-                    bottom: BorderSide(color: Color(0xFFE5E5E5), width: 0.5),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      flex: 1,
-                      child: Center(
-                        child: HighlightedText(
-                          text: document.documentSerialNumber ?? '-',
-                          query: _pageSearchQuery,
-                          style: const TextStyle(
-                            color: Color(0xFF252525),
-                            fontSize: 15,
-                            fontFamily: 'Inter',
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      flex: 2,
-                      child: Center(
-                        child: HighlightedText(
-                          text: document.documentName ?? '-',
-                          query: _pageSearchQuery,
-                          style: const TextStyle(
-                            color: Color(0xFF252525),
-                            fontSize: 15,
-                            fontFamily: 'Inter',
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      flex: 1,
-                      child: Center(
-                        child: HighlightedText(
-                          text: document.documentExtension ?? '-',
-                          query: _pageSearchQuery,
-                          style: const TextStyle(
-                            color: Color(0xFF252525),
-                            fontSize: 15,
-                            fontFamily: 'Inter',
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      flex: 1,
-                      child: Center(
-                        child: HighlightedText(
-                          text: document.documentType ?? '-',
-                          query: _pageSearchQuery,
-                          style: const TextStyle(
-                            color: Color(0xFF252525),
-                            fontSize: 15,
-                            fontFamily: 'Inter',
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      flex: 2,
-                      child: Center(
-                        child: HighlightedText(
-                          text: document.documentDescription ?? '-',
-                          query: _pageSearchQuery,
-                          style: const TextStyle(
-                            color: Color(0xFF252525),
-                            fontSize: 15,
-                            fontFamily: 'Inter',
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      flex: 1,
-                      child: Center(
-                        child: HighlightedText(
-                          text: document.attachmentDate ?? '-',
-                          query: _pageSearchQuery,
-                          style: const TextStyle(
-                            color: Color(0xFF252525),
-                            fontSize: 15,
-                            fontFamily: 'Inter',
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      flex: 1,
-                      child: Center(
-                        child: HighlightedText(
-                          text: document.attacher ?? '-',
-                          query: _pageSearchQuery,
-                          style: const TextStyle(
-                            color: Color(0xFF252525),
-                            fontSize: 15,
-                            fontFamily: 'Inter',
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }),
-        ],
+            ),
+          ),
+        ),
+        TableColumnConfig(
+          header: '문서설명',
+          flex: 2,
+          valueBuilder: (data) => data.documentDescription ?? '-',
+          cellBuilder: (data, value) => Center(
+            child: HighlightedText(
+              text: value,
+              query: _pageSearchQuery,
+              style: const TextStyle(
+                color: Color(0xFF252525),
+                fontSize: 15,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ),
+        ),
+        TableColumnConfig(
+          header: '첨부일자',
+          flex: 1,
+          valueBuilder: (data) => data.attachmentDate ?? '-',
+          cellBuilder: (data, value) => Center(
+            child: HighlightedText(
+              text: value,
+              query: _pageSearchQuery,
+              style: const TextStyle(
+                color: Color(0xFF252525),
+                fontSize: 15,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ),
+        ),
+        TableColumnConfig(
+          header: '첨부자',
+          flex: 1,
+          valueBuilder: (data) => data.attacher ?? '-',
+          cellBuilder: (data, value) => Center(
+            child: HighlightedText(
+              text: value,
+              query: _pageSearchQuery,
+              style: const TextStyle(
+                color: Color(0xFF252525),
+                fontSize: 15,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ),
+        ),
+      ],
+      data: _documents,
+      emptyMessage: '문서 데이터가 없습니다.',
+      headerAction: ElevatedButton(
+        onPressed: _showAddDocumentModal,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF007AFF),
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(
+            horizontal: 20,
+            vertical: 8,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(6),
+          ),
+          elevation: 0,
+        ),
+        child: const Text(
+          '추가',
+          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+        ),
       ),
     );
   }
