@@ -28,7 +28,7 @@ class DocumentInfo {
       documentName: json['문서명'] as String?,
       documentExtension: json['문서확장자'] as String?,
       documentDescription: json['문서설명'] as String?,
-      attachmentDate: dateToString(json['첨부일자']),
+      attachmentDate: detailDateParsing(json['첨부일자']),
       attacher: json['첨부자'] as String?,
       documentType: json['문서종류'] as String?,
     );

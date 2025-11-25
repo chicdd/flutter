@@ -633,3 +633,42 @@ String dateToString(String? date) {
     return date;
   }
 }
+
+// datetime 형식을 상세한 String으로 변환 (yyyy-MM-dd 오후 h:mm 형식)
+String detailDateParsing(String? date) {
+  // null 또는 빈 문자열 체크
+  if (date == null || date.isEmpty) return '';
+
+  try {
+    // ISO 8601 형식 (2015-03-21T14:38:00) 처리
+    DateTime dateTime;
+    if (date.contains('T')) {
+      dateTime = DateTime.parse(date);
+    } else {
+      // 다른 형식도 시도
+      dateTime = DateTime.parse(date);
+    }
+
+    // 년-월-일 형식
+    final dateStr = '${dateTime.year}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')}';
+
+    // 오전/오후 판단
+    final period = dateTime.hour >= 12 ? '오후' : '오전';
+
+    // 12시간 형식으로 시간 변환
+    int hour = dateTime.hour;
+    if (hour > 12) {
+      hour = hour - 12;
+    } else if (hour == 0) {
+      hour = 12;
+    }
+
+    // 분 형식
+    final minute = dateTime.minute.toString().padLeft(2, '0');
+
+    return '$dateStr $period $hour:$minute';
+  } catch (e) {
+    print('날짜 파싱 오류: $e');
+    return date;
+  }
+}
