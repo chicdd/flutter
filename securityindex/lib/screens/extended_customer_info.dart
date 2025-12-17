@@ -581,14 +581,11 @@ class ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
                             ),
                             const SizedBox(width: 16),
                             Expanded(
-                              flex: 2,
-                              child: Row(
-                                children: [
-                                  Expanded(child: _buildCustomerMemoSection()),
-                                  const SizedBox(width: 16),
-                                  Expanded(child: _buildGPSSection()),
-                                ],
-                              ),
+                              child: _buildCustomerMemoSection(),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: _buildGPSSection(),
                             ),
                           ],
                         ),
@@ -623,11 +620,7 @@ class ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
                             const SizedBox(width: 16),
                             Expanded(
                               flex: 1,
-                              child: Row(
-                                children: [
-                                  Expanded(child: _buildCustomerMemoSection()),
-                                ],
-                              ),
+                              child: _buildCustomerMemoSection(),
                             ),
                           ],
                         ),
