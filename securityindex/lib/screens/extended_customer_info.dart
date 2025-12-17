@@ -561,145 +561,46 @@ class ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
       },
       child: Scaffold(
         backgroundColor: AppTheme.backgroundColor,
-        body: LayoutBuilder(
-          builder: (context, constraints) {
-            final isExtraWideScreen = constraints.maxWidth >= 1920;
-            final isWideScreen = constraints.maxWidth >= 1200;
-
-            return SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: isExtraWideScreen
-                  ? Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              flex: 2,
-                              child: _buildSecuritySettingsSection(),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: _buildCustomerMemoSection(),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: _buildGPSSection(),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 24),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(child: _buildWeeklyHolidaySettings()),
-                            const SizedBox(width: 16),
-                            Expanded(child: _buildCompanyBranchSection()),
-                            const SizedBox(width: 16),
-                            Expanded(child: _buildDedicatedLineSection()),
-                          ],
-                        ),
-                        const SizedBox(height: 24),
-                        _buildServiceSection(),
-                        const SizedBox(height: 24),
-                        _buildDVRSection(),
-                      ],
-                    )
-                  : isWideScreen
-                  ? Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              flex: 2,
-                              child: _buildSecuritySettingsSection(),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              flex: 1,
-                              child: _buildCustomerMemoSection(),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 24),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              flex: 3,
-                              child: _buildWeeklyHolidaySettings(),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(flex: 2, child: _buildGPSSection()),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              flex: 2,
-                              child: _buildCompanyBranchSection(),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              flex: 2,
-                              child: _buildDedicatedLineSection(),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 24),
-                        _buildServiceSection(),
-                        const SizedBox(height: 24),
-                        _buildDVRSection(),
-                      ],
-                    )
-                  : Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildSecuritySettingsSection(),
-                        const SizedBox(height: 24),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(child: _buildCustomerMemoSection()),
-                            const SizedBox(width: 16),
-                            Expanded(child: _buildGPSSection()),
-                          ],
-                        ),
-                        const SizedBox(height: 24),
-                        _buildWeeklyHolidaySettings(),
-                        const SizedBox(height: 24),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(child: _buildCompanyBranchSection()),
-                            const SizedBox(width: 16),
-                            Expanded(child: _buildDedicatedLineSection()),
-                          ],
-                        ),
-                        const SizedBox(height: 24),
-                        _buildServiceSection(),
-                        const SizedBox(height: 24),
-                        _buildDVRSection(),
-                      ],
-                    ),
-            );
-          },
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    flex: 2,
+                    child: _buildSecuritySettingsSection(),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: _buildCustomerMemoSection(),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: _buildGPSSection(),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(child: _buildWeeklyHolidaySettings()),
+                  const SizedBox(width: 16),
+                  Expanded(child: _buildCompanyBranchSection()),
+                  const SizedBox(width: 16),
+                  Expanded(child: _buildDedicatedLineSection()),
+                ],
+              ),
+              const SizedBox(height: 24),
+              _buildServiceSection(),
+              const SizedBox(height: 24),
+              _buildDVRSection(),
+            ],
+          ),
         ),
-        // body: SingleChildScrollView(
-        //   padding: const EdgeInsets.all(24),
-        //   child: Column(
-        //     crossAxisAlignment: CrossAxisAlignment.start,
-        //     children: [
-        //       _buildSecuritySettingsSection(),
-        //       const SizedBox(height: 32),
-        //       _buildAdditionalInfoSection(),
-        //       const SizedBox(height: 32),
-        //       _buildServiceSection(),
-        //       const SizedBox(height: 32),
-        //       _buildDVRSection(),
-        //     ],
-        //   ),
-        // ),
       ),
     );
   }
