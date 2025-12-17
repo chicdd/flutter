@@ -205,4 +205,23 @@ namespace securityindexAPI.Models
         public string 지사구분코드명 { get; set; } = string.Empty;
 
     }
+
+    /// <summary>
+    /// 문서종류 모델
+    /// </summary>
+    [Table("문서종류코드마스터")]
+    public class 문서종류코드모델
+    {
+        [Key]
+        [Column("문서종류코드")]
+        public string 문서종류코드 { get; set; } = string.Empty;
+
+        [Column("문서종류코드명")]
+        public string 문서종류코드명 { get; set; } = string.Empty;
+
+        public static implicit operator List<object>(문서종류코드모델? v)
+        {
+            throw new NotImplementedException();
+        }
+    }
 }

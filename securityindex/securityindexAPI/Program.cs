@@ -6,8 +6,11 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 
 // 데이터베이스 컨텍스트 등록
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddDbContext<SecurityRingDBContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("SecurityConnection")));
+
+builder.Services.AddDbContext<neo_erpaDBContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("ErpAConnection")));
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

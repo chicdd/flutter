@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:securityindex/screens/materialstatus.dart';
+import '../screens/recentsignallist.dart';
 import '../screens/smartphone_app_auth_registration.dart';
 import '../screens/document_support.dart';
+import '../screens/userzoneInfo.dart';
 import '../style.dart';
 import '../theme.dart';
 import '../models/search_panel.dart';
@@ -34,6 +37,9 @@ class _ContentAreaState extends State<ContentArea> {
   final GlobalKey<SmartphoneAppAuthRegistrationState> _smartphoneAuthKey =
       GlobalKey();
   final GlobalKey<DocumentSupportState> _documentSupportKey = GlobalKey();
+  final GlobalKey<MaterialStatusState> _materialstatusKey = GlobalKey();
+  final GlobalKey<UserZoneInfoState> _userZoneInfoKey = GlobalKey();
+  final GlobalKey<UserZoneInfoState> _recentSignalListKey = GlobalKey();
   final GlobalKey<CustomTopBarState> _topBarKey = GlobalKey();
 
   @override
@@ -79,6 +85,12 @@ class _ContentAreaState extends State<ContentArea> {
       _smartphoneAuthKey.currentState?.updateSearchQuery(query);
     } else if (widget.selectedSubMenu == '문서지원') {
       _documentSupportKey.currentState?.updateSearchQuery(query);
+    } else if (widget.selectedSubMenu == '설치자재현황') {
+      _materialstatusKey.currentState?.updateSearchQuery(query);
+    } else if (widget.selectedMenu == '사용자 / 존정보') {
+      _userZoneInfoKey.currentState?.updateSearchQuery(query);
+    } else if (widget.selectedMenu == '최근신호이력') {
+      _recentSignalListKey.currentState?.updateSearchQuery(query);
     }
   }
 
@@ -135,6 +147,12 @@ class _ContentAreaState extends State<ContentArea> {
     // 문서지원 화면
     else if (widget.selectedSubMenu == '문서지원') {
       return TopBarConfig.defaultButtons(context);
+    } else if (widget.selectedSubMenu == '설치자재현황') {
+      return TopBarConfig.defaultButtons(context);
+    } else if (widget.selectedMenu == '사용자 / 존정보') {
+      return TopBarConfig.defaultButtons(context);
+    } else if (widget.selectedMenu == '최근신호이력') {
+      return TopBarConfig.defaultButtons(context);
     }
     // 기타 화면
     else {
@@ -164,6 +182,22 @@ class _ContentAreaState extends State<ContentArea> {
     // 고객이 선택되었고 메뉴가 선택되지 않았거나, 관제고객정보 메뉴일 때
     if (widget.selectedMenu == null || widget.selectedMenu == '관제고객정보') {
       return _buildCustomerInfoContent(context);
+    }
+
+    // 사용자 / 존정보 메뉴
+    if (widget.selectedMenu == '사용자 / 존정보') {
+      return UserZoneInfoScreen(
+        key: _userZoneInfoKey,
+        searchpanel: widget.selectedCustomer!,
+      );
+    }
+
+    // 최근신호이력 메뉴
+    if (widget.selectedMenu == '최근신호이력') {
+      return RecentSignalListScreen(
+        key: _recentSignalListKey,
+        searchpanel: widget.selectedCustomer!,
+      );
     }
 
     return SingleChildScrollView(
@@ -207,6 +241,15 @@ class _ContentAreaState extends State<ContentArea> {
         searchpanel: widget.selectedCustomer!,
       );
     }
+
+    // 설치자재현황
+    if (widget.selectedSubMenu == '설치자재현황') {
+      return MaterialStatus(
+        key: _materialstatusKey,
+        searchpanel: widget.selectedCustomer!,
+      );
+    }
+
     // 다른 서브메뉴들은 일단 플레이스홀더로 표시
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
@@ -251,7 +294,9 @@ class _ContentAreaState extends State<ContentArea> {
     if (widget.selectedMenu == null) {
       return const SizedBox.shrink();
     }
-
+    print(widget.selectedCustomer);
+    print(widget.selectedMenu);
+    print(widget.selectedSubMenu);
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(

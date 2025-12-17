@@ -8,6 +8,8 @@ import '../models/additional_service.dart';
 import '../models/dvr_info.dart';
 import '../models/AuthRegist.dart';
 import '../models/document_info.dart';
+import '../models/userZone.dart';
+import '../models/recentsignalinfo.dart';
 
 class DatabaseService {
   static const String baseUrl = 'https://localhost:5001/api';
@@ -267,6 +269,97 @@ class DatabaseService {
     }
   }
 
+  // 드롭다운 코드 데이터 조회 (CodeDataCache에서 사용)
+  Future<List<CodeData>> fetchCodeData(String codeType) async {
+    try {
+      final httpClient = DatabaseService._createHttpClient();
+      final uri = Uri.parse('https://localhost:7088/api/Dropdown/$codeType');
+
+      print('드롭다운 데이터 조회 API 호출: $uri');
+
+      final request = await httpClient.getUrl(uri);
+      final response = await request.close();
+
+      if (response.statusCode == 200) {
+        final String responseBody = await response
+            .transform(utf8.decoder)
+            .join();
+        final List<dynamic> jsonList = json.decode(responseBody);
+        return jsonList
+            .map((json) => CodeData.fromJson(json as Map<String, dynamic>))
+            .toList();
+      } else {
+        print('드롭다운 데이터 조회 오류: ${response.statusCode}');
+        return [];
+      }
+    } catch (e) {
+      print('드롭다운 데이터 조회 API 호출 오류: $e');
+      return [];
+    }
+  }
+
+  /// 사용자 정보 조회
+  /// 관제관리번호로 사용자 정보 목록을 조회합니다.
+  static Future<List<UserZoneInfo>> getUserInfo(String managementNumber) async {
+    try {
+      final httpClient = _createHttpClient();
+      final encodedNumber = Uri.encodeComponent(managementNumber);
+      final uri = Uri.parse(
+        'https://localhost:7088/api/관제고객/$encodedNumber/user-info',
+      );
+
+      print('사용자 정보 조회 API 호출: $uri');
+
+      final request = await httpClient.getUrl(uri);
+      final response = await request.close();
+
+      if (response.statusCode == 200) {
+        final String responseBody = await response
+            .transform(utf8.decoder)
+            .join();
+        final List<dynamic> jsonList = json.decode(responseBody);
+        return jsonList.map((json) => UserZoneInfo.fromJson(json)).toList();
+      } else {
+        print('사용자 정보 조회 오류: ${response.statusCode}');
+        return [];
+      }
+    } catch (e) {
+      print('사용자 정보 조회 API 호출 오류: $e');
+      return [];
+    }
+  }
+
+  /// 존정보 조회
+  /// 관제관리번호로 존정보 목록을 조회합니다.
+  static Future<List<ZoneInfo>> getZoneInfo(String managementNumber) async {
+    try {
+      final httpClient = _createHttpClient();
+      final encodedNumber = Uri.encodeComponent(managementNumber);
+      final uri = Uri.parse(
+        'https://localhost:7088/api/관제고객/$encodedNumber/zone-info',
+      );
+
+      print('존정보 조회 API 호출: $uri');
+
+      final request = await httpClient.getUrl(uri);
+      final response = await request.close();
+
+      if (response.statusCode == 200) {
+        final String responseBody = await response
+            .transform(utf8.decoder)
+            .join();
+        final List<dynamic> jsonList = json.decode(responseBody);
+        return jsonList.map((json) => ZoneInfo.fromJson(json)).toList();
+      } else {
+        print('존정보 조회 오류: ${response.statusCode}');
+        return [];
+      }
+    } catch (e) {
+      print('존정보 조회 API 호출 오류: $e');
+      return [];
+    }
+  }
+
   // 관제관리번호로 문서 정보 조회
   static Future<List<DocumentInfo>> getDocumentInfo(
     String managementNumber,
@@ -299,13 +392,40 @@ class DatabaseService {
     }
   }
 
-  // 드롭다운 코드 데이터 조회 (CodeDataCache에서 사용)
-  Future<List<CodeData>> fetchCodeData(String codeType) async {
+  /// 최근 수신신호 조회 (페이징 지원)
+  /// 관제관리번호, 시작일자, 종료일자, 신호필터, 정렬 순서로 수신신호를 조회합니다.
+  /// 반환값: {data: List<RecentSignalInfo>, totalCount: int}
+  static Future<Map<String, dynamic>> getRecentSignals({
+    required String managementNumber,
+    required DateTime startDate,
+    required DateTime endDate,
+    String signalFilter = '전체신호',
+    bool ascending = false,
+    int skip = 0,
+    int take = 100,
+  }) async {
     try {
-      final httpClient = DatabaseService._createHttpClient();
-      final uri = Uri.parse('https://localhost:7088/api/Dropdown/$codeType');
+      final httpClient = _createHttpClient();
+      final encodedNumber = Uri.encodeComponent(managementNumber);
 
-      print('드롭다운 데이터 조회 API 호출: $uri');
+      // 날짜를 YYYY-MM-DD 형식으로 변환
+      final startDateStr =
+          '${startDate.year}-${startDate.month.toString().padLeft(2, '0')}-${startDate.day.toString().padLeft(2, '0')}';
+      final endDateStr =
+          '${endDate.year}-${endDate.month.toString().padLeft(2, '0')}-${endDate.day.toString().padLeft(2, '0')}';
+
+      final uri = Uri.parse(
+        'https://localhost:7088/api/관제고객/$encodedNumber/recent-signals',
+      ).replace(queryParameters: {
+        '시작일자': startDateStr,
+        '종료일자': endDateStr,
+        '신호필터': signalFilter,
+        '오름차순정렬': ascending.toString(),
+        'skip': skip.toString(),
+        'take': take.toString(),
+      });
+
+      print('최근 수신신호 조회 API 호출: $uri');
 
       final request = await httpClient.getUrl(uri);
       final response = await request.close();
@@ -314,17 +434,19 @@ class DatabaseService {
         final String responseBody = await response
             .transform(utf8.decoder)
             .join();
-        final List<dynamic> jsonList = json.decode(responseBody);
-        return jsonList
-            .map((json) => CodeData.fromJson(json as Map<String, dynamic>))
-            .toList();
+        final Map<String, dynamic> jsonData = json.decode(responseBody);
+        final List<dynamic> dataList = jsonData['data'] ?? [];
+        final int totalCount = jsonData['totalCount'] ?? 0;
+
+        final signals = dataList.map((json) => RecentSignalInfo.fromJson(json)).toList();
+        return {'data': signals, 'totalCount': totalCount};
       } else {
-        print('드롭다운 데이터 조회 오류: ${response.statusCode}');
-        return [];
+        print('최근 수신신호 조회 오류: ${response.statusCode}');
+        return {'data': <RecentSignalInfo>[], 'totalCount': 0};
       }
     } catch (e) {
-      print('드롭다운 데이터 조회 API 호출 오류: $e');
-      return [];
+      print('최근 수신신호 조회 API 호출 오류: $e');
+      return {'data': <RecentSignalInfo>[], 'totalCount': 0};
     }
   }
 }
@@ -370,7 +492,6 @@ class CodeDataCache {
     final data = await api.fetchCodeData(codeType);
     _cache[codeType] = data;
     _cacheTime[codeType] = now;
-
     return data;
   }
 
@@ -384,5 +505,214 @@ class CodeDataCache {
   static void clearCacheForType(String codeType) {
     _cache.remove(codeType);
     _cacheTime.remove(codeType);
+  }
+
+  /// 코드 추가
+  static Future<bool> insertCode({
+    required String typeName,
+    required String code,
+    required String codeName,
+  }) async {
+    try {
+      final httpClient = DatabaseService._createHttpClient();
+      final uri = Uri.parse('https://localhost:7088/api/Insert/$typeName');
+
+      print('코드 추가 API 호출: $uri');
+      print('코드: $code, 코드명: $codeName');
+
+      final request = await httpClient.postUrl(uri);
+      request.headers.set('Content-Type', 'application/json; charset=utf-8');
+
+      // DeleteController와 동일한 구조로 code, codeName 키 사용
+      final body = json.encode({'code': code, 'codeName': codeName});
+
+      request.write(body);
+      final response = await request.close();
+
+      if (response.statusCode == 201) {
+        print('코드 추가 성공');
+        // 캐시 삭제하여 다음 조회 시 최신 데이터 반영
+        clearCacheForType(typeName);
+        return true;
+      } else {
+        final String responseBody = await response
+            .transform(utf8.decoder)
+            .join();
+        print('코드 추가 오류: ${response.statusCode}, $responseBody');
+        return false;
+      }
+    } catch (e) {
+      print('코드 추가 API 호출 오류: $e');
+      return false;
+    }
+  }
+
+  /// 코드 삭제
+  static Future<bool> deleteCodeType({
+    required String typeName,
+    required String code,
+  }) async {
+    try {
+      final httpClient = DatabaseService._createHttpClient();
+      // 쿼리 파라미터로 code 전달
+      final uri = Uri.parse(
+        'https://localhost:7088/api/Delete/$typeName',
+      ).replace(queryParameters: {'code': code});
+
+      print('코드 삭제 API 호출: $uri');
+      print('code: $code');
+
+      final request = await httpClient.deleteUrl(uri);
+      final response = await request.close();
+
+      if (response.statusCode == 200) {
+        print('코드 삭제 성공');
+        // 캐시 삭제하여 다음 조회 시 최신 데이터 반영
+        clearCacheForType(typeName);
+        return true;
+      } else {
+        final String responseBody = await response
+            .transform(utf8.decoder)
+            .join();
+        print('코드 삭제 오류: ${response.statusCode}, $responseBody');
+        return false;
+      }
+    } catch (e) {
+      print('코드 삭제 API 호출 오류: $e');
+      return false;
+    }
+  }
+
+  /// 문서 업로드 (파일 + 메타데이터)
+  static Future<bool> uploadDocument({
+    required String managementNumber,
+    required String documentName,
+    required String documentExtension,
+    required String documentDescription,
+    required String documentTypeName,
+    required List<int> fileBytes,
+    required String fileName,
+  }) async {
+    try {
+      final httpClient = DatabaseService._createHttpClient();
+      final uri = Uri.parse('https://localhost:7088/api/Import/document');
+
+      print('문서 업로드 API 호출: $uri');
+      print('관제관리번호: $managementNumber, 문서명: $documentName');
+
+      final request = await httpClient.postUrl(uri);
+
+      // Multipart form data 생성
+      final boundary =
+          '----WebKitFormBoundary${DateTime.now().millisecondsSinceEpoch}';
+      request.headers.set(
+        'Content-Type',
+        'multipart/form-data; boundary=$boundary',
+      );
+
+      // Body 생성
+      final bodyBuffer = <int>[];
+
+      // 필드 추가 함수
+      void addField(String name, String value) {
+        bodyBuffer.addAll(utf8.encode('--$boundary\r\n'));
+        bodyBuffer.addAll(
+          utf8.encode('Content-Disposition: form-data; name="$name"\r\n\r\n'),
+        );
+        bodyBuffer.addAll(utf8.encode(value));
+        bodyBuffer.addAll(utf8.encode('\r\n'));
+      }
+
+      // 메타데이터 추가
+      addField('관제관리번호', managementNumber);
+      addField('문서명', documentName);
+      addField('문서확장자', documentExtension);
+      addField('문서설명', documentDescription);
+      addField('문서종류명', documentTypeName);
+
+      // 파일 추가
+      bodyBuffer.addAll(utf8.encode('--$boundary\r\n'));
+      bodyBuffer.addAll(
+        utf8.encode(
+          'Content-Disposition: form-data; name="file"; filename="$fileName"\r\n',
+        ),
+      );
+      bodyBuffer.addAll(
+        utf8.encode('Content-Type: application/octet-stream\r\n\r\n'),
+      );
+      bodyBuffer.addAll(fileBytes);
+      bodyBuffer.addAll(utf8.encode('\r\n'));
+
+      // 종료 boundary
+      bodyBuffer.addAll(utf8.encode('--$boundary--\r\n'));
+
+      request.contentLength = bodyBuffer.length;
+      request.add(bodyBuffer);
+
+      final response = await request.close();
+
+      if (response.statusCode == 200) {
+        print('문서 업로드 성공');
+        return true;
+      } else {
+        final String responseBody = await response
+            .transform(utf8.decoder)
+            .join();
+        print('문서 업로드 오류: ${response.statusCode}, $responseBody');
+        return false;
+      }
+    } catch (e) {
+      print('문서 업로드 API 호출 오류: $e');
+      return false;
+    }
+  }
+
+  /// 스마트폰 앱 인증 정보 추가
+  static Future<bool> insertAuth({
+    required String phoneNumber,
+    required String controlManagementNumber,
+    required String erpCusNumber,
+    required String businessName,
+    required String userName,
+    required bool remoteGuardAllowed,
+    required bool remoteReleaseAllowed,
+  }) async {
+    try {
+      final httpClient = DatabaseService._createHttpClient();
+      final uri = Uri.parse('https://localhost:7088/api/Insert/auth');
+
+      print('인증 정보 추가 API 호출: $uri');
+      print('휴대폰번호: $phoneNumber, 관제관리번호: $controlManagementNumber');
+
+      final request = await httpClient.postUrl(uri);
+      request.headers.set('Content-Type', 'application/json; charset=utf-8');
+
+      final body = json.encode({
+        '휴대폰번호': phoneNumber,
+        '관제관리번호': controlManagementNumber,
+        '영업관리번호': erpCusNumber,
+        '상호명': businessName,
+        '사용자이름': userName,
+        '원격경계여부': remoteGuardAllowed,
+        '원격해제여부': remoteReleaseAllowed,
+      });
+
+      request.write(body);
+      final response = await request.close();
+
+      if (response.statusCode == 201) {
+        print('인증 정보 추가 성공');
+        return true;
+      } else {
+        final String responseBody = await response
+            .transform(utf8.decoder)
+            .join();
+        print('인증 정보 추가 오류: ${response.statusCode}, $responseBody');
+        return false;
+      }
+    } catch (e) {
+      print('인증 정보 추가 API 호출 오류: $e');
+      return false;
+    }
   }
 }

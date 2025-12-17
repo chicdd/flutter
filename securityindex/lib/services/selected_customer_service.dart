@@ -70,20 +70,20 @@ class SelectedCustomerService extends ChangeNotifier {
     }
   }
 
-  /// 고객 정보 새로고침
-  Future<void> refreshCustomerDetail() async {
-    if (_selectedCustomer == null) {
-      return;
-    }
-
-    _customerDetail = null; // 기존 데이터 초기화
-    await loadCustomerDetail();
-  }
-
-  /// 선택 해제
-  void clearSelection() {
-    _selectedCustomer = null;
-    _customerDetail = null;
-    notifyListeners();
-  }
+  // /// 고객 정보 새로고침
+  // Future<void> refreshCustomerDetail() async {
+  //   if (_selectedCustomer == null) {
+  //     return;
+  //   }
+  //
+  //   _customerDetail = null; // 기존 데이터 초기화
+  //   await loadCustomerDetail();
+  // }
+  //
+  // /// 선택 해제
+  // void clearSelection() {
+  //   _selectedCustomer = null;
+  //   _customerDetail = null;
+  //   notifyListeners();
+  // }
 }

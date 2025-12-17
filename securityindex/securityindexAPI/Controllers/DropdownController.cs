@@ -12,10 +12,10 @@ namespace securityindexAPI.Controllers
     [Route("api/[controller]")]
     public class DropdownController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
+        private readonly SecurityRingDBContext _context;
         private readonly ILogger<DropdownController> _logger;
 
-        public DropdownController(ApplicationDbContext context, ILogger<DropdownController> logger)
+        public DropdownController(SecurityRingDBContext context, ILogger<DropdownController> logger)
         {
             _context = context;
             _logger = logger;
@@ -184,6 +184,17 @@ namespace securityindexAPI.Controllers
                             {
                                 Code = x.지사구분코드,
                                 Name = x.지사구분코드명,
+                            })
+                            .OrderBy(x => x.Code)
+                            .ToListAsync();
+                        break;
+
+                    case "documenttype": // 지사구분
+                        result = await _context.문서종류코드마스터
+                            .Select(x => new CodeData
+                            {
+                                Code = x.문서종류코드,
+                                Name = x.문서종류코드명,
                             })
                             .OrderBy(x => x.Code)
                             .ToListAsync();

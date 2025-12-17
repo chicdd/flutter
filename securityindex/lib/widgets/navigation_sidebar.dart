@@ -7,11 +7,7 @@ class NavigationItem {
   final IconData icon;
   final List<String>? subItems;
 
-  NavigationItem({
-    required this.title,
-    required this.icon,
-    this.subItems,
-  });
+  NavigationItem({required this.title, required this.icon, this.subItems});
 }
 
 class NavigationSidebar extends StatefulWidget {
@@ -20,11 +16,11 @@ class NavigationSidebar extends StatefulWidget {
   final String? initialSelectedSubMenu;
 
   const NavigationSidebar({
-    Key? key,
+    super.key,
     required this.onNavigate,
     this.initialSelectedMenu,
     this.initialSelectedSubMenu,
-  }) : super(key: key);
+  });
 
   @override
   State<NavigationSidebar> createState() => _NavigationSidebarState();
@@ -42,7 +38,8 @@ class _NavigationSidebarState extends State<NavigationSidebar> {
     selectedMainItem = widget.initialSelectedMenu;
     selectedSubItem = widget.initialSelectedSubMenu;
     // 서브 메뉴가 있으면 해당 메인 메뉴를 펼친 상태로
-    if (widget.initialSelectedSubMenu != null && widget.initialSelectedMenu != null) {
+    if (widget.initialSelectedSubMenu != null &&
+        widget.initialSelectedMenu != null) {
       expandedItem = widget.initialSelectedMenu;
     }
   }
@@ -68,51 +65,17 @@ class _NavigationSidebarState extends State<NavigationSidebar> {
     NavigationItem(
       title: '관제고객정보',
       icon: Icons.business,
-      subItems: [
-        '기본고객정보',
-        '확장고객정보',
-        '스마트어플인증등록',
-        '문서지원',
-        '설치자재현황',
-        'IOT장비',
-      ],
+      subItems: ['기본고객정보', '확장고객정보', '스마트어플인증등록', '문서지원', '설치자재현황', 'IOT장비'],
     ),
-    NavigationItem(
-      title: '사용자 / 존정보',
-      icon: Icons.person_outline,
-    ),
-    NavigationItem(
-      title: '최근신호이력',
-      icon: Icons.history,
-    ),
-    NavigationItem(
-      title: '관제 / 고객로그',
-      icon: Icons.article_outlined,
-    ),
-    NavigationItem(
-      title: '약도',
-      icon: Icons.map_outlined,
-    ),
-    NavigationItem(
-      title: '도면',
-      icon: Icons.architecture_outlined,
-    ),
-    NavigationItem(
-      title: '관제개통 / 루프',
-      icon: Icons.settings_input_antenna,
-    ),
-    NavigationItem(
-      title: 'AS접수',
-      icon: Icons.build_outlined,
-    ),
-    NavigationItem(
-      title: '녹취조회',
-      icon: Icons.mic_outlined,
-    ),
-    NavigationItem(
-      title: '영업정보',
-      icon: Icons.business_center_outlined,
-    ),
+    NavigationItem(title: '사용자 / 존정보', icon: Icons.person_outline),
+    NavigationItem(title: '최근신호이력', icon: Icons.history),
+    NavigationItem(title: '관제 / 고객로그', icon: Icons.article_outlined),
+    NavigationItem(title: '약도', icon: Icons.map_outlined),
+    NavigationItem(title: '도면', icon: Icons.architecture_outlined),
+    NavigationItem(title: '관제개통 / 루프', icon: Icons.settings_input_antenna),
+    NavigationItem(title: 'AS접수', icon: Icons.build_outlined),
+    NavigationItem(title: '녹취조회', icon: Icons.mic_outlined),
+    NavigationItem(title: '영업정보', icon: Icons.business_center_outlined),
   ];
 
   @override
@@ -158,9 +121,9 @@ class _NavigationSidebarState extends State<NavigationSidebar> {
           const SizedBox(width: 8),
           Text(
             '메뉴',
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
           ),
         ],
       ),
@@ -209,11 +172,13 @@ class _NavigationSidebarState extends State<NavigationSidebar> {
                   child: Text(
                     item.title,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                          color: isSelected
-                              ? AppTheme.selectedColor
-                              : AppTheme.textPrimary,
-                        ),
+                      fontWeight: isSelected
+                          ? FontWeight.w600
+                          : FontWeight.normal,
+                      color: isSelected
+                          ? AppTheme.selectedColor
+                          : AppTheme.textPrimary,
+                    ),
                   ),
                 ),
                 if (hasSubItems)
@@ -228,8 +193,8 @@ class _NavigationSidebarState extends State<NavigationSidebar> {
         ),
         if (hasSubItems && isExpanded)
           ...item.subItems!.map((subItem) {
-            final isSubSelected = selectedMainItem == item.title &&
-                                 selectedSubItem == subItem;
+            final isSubSelected =
+                selectedMainItem == item.title && selectedSubItem == subItem;
             return InkWell(
               onTap: () {
                 setState(() {
@@ -239,8 +204,16 @@ class _NavigationSidebarState extends State<NavigationSidebar> {
                 widget.onNavigate(item.title, subItem);
               },
               child: Container(
-                margin: const EdgeInsets.only(left: 16, right: 8, top: 2, bottom: 2),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                margin: const EdgeInsets.only(
+                  left: 16,
+                  right: 8,
+                  top: 2,
+                  bottom: 2,
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: isSubSelected
                       ? AppTheme.selectedColor.withOpacity(0.1)
@@ -254,11 +227,13 @@ class _NavigationSidebarState extends State<NavigationSidebar> {
                       child: Text(
                         subItem,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: isSubSelected
-                                  ? AppTheme.selectedColor
-                                  : AppTheme.textPrimary,
-                              fontWeight: isSubSelected ? FontWeight.w600 : FontWeight.normal,
-                            ),
+                          color: isSubSelected
+                              ? AppTheme.selectedColor
+                              : AppTheme.textPrimary,
+                          fontWeight: isSubSelected
+                              ? FontWeight.w600
+                              : FontWeight.normal,
+                        ),
                       ),
                     ),
                   ],
@@ -275,9 +250,7 @@ class _NavigationSidebarState extends State<NavigationSidebar> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        border: Border(
-          top: BorderSide(color: AppTheme.dividerColor, width: 1),
-        ),
+        border: Border(top: BorderSide(color: AppTheme.dividerColor, width: 1)),
       ),
       child: InkWell(
         onTap: () {
@@ -299,26 +272,19 @@ class _NavigationSidebarState extends State<NavigationSidebar> {
           decoration: BoxDecoration(
             color: Colors.orange.withOpacity(0.1),
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: Colors.orange.withOpacity(0.3),
-              width: 1,
-            ),
+            border: Border.all(color: Colors.orange.withOpacity(0.3), width: 1),
           ),
           child: Row(
             children: [
-              Icon(
-                Icons.refresh,
-                size: 20,
-                color: Colors.orange,
-              ),
+              Icon(Icons.refresh, size: 20, color: Colors.orange),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   '캐시 초기화',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Colors.orange,
-                        fontWeight: FontWeight.w600,
-                      ),
+                    color: Colors.orange,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ],

@@ -3,7 +3,7 @@ namespace securityindexAPI.Models
     /// <summary>
     /// 문서 정보 모델
     /// </summary>
-    public class 문서정보
+    public class 문서관리마스터
     {
         public string? 관제관리번호 { get; set; }
         public string? 문서일련번호 { get; set; }

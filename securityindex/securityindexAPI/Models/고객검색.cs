@@ -15,10 +15,4 @@ namespace securityindexAPI.Models
         public string? 대표자 { get; set; }
         public string? 관제연락처1 { get; set; }
     }
-
-    public class 사용자마스터
-    {
-        public string? 휴대전화 { get; set; }
-        public string? 관제관리번호 { get; set; }
-    }
 }

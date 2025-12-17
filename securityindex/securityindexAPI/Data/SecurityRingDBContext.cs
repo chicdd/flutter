@@ -3,9 +3,9 @@ using securityindexAPI.Models;
 
 namespace securityindexAPI.Data
 {
-    public class ApplicationDbContext : DbContext
+    public class SecurityRingDBContext : DbContext
     {
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+        public SecurityRingDBContext(DbContextOptions<SecurityRingDBContext> options)
             : base(options)
         {
         }
@@ -34,7 +34,10 @@ namespace securityindexAPI.Data
         public DbSet<스마트정보조회마스터> 스마트정보조회마스터 { get; set; }
 
         // 문서관리 테이블 매핑
-        public DbSet<문서정보> 문서관리마스터 { get; set; }
+        public DbSet<문서관리마스터> 문서관리마스터 { get; set; }
+
+        // 존코드테이블 매핑
+        public DbSet<존마스터> 존마스터 { get; set; }
 
         // 코드 테이블들 (드롭다운용)
         public DbSet<관리구역코드모델> 관리구역코드 { get; set; }
@@ -50,6 +53,7 @@ namespace securityindexAPI.Data
         public DbSet<미경계종류코드모델> 미경계종류코드 { get; set; }
         public DbSet<회사구분코드모델> 회사구분코드 { get; set; }
         public DbSet<지사구분코드모델> 지사구분코드 { get; set; }
+        public DbSet<문서종류코드모델> 문서종류코드마스터 { get; set; }
         public DbSet<차량코드모델> 차량코드 { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -65,7 +69,7 @@ namespace securityindexAPI.Data
             // 사용자마스터 테이블 매핑
             modelBuilder.Entity<사용자마스터>()
                 .ToTable("사용자마스터")
-                .HasKey(u => u.관제관리번호);
+                .HasKey(u => u.등록번호);
 
             // 관제고객휴일주간 테이블 매핑
             modelBuilder.Entity<휴일주간>()
@@ -95,9 +99,14 @@ namespace securityindexAPI.Data
                 .HasKey(s => s.휴대폰번호);
 
             // 문서관리 테이블 매핑
-            modelBuilder.Entity<문서정보>()
+            modelBuilder.Entity<문서관리마스터>()
                 .ToTable("문서관리마스터")
                 .HasKey(d => d.문서일련번호);
+
+            // 존코드테이블 매핑
+            modelBuilder.Entity<존마스터>()
+                .ToTable("존코드테이블")
+                .HasKey(z => z.존번호);
 
             // 코드 테이블 매핑 (모델의 [Table] 어트리뷰트를 사용하므로 키만 설정)
             modelBuilder.Entity<관리구역코드모델>()
@@ -138,6 +147,9 @@ namespace securityindexAPI.Data
 
             modelBuilder.Entity<차량코드모델>()
                 .HasKey(c => c.차량코드);
+
+            modelBuilder.Entity<문서종류코드모델>()
+                .HasKey(c => c.문서종류코드);
         }
     }
 }

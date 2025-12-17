@@ -9,6 +9,9 @@ class DocumentInfo {
   final String? attachmentDate; // 첨부일자
   final String? attacher; // 첨부자
   final String? documentType; // 문서종류
+  //드롭다운
+  final String? documentTypeCode; // 문서종류코드
+  final String? documentTypeName; // 문서종류코드명
 
   DocumentInfo({
     this.controlManagementNumber,
@@ -19,6 +22,8 @@ class DocumentInfo {
     this.attachmentDate,
     this.attacher,
     this.documentType,
+    this.documentTypeCode,
+    this.documentTypeName,
   });
 
   factory DocumentInfo.fromJson(Map<String, dynamic> json) {
@@ -31,6 +36,8 @@ class DocumentInfo {
       attachmentDate: detailDateParsing(json['첨부일자']),
       attacher: json['첨부자'] as String?,
       documentType: json['문서종류'] as String?,
+      documentTypeCode: json['문서종류코드'] as String?,
+      documentTypeName: json['문서종류코드명'] as String?,
     );
   }
 
@@ -44,6 +51,8 @@ class DocumentInfo {
       '첨부일자': attachmentDate,
       '첨부자': attacher,
       '문서종류': documentType,
+      '문서종류코드': documentTypeCode,
+      '문서종류코드명': documentTypeName,
     };
   }
 }

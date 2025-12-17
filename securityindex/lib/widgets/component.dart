@@ -6,6 +6,7 @@ import 'custom_top_bar.dart'; // HighlightedText import
 /// ========================================
 /// 공통 검색 가능 텍스트 필드 빌더
 /// ========================================
+List<CodeData> dropdownList = [];
 
 /// 검색 쿼리를 포함한 CommonTextField 빌더 함수
 Widget buildSearchableTextField({
@@ -103,6 +104,18 @@ Widget buildSearchableTextField({
       ),
     ],
   );
+}
+
+/// 드롭다운 데이터 로드
+Future<List<CodeData>> loadDropdownData(String dropdownName) async {
+  try {
+    // 캐시를 통해 드롭다운 데이터 로드
+    List<CodeData> data = await CodeDataCache.getCodeData(dropdownName);
+    return data;
+  } catch (e) {
+    print('드롭다운 데이터 로드 오류: $e');
+    return [];
+  }
 }
 
 /// ========================================
@@ -305,7 +318,7 @@ class CommonDropdown extends StatelessWidget {
 }
 
 /// ========================================
-/// 공통 체크박스 위젯
+/// 공통 체크박스 위젯 (텍스트 클릭 가능)
 /// ========================================
 
 Widget buildCheckboxOption(
@@ -313,36 +326,74 @@ Widget buildCheckboxOption(
   bool value,
   Function(bool?) onChanged,
 ) {
-  return Row(
-    children: [
-      Checkbox(
-        value: value,
-        onChanged: onChanged,
-        activeColor: AppTheme.selectedColor,
-      ),
-      Text(label, style: const TextStyle(fontSize: 14)),
-    ],
+  return InkWell(
+    onTap: () => onChanged(!value),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Checkbox(
+          value: value,
+          onChanged: onChanged,
+          activeColor: AppTheme.selectedColor,
+        ),
+        Text(label, style: const TextStyle(fontSize: 14)),
+      ],
+    ),
   );
 }
 
 /// ========================================
-/// 공통 라디오버튼 위젯
+/// 공통 라디오버튼 위젯 (텍스트 클릭 가능)
 /// ========================================
 Widget buildRadioOption(
   String label,
   bool isSelected,
   Function(bool?) onChanged,
 ) {
-  return Row(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      Radio<bool>(
-        value: true,
-        groupValue: isSelected,
-        onChanged: onChanged,
-        activeColor: AppTheme.selectedColor,
-      ),
-      Text(label, style: const TextStyle(fontSize: 14)),
-    ],
+  return InkWell(
+    onTap: () => onChanged(true),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Radio<bool>(
+          value: true,
+          groupValue: isSelected,
+          onChanged: onChanged,
+          activeColor: AppTheme.selectedColor,
+        ),
+        Text(label, style: const TextStyle(fontSize: 14)),
+      ],
+    ),
+  );
+}
+
+/// 체크박스 빌더 (텍스트 클릭 가능)
+Widget buildCheckbox(String label, bool value, Function(bool?) onChanged) {
+  return InkWell(
+    onTap: () => onChanged(!value),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          width: 20,
+          height: 20,
+          child: Checkbox(
+            value: value,
+            onChanged: onChanged,
+            activeColor: const Color(0xFF007AFF),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          label,
+          style: const TextStyle(
+            color: Color(0xFF252525),
+            fontSize: 14,
+            fontWeight: FontWeight.w400,
+          ),
+        ),
+      ],
+    ),
   );
 }

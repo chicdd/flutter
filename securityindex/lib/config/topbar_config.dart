@@ -76,6 +76,16 @@ class TopBarConfig {
     return [];
   }
 
+  /// 최근신호이력
+  static List<TopBarButton> recentSignalListButtons(BuildContext context) {
+    return [
+      TopBarButton(
+        label: '저장',
+        onPressed: () => TopBarActions.onSavePressed(context),
+      ),
+    ];
+  }
+
   /// 기타 화면 버튼 (공통)
   static List<TopBarButton> defaultButtons(BuildContext context) {
     return [];

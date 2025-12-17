@@ -3,6 +3,7 @@ import '../style.dart';
 class CustomerDetail {
   // 기본 정보
   final String controlManagementNumber; // 관제관리번호
+  final String? erpCusNumber; // 영업관리번호
   final String? publicLine; // 공중회선
   final String? dedicatedLine; // 전용회선
   final String? internetLine; // 인터넷회선
@@ -97,6 +98,7 @@ class CustomerDetail {
 
   CustomerDetail({
     required this.controlManagementNumber,
+    this.erpCusNumber,
     this.publicLine,
     this.dedicatedLine,
     this.internetLine,
@@ -176,10 +178,9 @@ class CustomerDetail {
   });
 
   factory CustomerDetail.fromJson(Map<String, dynamic> json) {
-    print('관제관리번호${json['관제관리번호']?.toString()}');
-    print('TMP8${json['TMP8'] as bool?}');
     return CustomerDetail(
       controlManagementNumber: json['관제관리번호']?.toString() ?? '',
+      erpCusNumber: json['고객관리번호']?.toString() ?? '',
       usageLineTypeCode: json['사용회선종류']?.toString(),
       usageLineTypeName: json['사용회선종류명']?.toString(),
       publicLine: json['공중회선']?.toString(),

@@ -46,6 +46,7 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
 
   // 관제 기본 정보
   final _managementNumberController = TextEditingController(); // 관제관리번호
+  final _erpCusNumberController = TextEditingController(); // 영업관리번호
   final _publicNumberController = TextEditingController(); // 공중회선
   final _transmissionNumberController = TextEditingController(); // 전용회선
   final _publicTransmissionController = TextEditingController(); // 인터넷회선
@@ -118,6 +119,7 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
     _representativeNameController.dispose();
     _representativePhoneController.dispose();
     _managementNumberController.dispose();
+    _erpCusNumberController.dispose();
     _publicNumberController.dispose();
     _transmissionNumberController.dispose();
     _publicTransmissionController.dispose();
@@ -141,6 +143,7 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
   void _clearAllFields() {
     // 모든 필드 초기화
     _managementNumberController.clear();
+    _erpCusNumberController.clear();
     _controlTypeController.clear();
     _smsNameController.clear();
     _contact1Controller.clear();
@@ -192,6 +195,7 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
   void _updateFieldsFromDetail(CustomerDetail detail) {
     // 관제 물건 정보
     _managementNumberController.text = detail.controlManagementNumber;
+    _erpCusNumberController.text = detail.erpCusNumber ?? '';
     _controlTypeController.text = detail.controlBusinessName ?? '';
     _smsNameController.text = detail.customerBusinessName ?? '';
     _contact1Controller.text = detail.controlContact1 ?? '';
@@ -283,7 +287,7 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
   }
 
   /// 서비스에서 UI 업데이트 (무한 루프 방지)
-  void _updateUIFromService() {
+  Future<void> _updateUIFromService() async {
     final detail = _customerService.customerDetail;
     final customer = _customerService.selectedCustomer;
 
@@ -292,11 +296,13 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
         _customerDetail = detail;
         _updateFieldsFromDetail(detail);
       });
-    } else if (customer != null) {
-      setState(() {
-        _loadBasicCustomerInfo(customer);
-      });
-    } else {
+    }
+    //else if (customer != null) {
+    //   setState(() {
+    //     _loadBasicCustomerInfo(customer);
+    //   });
+    // }
+    else {
       _clearAllFields();
     }
   }
@@ -304,98 +310,98 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
   /// 데이터 초기화 (순차 처리)
   Future<void> _initializeData() async {
     // 1. 드롭다운 데이터 먼저 로드
-    await _loadDropdownData();
+    _managementAreaList = await loadDropdownData('managementarea');
+    _operationAreaList = await loadDropdownData('operationarea');
+    _businessTypeList = await loadDropdownData('businesstype');
+    _vehicleCodeList = await loadDropdownData('vehiclecode');
+    _policeStationList = await loadDropdownData('policestation');
+    _policeDistrictList = await loadDropdownData('policedistrict');
+    _usageLineList = await loadDropdownData('usageline');
+    _serviceTypeList = await loadDropdownData('servicetype');
+    _mainSystemList = await loadDropdownData('mainsystem');
+    _subSystemList = await loadDropdownData('subsystem');
+    _miSettingsList = await loadDropdownData('misettings');
+    _customerStatusList = await loadDropdownData('customerstatus');
 
     // 2. 고객 데이터 로드 (전역 서비스에서)
-    await _loadCustomerDataFromService();
+    await _updateUIFromService();
   }
 
-  /// 드롭다운 데이터 로드
-  Future<void> _loadDropdownData() async {
-    try {
-      // 캐시를 통해 드롭다운 데이터 로드
-      _managementAreaList = await CodeDataCache.getCodeData(
-        'managementarea',
-      ); //관리구역
-      _operationAreaList = await CodeDataCache.getCodeData('operationarea');
-      _businessTypeList = await CodeDataCache.getCodeData('businesstype');
-      _vehicleCodeList = await CodeDataCache.getCodeData('vehiclecode');
-      _policeStationList = await CodeDataCache.getCodeData('policestation');
-      _policeDistrictList = await CodeDataCache.getCodeData('policedistrict');
-      _usageLineList = await CodeDataCache.getCodeData('usageline');
-      _serviceTypeList = await CodeDataCache.getCodeData('servicetype');
-      _mainSystemList = await CodeDataCache.getCodeData('mainsystem');
-      _subSystemList = await CodeDataCache.getCodeData('subsystem');
-      _miSettingsList = await CodeDataCache.getCodeData('misettings');
-      _customerStatusList = await CodeDataCache.getCodeData('customerstatus');
-    } catch (e) {
-      print('드롭다운 데이터 로드 오류: $e');
-    }
-  }
+  // /// 드롭다운 데이터 로드
+  // Future<void> _loadDropdownData() async {
+  //   try {
+  //     // 캐시를 통해 드롭다운 데이터 로드
+  //     _managementAreaList = await CodeDataCache.getCodeData(
+  //       'managementarea',
+  //     ); //관리구역
+  //     _operationAreaList = await CodeDataCache.getCodeData('operationarea');
+  //     _businessTypeList = await CodeDataCache.getCodeData('businesstype');
+  //     _vehicleCodeList = await CodeDataCache.getCodeData('vehiclecode');
+  //     _policeStationList = await CodeDataCache.getCodeData('policestation');
+  //     _policeDistrictList = await CodeDataCache.getCodeData('policedistrict');
+  //     _usageLineList = await CodeDataCache.getCodeData('usageline');
+  //     _serviceTypeList = await CodeDataCache.getCodeData('servicetype');
+  //     _mainSystemList = await CodeDataCache.getCodeData('mainsystem');
+  //     _subSystemList = await CodeDataCache.getCodeData('subsystem');
+  //     _miSettingsList = await CodeDataCache.getCodeData('misettings');
+  //     _customerStatusList = await CodeDataCache.getCodeData('customerstatus');
+  //   } catch (e) {
+  //     print('드롭다운 데이터 로드 오류: $e');
+  //   }
+  // }
 
-  @override
-  void didUpdateWidget(BasicCustomerInfo oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    // 고객이 변경되었을 때 새로운 데이터 로드
-    if (widget.searchpanel != oldWidget.searchpanel &&
-        widget.searchpanel != null) {
-      _loadDropdownData(); // 드롭다운 데이터 먼저 로드
-      _loadCustomerDataFromService(); // 전역 서비스에서 고객 상세 정보 로드
-    }
-  }
+  // /// 전역 서비스에서 고객 데이터 로드
+  // Future<void> _loadCustomerDataFromService() async {
+  //   final selectedCustomer = _customerService.selectedCustomer;
+  //
+  //   if (selectedCustomer == null) {
+  //     // 선택된 고객이 없으면 필드 초기화
+  //     _clearAllFields();
+  //     return;
+  //   }
+  //
+  //   setState(() {
+  //     _isLoading = true;
+  //   });
+  //
+  //   try {
+  //     // 전역 서비스에서 상세 정보 로드
+  //     await _customerService.loadCustomerDetail();
+  //
+  //     final detail = _customerService.customerDetail;
+  //
+  //     if (detail != null && mounted) {
+  //       setState(() {
+  //         _customerDetail = detail;
+  //         _updateFieldsFromDetail(detail);
+  //         _isLoading = false;
+  //       });
+  //     } else if (mounted) {
+  //       setState(() {
+  //         _isLoading = false;
+  //       });
+  //       // API에서 상세 정보를 가져오지 못한 경우 기본 고객 정보만 표시
+  //       //_loadBasicCustomerInfo(selectedCustomer);
+  //     }
+  //   } catch (e) {
+  //     print('고객 상세 정보 로드 오류: $e');
+  //     if (mounted) {
+  //       setState(() {
+  //         _isLoading = false;
+  //       });
+  //       //_loadBasicCustomerInfo(selectedCustomer);
+  //     }
+  //   }
+  // }
 
-  /// 전역 서비스에서 고객 데이터 로드
-  Future<void> _loadCustomerDataFromService() async {
-    final selectedCustomer = _customerService.selectedCustomer;
-
-    if (selectedCustomer == null) {
-      // 선택된 고객이 없으면 필드 초기화
-      _clearAllFields();
-      return;
-    }
-
-    setState(() {
-      _isLoading = true;
-    });
-
-    try {
-      // 전역 서비스에서 상세 정보 로드
-      await _customerService.loadCustomerDetail();
-
-      final detail = _customerService.customerDetail;
-
-      if (detail != null && mounted) {
-        setState(() {
-          _customerDetail = detail;
-          _updateFieldsFromDetail(detail);
-          _isLoading = false;
-        });
-      } else if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-        // API에서 상세 정보를 가져오지 못한 경우 기본 고객 정보만 표시
-        _loadBasicCustomerInfo(selectedCustomer);
-      }
-    } catch (e) {
-      print('고객 상세 정보 로드 오류: $e');
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-        _loadBasicCustomerInfo(selectedCustomer);
-      }
-    }
-  }
-
-  void _loadBasicCustomerInfo(SearchPanel customer) {
-    // API 실패 시 기본 고객 정보만 로드
-    _managementNumberController.text = customer.controlManagementNumber;
-    _controlTypeController.text = customer.controlBusinessName;
-    _contact1Controller.text = widget.searchpanel?.phoneNumber ?? '';
-    _addressController.text = customer.propertyAddress;
-    _representativeNameController.text = customer.representative ?? '';
-  }
+  // void _loadBasicCustomerInfo(SearchPanel customer) {
+  //   // API 실패 시 기본 고객 정보만 로드
+  //   _managementNumberController.text = customer.controlManagementNumber;
+  //   _controlTypeController.text = customer.controlBusinessName;
+  //   _contact1Controller.text = widget.searchpanel?.phoneNumber ?? '';
+  //   _addressController.text = customer.propertyAddress;
+  //   _representativeNameController.text = customer.representative ?? '';
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -576,8 +582,8 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
               Expanded(
                 child: buildSearchableTextField(
                   searchQuery: _pageSearchQuery,
-                  label: '공중회선',
-                  controller: _publicNumberController,
+                  label: '영업관리번호',
+                  controller: _erpCusNumberController,
                 ),
               ),
             ],
@@ -585,6 +591,14 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
           const SizedBox(height: 16),
           Row(
             children: [
+              Expanded(
+                child: buildSearchableTextField(
+                  searchQuery: _pageSearchQuery,
+                  label: '공중회선',
+                  controller: _publicNumberController,
+                ),
+              ),
+              const SizedBox(width: 12),
               Expanded(
                 child: buildSearchableTextField(
                   searchQuery: _pageSearchQuery,
@@ -592,14 +606,6 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
                   controller: _transmissionNumberController,
                 ),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: buildSearchableTextField(
-                  searchQuery: _pageSearchQuery,
-                  label: '인터넷회선',
-                  controller: _publicTransmissionController,
-                ),
-              ),
             ],
           ),
           const SizedBox(height: 16),
@@ -608,16 +614,16 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
               Expanded(
                 child: buildSearchableTextField(
                   searchQuery: _pageSearchQuery,
-                  label: '원격포트 구분',
-                  controller: _remoteCodeController,
+                  label: '인터넷회선',
+                  controller: _publicTransmissionController,
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: buildSearchableTextField(
                   searchQuery: _pageSearchQuery,
-                  label: '경비개시일자',
-                  controller: _securityStartDateController,
+                  label: '원격포트 구분',
+                  controller: _remoteCodeController,
                 ),
               ),
             ],
@@ -719,10 +725,24 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
             ],
           ),
           const SizedBox(height: 16),
-          buildSearchableTextField(
-            searchQuery: _pageSearchQuery,
-            label: '기관연락처',
-            controller: _emergencyContactController,
+          Row(
+            children: [
+              Expanded(
+                child: buildSearchableTextField(
+                  searchQuery: _pageSearchQuery,
+                  label: '기관연락처',
+                  controller: _emergencyContactController,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: buildSearchableTextField(
+                  searchQuery: _pageSearchQuery,
+                  label: '경비개시일자',
+                  controller: _securityStartDateController,
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -1060,11 +1080,11 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              buildCheckboxOption('DVR고객', _isDvrInspection, (val) {
+              buildCheckbox('DVR고객', _isDvrInspection, (val) {
                 setState(() => _isDvrInspection = val ?? false);
               }),
               const SizedBox(width: 20),
-              buildCheckboxOption('무선센서 설치고객', _isWirelessSensorInspection, (
+              buildCheckbox('무선센서 설치고객', _isWirelessSensorInspection, (
                 val,
               ) {
                 setState(() => _isWirelessSensorInspection = val ?? false);

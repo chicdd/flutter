@@ -55,7 +55,6 @@ class ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
   int? _holidayUnauthorizedEndHour;
   int? _holidayUnauthorizedEndMinute;
   bool _isHolidayUsed = false;
-  bool _isH2olidayUsed = false;
 
   // 주간 휴일설정 - 5주 x 7일
   final List<List<bool>> _weeklyHolidays = List.generate(
@@ -78,13 +77,11 @@ class ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
   final _gpsY1Controller = TextEditingController();
   final _gpsX2Controller = TextEditingController();
   final _gpsY2Controller = TextEditingController();
-  final _companyTypeController = TextEditingController();
-  final _branchTypeController = TextEditingController();
   final _dedicatedNumberController = TextEditingController();
   final _dedicatedMemoController = TextEditingController();
 
-  String? _companyType; // 회사구분
-  String? _branchType; // 지사구분
+  String? companyType; // 회사구분
+  String? branchType; // 지사구분
 
   // 부가서비스 데이터 목록
   List<AdditionalService> _additionalServices = [];
@@ -106,8 +103,6 @@ class ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
     _gpsY1Controller.dispose();
     _gpsX2Controller.dispose();
     _gpsY2Controller.dispose();
-    _companyTypeController.dispose();
-    _branchTypeController.dispose();
     _dedicatedNumberController.dispose();
     _dedicatedMemoController.dispose();
     super.dispose();
@@ -124,15 +119,13 @@ class ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
     _gpsY1Controller.clear();
     _gpsX2Controller.clear();
     _gpsY2Controller.clear();
-    _companyTypeController.clear();
-    _branchTypeController.clear();
     _dedicatedNumberController.clear();
     _dedicatedMemoController.clear();
 
     if (mounted) {
       setState(() {
-        _companyType = null;
-        _branchType = null;
+        companyType = null;
+        branchType = null;
 
         // 휴일주간 체크박스 초기화
         for (var i = 0; i < 5; i++) {
@@ -181,19 +174,19 @@ class ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
     }
   }
 
-  @override
-  void didUpdateWidget(ExtendedCustomerInfo oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    // 고객이 변경되었을 때 새로운 데이터 로드
-    if (widget.searchpanel != oldWidget.searchpanel &&
-        widget.searchpanel != null) {
-      _loadDropdownData(); // 드롭다운 데이터 먼저 로드
-      _loadCustomerDataFromService(); // 전역 서비스에서 고객 상세 정보 로드
-    }
-  }
+  // @override
+  // void didUpdateWidget(ExtendedCustomerInfo oldWidget) {
+  //   super.didUpdateWidget(oldWidget);
+  //   // 고객이 변경되었을 때 새로운 데이터 로드
+  //   if (widget.searchpanel != oldWidget.searchpanel &&
+  //       widget.searchpanel != null) {
+  //     _loadDropdownData(); // 드롭다운 데이터 먼저 로드
+  //     _updateUIFromService(); // 전역 서비스에서 고객 상세 정보 로드
+  //   }
+  // }
 
   /// 상세 정보로부터 필드 업데이트
-  void _updateFieldsFromDetail(CustomerDetail detail) {
+  Future<void> _updateFieldsFromDetail(CustomerDetail detail) async {
     // 기본 필드 매핑
     _openingPhoneController.text = detail.openingPhone ?? ''; //개통전화번호
     _modemSerialController.text = detail.modemSerial ?? ''; // 모뎀일련번호
@@ -208,11 +201,10 @@ class ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
     _dedicatedMemoController.text = detail.dedicatedMemo ?? '';
 
     //드롭다운
-    _companyType = isValidCode(detail.companyTypeCode)
+    companyType = isValidCode(detail.companyTypeCode)
         ? detail.companyTypeCode
         : null;
-
-    _branchType = isValidCode(detail.branchTypeCode)
+    branchType = isValidCode(detail.branchTypeCode)
         ? detail.branchTypeCode
         : null;
 
@@ -253,10 +245,11 @@ class ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
   /// 데이터 초기화 (순차 처리)
   Future<void> _initializeData() async {
     // 1. 드롭다운 데이터 먼저 로드
-    await _loadDropdownData();
+    _companyTypeList = await loadDropdownData('companytype');
+    _branchTypeList = await loadDropdownData('branchtype');
 
-    // 2. 고객 데이터 로드 (전역 서비스에서)
-    await _loadCustomerDataFromService();
+    // 2. 고객 데이터 로드
+    await _updateUIFromService();
   }
 
   // 페이지 내 검색
@@ -269,16 +262,16 @@ class ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
     });
   }
 
-  /// 드롭다운 데이터 로드
-  Future<void> _loadDropdownData() async {
-    try {
-      // 캐시를 통해 드롭다운 데이터 로드
-      _companyTypeList = await CodeDataCache.getCodeData('companytype');
-      _branchTypeList = await CodeDataCache.getCodeData('branchtype');
-    } catch (e) {
-      print('드롭다운 데이터 로드 오류: $e');
-    }
-  }
+  // /// 드롭다운 데이터 로드
+  // Future<void> _loadDropdownData() async {
+  //   try {
+  //     // 캐시를 통해 드롭다운 데이터 로드
+  //     _companyTypeList = await CodeDataCache.getCodeData('companytype');
+  //     _branchTypeList = await CodeDataCache.getCodeData('branchtype');
+  //   } catch (e) {
+  //     print('드롭다운 데이터 로드 오류: $e');
+  //   }
+  // }
 
   // 검색 쿼리를 포함한 CommonTextField 빌더
   Widget _buildSearchableTextField({
@@ -313,17 +306,16 @@ class ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
   }
 
   /// 서비스에서 UI 업데이트 (무한 루프 방지)
-  void _updateUIFromService() {
+  Future<void> _updateUIFromService() async {
     final detail = _customerService.customerDetail;
     final selectedCustomer = _customerService.selectedCustomer;
 
     if (detail != null) {
-      setState(() {
-        _updateFieldsFromDetail(detail);
-      });
+      setState(() {});
 
       // 휴일주간, 부가서비스, DVR 데이터 로드
       if (selectedCustomer != null) {
+        _updateFieldsFromDetail(detail);
         _loadHolidayData(selectedCustomer.controlManagementNumber);
         _loadAdditionalServices(selectedCustomer.controlManagementNumber);
         _loadDVRInfo(selectedCustomer.controlManagementNumber);
@@ -333,36 +325,35 @@ class ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
     }
   }
 
-  /// 전역 서비스에서 고객 데이터 로드
-  Future<void> _loadCustomerDataFromService() async {
-    final selectedCustomer = _customerService.selectedCustomer;
-
-    if (selectedCustomer == null) {
-      // 선택된 고객이 없으면 필드 초기화
-      _clearAllFields();
-      return;
-    }
-
-    try {
-      // 전역 서비스에서 상세 정보 로드
-      await _customerService.loadCustomerDetail();
-
-      final detail = _customerService.customerDetail;
-
-      if (detail != null && mounted) {
-        setState(() {
-          _updateFieldsFromDetail(detail);
-        });
-
-        // 휴일주간, 부가서비스, DVR 데이터 로드
-        await _loadHolidayData(selectedCustomer.controlManagementNumber);
-        await _loadAdditionalServices(selectedCustomer.controlManagementNumber);
-        await _loadDVRInfo(selectedCustomer.controlManagementNumber);
-      }
-    } catch (e) {
-      print('고객 상세 정보 로드 오류: $e');
-    }
-  }
+  // /// 전역 서비스에서 고객 데이터 로드
+  // Future<void> _loadCustomerDataFromService() async {
+  //   final selectedCustomer = _customerService.selectedCustomer;
+  //
+  //   if (selectedCustomer == null) {
+  //     // 선택된 고객이 없으면 필드 초기화
+  //     _clearAllFields();
+  //     return;
+  //   }
+  //
+  //   try {
+  //     // 전역 서비스에서 상세 정보 로드
+  //     await _customerService.loadCustomerDetail();
+  //
+  //     final detail = _customerService.customerDetail;
+  //
+  //     if (detail != null && mounted) {
+  //       setState(() {});
+  //
+  //       // // 휴일주간, 부가서비스, DVR 데이터 로드
+  //       await _updateFieldsFromDetail(detail);
+  //       await _loadHolidayData(selectedCustomer.controlManagementNumber);
+  //       await _loadAdditionalServices(selectedCustomer.controlManagementNumber);
+  //       await _loadDVRInfo(selectedCustomer.controlManagementNumber);
+  //     }
+  //   } catch (e) {
+  //     print('고객 상세 정보 로드 오류: $e');
+  //   }
+  // }
 
   /// 휴일주간 데이터 로드 및 체크박스 업데이트
   Future<void> _loadHolidayData(String managementNumber) async {
@@ -1015,9 +1006,10 @@ class ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
                       ),
                     ),
                     const Spacer(),
-                    Checkbox(
-                      value: isUsed,
-                      onChanged: (value) {
+                    buildCheckbox(
+                      '사용',
+                      isUsed,
+                      (value) {
                         setState(() {
                           if (isWeekday == true) {
                             _isWeekdayUsed = value ?? false;
@@ -1028,16 +1020,6 @@ class ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
                           }
                         });
                       },
-                      activeColor: AppTheme.selectedColor,
-                    ),
-                    const Text(
-                      '사용',
-                      style: TextStyle(
-                        color: Color(0xFF252525),
-                        fontSize: 15,
-                        fontFamily: 'Inter',
-                        fontWeight: FontWeight.w400,
-                      ),
                     ),
                   ],
                 ),
@@ -1306,24 +1288,24 @@ class ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
           const SizedBox(height: 16),
           buildDropdownField(
             label: '회사구분',
-            value: _companyType,
+            value: companyType,
             items: _companyTypeList,
             searchQuery: _pageSearchQuery,
             onChanged: (String? newValue) {
               setState(() {
-                _companyType = newValue!;
+                companyType = newValue!;
               });
             },
           ),
           const SizedBox(height: 12),
           buildDropdownField(
             label: '지사구분',
-            value: _branchType,
+            value: branchType,
             items: _branchTypeList,
             searchQuery: _pageSearchQuery,
             onChanged: (String? newValue) {
               setState(() {
-                _branchType = newValue!;
+                branchType = newValue!;
               });
             },
           ),

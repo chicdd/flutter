@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:securityindex/services/api_service.dart';
 import 'theme.dart';
-import 'models/customer_detail.dart';
 
 /// ========================================
 /// 공통 텍스트 필드 위젯
@@ -20,7 +19,7 @@ class CommonTextField extends StatelessWidget {
   final String? searchQuery;
 
   const CommonTextField({
-    Key? key,
+    super.key,
     required this.label,
     this.controller,
     this.hintText,
@@ -30,7 +29,7 @@ class CommonTextField extends StatelessWidget {
     this.keyboardType,
     this.maxLines = 1,
     this.searchQuery,
-  }) : super(key: key);
+  });
 
   bool _containsQuery() {
     if (searchQuery == null || searchQuery!.isEmpty) return false;
@@ -71,6 +70,10 @@ class CommonTextField extends StatelessWidget {
             maxLines: maxLines,
             decoration: InputDecoration(
               hintText: hintText,
+              hintStyle: const TextStyle(
+                color: Color(0xFF999999),
+                fontSize: 14,
+              ),
               isDense: true,
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 12,
@@ -141,7 +144,7 @@ class InlineTextField extends StatelessWidget {
   final double? maxWidth;
 
   const InlineTextField({
-    Key? key,
+    super.key,
     required this.label,
     this.controller,
     this.hintText,
@@ -149,7 +152,7 @@ class InlineTextField extends StatelessWidget {
     this.readOnly = false,
     this.onTap,
     this.maxWidth = 350,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -214,8 +217,11 @@ class ReadOnlyTextField extends StatelessWidget {
   final String label;
   final String value;
 
-  const ReadOnlyTextField({Key? key, required this.label, required this.value})
-    : super(key: key);
+  const ReadOnlyTextField({
+    super.key,
+    required this.label,
+    required this.value,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -280,12 +286,12 @@ class CommonDropdownField extends StatelessWidget {
   final Function(String?) onChanged;
 
   const CommonDropdownField({
-    Key? key,
+    super.key,
     required this.label,
     required this.value,
     required this.items,
     required this.onChanged,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -368,12 +374,12 @@ class StatusButton extends StatelessWidget {
   final VoidCallback? onTap;
 
   const StatusButton({
-    Key? key,
+    super.key,
     required this.label,
     required this.isSelected,
     required this.color,
     this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -451,11 +457,11 @@ class RadioOption extends StatelessWidget {
   final Function(bool?) onChanged;
 
   const RadioOption({
-    Key? key,
+    super.key,
     required this.label,
     required this.isSelected,
     required this.onChanged,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -481,11 +487,11 @@ class CheckboxOption extends StatelessWidget {
   final Function(bool?) onChanged;
 
   const CheckboxOption({
-    Key? key,
+    super.key,
     required this.label,
     required this.value,
     required this.onChanged,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -510,8 +516,11 @@ class NumberDisplayField extends StatelessWidget {
   final String label;
   final int value;
 
-  const NumberDisplayField({Key? key, required this.label, required this.value})
-    : super(key: key);
+  const NumberDisplayField({
+    super.key,
+    required this.label,
+    required this.value,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -554,12 +563,12 @@ class MemoTab extends StatelessWidget {
   final VoidCallback onTap;
 
   const MemoTab({
-    Key? key,
+    super.key,
     required this.label,
     required this.index,
     required this.selectedIndex,
     required this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -650,7 +659,8 @@ String detailDateParsing(String? date) {
     }
 
     // 년-월-일 형식
-    final dateStr = '${dateTime.year}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')}';
+    final dateStr =
+        '${dateTime.year}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')}';
 
     // 오전/오후 판단
     final period = dateTime.hour >= 12 ? '오후' : '오전';

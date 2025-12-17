@@ -12,6 +12,7 @@ namespace securityindexAPI.Models
         [Key]
         public string? 휴대폰번호 { get; set; }
         public string? 관제관리번호 { get; set; }
+        public string? 영업관리번호 { get; set; }
         public string? 상호명 { get; set; }
         public string? 사용자이름 { get; set; }
         public bool? 원격경계여부 { get; set; }
