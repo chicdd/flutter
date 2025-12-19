@@ -1084,9 +1084,7 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
                 setState(() => _isDvrInspection = val ?? false);
               }),
               const SizedBox(width: 20),
-              buildCheckbox('무선센서 설치고객', _isWirelessSensorInspection, (
-                val,
-              ) {
+              buildCheckbox('무선센서 설치고객', _isWirelessSensorInspection, (val) {
                 setState(() => _isWirelessSensorInspection = val ?? false);
               }),
             ],

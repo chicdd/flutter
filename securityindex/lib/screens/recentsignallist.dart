@@ -23,6 +23,18 @@ class _RecentSignalListScreenState extends State<RecentSignalListScreen>
     with CustomerServiceHandler, AutomaticKeepAliveClientMixin {
   @override
   bool get wantKeepAlive => true;
+  // 검색 컨트롤러
+  final TextEditingController _searchController = TextEditingController();
+  // 페이지 내 검색
+  String _pageSearchQuery = '';
+
+  // 검색 쿼리 업데이트 메서드
+  void updateSearchQuery(String query) {
+    setState(() {
+      _pageSearchQuery = query;
+    });
+  }
+
   // 신호 데이터 목록
   List<RecentSignalInfo> _signalList = [];
   int _currentSkip = 0; // 현재 건너뛴 개수
@@ -82,6 +94,7 @@ class _RecentSignalListScreenState extends State<RecentSignalListScreen>
     _scrollController.dispose();
     _headerScrollController.dispose();
     _bodyScrollController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -337,8 +350,8 @@ class _RecentSignalListScreenState extends State<RecentSignalListScreen>
           Row(
             children: [
               // 신호 필터 드롭다운
-              Expanded(
-                flex: 2,
+              SizedBox(
+                width: 200,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -385,8 +398,8 @@ class _RecentSignalListScreenState extends State<RecentSignalListScreen>
               const SizedBox(width: 16),
 
               // 시작 날짜
-              Expanded(
-                flex: 2,
+              SizedBox(
+                width: 200,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -425,8 +438,8 @@ class _RecentSignalListScreenState extends State<RecentSignalListScreen>
               const SizedBox(width: 16),
 
               // 종료 날짜
-              Expanded(
-                flex: 2,
+              SizedBox(
+                width: 200,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -465,69 +478,63 @@ class _RecentSignalListScreenState extends State<RecentSignalListScreen>
               const SizedBox(width: 16),
 
               // 오름차순 정렬 체크박스
-              Expanded(
-                flex: 2,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      '정렬 옵션',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: Color(0xFF252525),
-                      ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    '정렬 옵션',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: Color(0xFF252525),
                     ),
-                    const SizedBox(height: 8),
-                    buildCheckbox('오름차순 정렬', _isAscending, (value) {
-                      setState(() {
-                        _isAscending = value ?? false;
-                      });
-                    }),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 8),
+                  buildCheckbox('오름차순 정렬', _isAscending, (value) {
+                    setState(() {
+                      _isAscending = value ?? false;
+                    });
+                  }),
+                ],
               ),
               const SizedBox(width: 16),
 
               // 조회 버튼
-              Expanded(
-                flex: 2,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 22),
-                    ElevatedButton(
-                      onPressed: _isLoading ? null : _refreshSignalData,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF007AFF),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 12,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        elevation: 0,
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 22),
+                  ElevatedButton(
+                    onPressed: _isLoading ? null : _refreshSignalData,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF007AFF),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 20,
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text(
-                            '관제신호 새로고침',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6),
                       ),
+                      elevation: 0,
                     ),
-                  ],
-                ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text(
+                          '관제신호 새로고침',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -585,10 +592,7 @@ class _RecentSignalListScreenState extends State<RecentSignalListScreen>
                 ? Center(
                     child: Text(
                       '조회된 신호가 없습니다.',
-                      style: const TextStyle(
-                        color: Colors.grey,
-                        fontSize: 16,
-                      ),
+                      style: const TextStyle(color: Colors.grey, fontSize: 16),
                     ),
                   )
                 : Stack(
