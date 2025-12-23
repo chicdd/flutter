@@ -51,7 +51,7 @@ dependencies:
   intl: ^0.20.2
 
   # 데이터 그리드
-  syncfusion_flutter_datagrid: ^27.2.5
+  syncfusion_flutter_datagrid: ^32.1.19
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -51,34 +51,45 @@ class _RecentSignalListScreenState extends State<RecentSignalListScreen>
   bool _isLoading = false;
   bool _isLoadingMore = false;
 
-  // 스크롤 컨트롤러
-  final ScrollController _scrollController = ScrollController();
+  // DataGrid 컨트롤러
+  late DataGridController _dataGridController;
+  late RecentSignalDataSource _dataSource;
+
+  // 열 너비 저장 (열 크기 조정을 위해)
+  final Map<String, double> _columnWidths = {
+    'controlManagementNumber': 120,
+    'controlBusinessName': 150,
+    'receiveDateFormatted': 120,
+    'receiveTimeFormatted': 100,
+    'signalName': 150,
+    'signalCode': 100,
+    'remark': 150,
+    'controllerName': 100,
+    'publicLine': 120,
+    'dedicatedLine': 120,
+    'inputContent': 200,
+    'textColor': 100,
+    'backgroundColor': 100,
+  };
 
   @override
   void initState() {
     super.initState();
     initCustomerServiceListener();
+    _dataGridController = DataGridController();
+    _dataSource = RecentSignalDataSource(
+      signalList: _signalList,
+      searchQuery: _pageSearchQuery,
+    );
     _initializeData();
-    _scrollController.addListener(_onScroll);
   }
 
   @override
   void dispose() {
     disposeCustomerServiceListener();
-    _scrollController.dispose();
+    _dataGridController.dispose();
     _searchController.dispose();
     super.dispose();
-  }
-
-  /// 스크롤 이벤트 처리 (페이징)
-  void _onScroll() {
-    // 스크롤이 80% 이상 내려왔을 때만 추가 로드 (중복 방지)
-    if (!_isLoadingMore &&
-        _hasMore &&
-        _scrollController.position.pixels >=
-            _scrollController.position.maxScrollExtent * 0.8) {
-      _loadMoreData();
-    }
   }
 
   /// 추가 데이터 로드
@@ -121,6 +132,11 @@ class _RecentSignalListScreenState extends State<RecentSignalListScreen>
               _totalCount = totalCount;
               _hasMore = _signalList.length < _totalCount;
               _isLoadingMore = false;
+              // DataSource 업데이트
+              _dataSource.updateDataSource(
+                signalList: _signalList,
+                searchQuery: _pageSearchQuery,
+              );
             });
           }
         });
@@ -199,6 +215,11 @@ class _RecentSignalListScreenState extends State<RecentSignalListScreen>
           _totalCount = totalCount;
           _hasMore = signals.length < totalCount;
           _isLoading = false;
+          // DataSource 업데이트
+          _dataSource.updateDataSource(
+            signalList: _signalList,
+            searchQuery: _pageSearchQuery,
+          );
         });
       }
 
@@ -539,262 +560,299 @@ class _RecentSignalListScreenState extends State<RecentSignalListScreen>
           Expanded(
             child: Stack(
               children: [
-                SfDataGrid(
-                  source: RecentSignalDataSource(
-                    signalList: _signalList,
-                    searchQuery: _pageSearchQuery,
-                  ),
-                  controller: DataGridController(),
-                  columnWidthMode: ColumnWidthMode.none,
-                  allowSorting: true,
-                  gridLinesVisibility: GridLinesVisibility.both,
-                  headerGridLinesVisibility: GridLinesVisibility.both,
-                  columns: [
-                    GridColumn(
-                      columnName: 'controlManagementNumber',
-                      width: 120,
-                      label: Container(
-                        padding: const EdgeInsets.all(8),
-                        alignment: Alignment.center,
-                        color: const Color(0xFFE0E0E0),
-                        child: const Text(
-                          '관제관리번호',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ),
-                    ),
-                    GridColumn(
-                      columnName: 'controlBusinessName',
-                      width: 150,
-                      label: Container(
-                        padding: const EdgeInsets.all(8),
-                        alignment: Alignment.center,
-                        color: const Color(0xFFE0E0E0),
-                        child: const Text(
-                          '관제상호',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ),
-                    ),
-                    GridColumn(
-                      columnName: 'receiveDateFormatted',
-                      width: 120,
-                      label: Container(
-                        padding: const EdgeInsets.all(8),
-                        alignment: Alignment.center,
-                        color: const Color(0xFFE0E0E0),
-                        child: const Text(
-                          '수신일자',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ),
-                    ),
-                    GridColumn(
-                      columnName: 'receiveTimeFormatted',
-                      width: 100,
-                      label: Container(
-                        padding: const EdgeInsets.all(8),
-                        alignment: Alignment.center,
-                        color: const Color(0xFFE0E0E0),
-                        child: const Text(
-                          '수신시간',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ),
-                    ),
-                    GridColumn(
-                      columnName: 'signalName',
-                      width: 150,
-                      label: Container(
-                        padding: const EdgeInsets.all(8),
-                        alignment: Alignment.center,
-                        color: const Color(0xFFE0E0E0),
-                        child: const Text(
-                          '신호명',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ),
-                    ),
-                    GridColumn(
-                      columnName: 'signalCode',
-                      width: 100,
-                      label: Container(
-                        padding: const EdgeInsets.all(8),
-                        alignment: Alignment.center,
-                        color: const Color(0xFFE0E0E0),
-                        child: const Text(
-                          '메인코드',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ),
-                    ),
-                    GridColumn(
-                      columnName: 'remark',
-                      width: 150,
-                      label: Container(
-                        padding: const EdgeInsets.all(8),
-                        alignment: Alignment.center,
-                        color: const Color(0xFFE0E0E0),
-                        child: const Text(
-                          '비고',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ),
-                    ),
-                    GridColumn(
-                      columnName: 'controllerName',
-                      width: 100,
-                      label: Container(
-                        padding: const EdgeInsets.all(8),
-                        alignment: Alignment.center,
-                        color: const Color(0xFFE0E0E0),
-                        child: const Text(
-                          '관제자',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ),
-                    ),
-                    GridColumn(
-                      columnName: 'publicLine',
-                      width: 120,
-                      label: Container(
-                        padding: const EdgeInsets.all(8),
-                        alignment: Alignment.center,
-                        color: const Color(0xFFE0E0E0),
-                        child: const Text(
-                          '공중회선',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ),
-                    ),
-                    GridColumn(
-                      columnName: 'dedicatedLine',
-                      width: 120,
-                      label: Container(
-                        padding: const EdgeInsets.all(8),
-                        alignment: Alignment.center,
-                        color: const Color(0xFFE0E0E0),
-                        child: const Text(
-                          '전용회선',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ),
-                    ),
-                    GridColumn(
-                      columnName: 'inputContent',
-                      width: 200,
-                      label: Container(
-                        padding: const EdgeInsets.all(8),
-                        alignment: Alignment.center,
-                        color: const Color(0xFFE0E0E0),
-                        child: const Text(
-                          '입력내용',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ),
-                    ),
-                    GridColumn(
-                      columnName: 'textColor',
-                      width: 100,
-                      label: Container(
-                        padding: const EdgeInsets.all(8),
-                        alignment: Alignment.center,
-                        color: const Color(0xFFE0E0E0),
-                        child: const Text(
-                          '글자색',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ),
-                    ),
-                    GridColumn(
-                      columnName: 'backgroundColor',
-                      width: 100,
-                      label: Container(
-                        padding: const EdgeInsets.all(8),
-                        alignment: Alignment.center,
-                        color: const Color(0xFFE0E0E0),
-                        child: const Text(
-                          '배경색',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                // 로딩 인디케이터
-                if (_isLoadingMore)
-                  Container(
-                    color: Colors.black.withOpacity(0.1),
-                    child: Center(
-                      child: Container(
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: const Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            CircularProgressIndicator(),
-                            SizedBox(height: 12),
-                            Text(
-                              '데이터를 불러오는 중...',
-                              style: TextStyle(
-                                color: Color(0xFF252525),
-                                fontSize: 14,
+                NotificationListener<ScrollNotification>(
+                  onNotification: (ScrollNotification scrollInfo) {
+                    // 스크롤 위치가 80%에 도달하면 추가 데이터 로드
+                    if (!_isLoadingMore &&
+                        _hasMore &&
+                        scrollInfo.metrics.pixels >=
+                            scrollInfo.metrics.maxScrollExtent * 0.8) {
+                      _loadMoreData();
+                    }
+                    return false;
+                  },
+                  child: SfDataGrid(
+                    source: _dataSource,
+                    controller: _dataGridController,
+                    // 행 높이 설정 (패딩 포함)
+                    rowHeight: double.nan, // 자동 높이 조절
+                    headerRowHeight: 45,
+                    // 가로 스크롤 활성화
+                    columnWidthMode: ColumnWidthMode.none,
+                    // 열 크기 조정 활성화
+                    allowColumnsResizing: true,
+                    onColumnResizeUpdate: (ColumnResizeUpdateDetails details) {
+                      setState(() {
+                        // 열 너비 업데이트
+                        _columnWidths[details.column.columnName] =
+                            details.width;
+                      });
+                      return true;
+                    },
+                    // 그리드 라인 표시
+                    gridLinesVisibility: GridLinesVisibility.both,
+                    headerGridLinesVisibility: GridLinesVisibility.both,
+                    // Load More 인디케이터
+                    loadMoreViewBuilder:
+                        (BuildContext context, LoadMoreRows loadMoreRows) {
+                          // 로딩 중이고 더 로드할 데이터가 있을 때만 표시
+                          if (_isLoadingMore && _hasMore) {
+                            return Container(
+                              height: 60.0,
+                              width: double.infinity,
+                              decoration: const BoxDecoration(
+                                color: Colors.white,
+                                border: Border(
+                                  top: BorderSide(
+                                    width: 1.0,
+                                    color: Color(0xFFE0E0E0),
+                                  ),
+                                ),
                               ),
+                              alignment: Alignment.center,
+                              child: const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  SizedBox(
+                                    height: 25,
+                                    width: 25,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 3,
+                                    ),
+                                  ),
+                                  SizedBox(width: 12),
+                                  Text('데이터를 불러오는 중...'),
+                                ],
+                              ),
+                            );
+                          }
+                          return const SizedBox.shrink();
+                        },
+                    columns: [
+                      GridColumn(
+                        columnName: 'controlManagementNumber',
+                        width: _columnWidths['controlManagementNumber']!,
+                        label: Container(
+                          padding: const EdgeInsets.all(8),
+                          alignment: Alignment.center,
+                          color: const Color(0xDAEEEEEE),
+                          child: const Text(
+                            '관제관리번호',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                              color: const Color(0xDA363636),
                             ),
-                          ],
+                          ),
                         ),
                       ),
-                    ),
+                      GridColumn(
+                        columnName: 'controlBusinessName',
+                        width: _columnWidths['controlBusinessName']!,
+                        label: Container(
+                          padding: const EdgeInsets.all(8),
+                          alignment: Alignment.center,
+                          color: const Color(0xDAEEEEEE),
+                          child: const Text(
+                            '관제상호',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                              color: const Color(0xDA363636),
+                            ),
+                          ),
+                        ),
+                      ),
+                      GridColumn(
+                        columnName: 'receiveDateFormatted',
+                        width: _columnWidths['receiveDateFormatted']!,
+                        label: Container(
+                          padding: const EdgeInsets.all(8),
+                          alignment: Alignment.center,
+                          color: const Color(0xDAEEEEEE),
+                          child: const Text(
+                            '수신일자',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                              color: const Color(0xDA363636),
+                            ),
+                          ),
+                        ),
+                      ),
+                      GridColumn(
+                        columnName: 'receiveTimeFormatted',
+                        width: _columnWidths['receiveTimeFormatted']!,
+                        label: Container(
+                          padding: const EdgeInsets.all(8),
+                          alignment: Alignment.center,
+                          color: const Color(0xDAEEEEEE),
+                          child: const Text(
+                            '수신시간',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                              color: const Color(0xDA363636),
+                            ),
+                          ),
+                        ),
+                      ),
+                      GridColumn(
+                        columnName: 'signalName',
+                        width: _columnWidths['signalName']!,
+                        label: Container(
+                          padding: const EdgeInsets.all(8),
+                          alignment: Alignment.center,
+                          color: const Color(0xDAEEEEEE),
+                          child: const Text(
+                            '신호명',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                              color: const Color(0xDA363636),
+                            ),
+                          ),
+                        ),
+                      ),
+                      GridColumn(
+                        columnName: 'signalCode',
+                        width: _columnWidths['signalCode']!,
+                        label: Container(
+                          padding: const EdgeInsets.all(8),
+                          alignment: Alignment.center,
+                          color: const Color(0xDAEEEEEE),
+                          child: const Text(
+                            '메인코드',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                              color: const Color(0xDA363636),
+                            ),
+                          ),
+                        ),
+                      ),
+                      GridColumn(
+                        columnName: 'remark',
+                        width: _columnWidths['remark']!,
+                        label: Container(
+                          padding: const EdgeInsets.all(8),
+                          alignment: Alignment.center,
+                          color: const Color(0xDAEEEEEE),
+                          child: const Text(
+                            '비고',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                              color: const Color(0xDA363636),
+                            ),
+                          ),
+                        ),
+                      ),
+                      GridColumn(
+                        columnName: 'controllerName',
+                        width: _columnWidths['controllerName']!,
+                        label: Container(
+                          padding: const EdgeInsets.all(8),
+                          alignment: Alignment.center,
+                          color: const Color(0xDAEEEEEE),
+                          child: const Text(
+                            '관제자',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                              color: const Color(0xDA363636),
+                            ),
+                          ),
+                        ),
+                      ),
+                      GridColumn(
+                        columnName: 'publicLine',
+                        width: _columnWidths['publicLine']!,
+                        label: Container(
+                          padding: const EdgeInsets.all(8),
+                          alignment: Alignment.center,
+                          color: const Color(0xDAEEEEEE),
+                          child: const Text(
+                            '공중회선',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                              color: const Color(0xDA363636),
+                            ),
+                          ),
+                        ),
+                      ),
+                      GridColumn(
+                        columnName: 'dedicatedLine',
+                        width: _columnWidths['dedicatedLine']!,
+                        label: Container(
+                          padding: const EdgeInsets.all(8),
+                          alignment: Alignment.center,
+                          color: const Color(0xDAEEEEEE),
+                          child: const Text(
+                            '전용회선',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                              color: const Color(0xDA363636),
+                            ),
+                          ),
+                        ),
+                      ),
+                      GridColumn(
+                        columnName: 'inputContent',
+                        width: _columnWidths['inputContent']!,
+                        label: Container(
+                          padding: const EdgeInsets.all(8),
+                          alignment: Alignment.center,
+                          color: const Color(0xDAEEEEEE),
+                          child: const Text(
+                            '입력내용',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                              color: const Color(0xDA363636),
+                            ),
+                          ),
+                        ),
+                      ),
+                      GridColumn(
+                        columnName: 'textColor',
+                        width: _columnWidths['textColor']!,
+                        label: Container(
+                          padding: const EdgeInsets.all(8),
+                          alignment: Alignment.center,
+                          color: const Color(0xDAEEEEEE),
+                          child: const Text(
+                            '글자색',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                              color: const Color(0xDA363636),
+                            ),
+                          ),
+                        ),
+                      ),
+                      GridColumn(
+                        columnName: 'backgroundColor',
+                        width: _columnWidths['backgroundColor']!,
+                        label: Container(
+                          padding: const EdgeInsets.all(8),
+                          alignment: Alignment.center,
+                          color: const Color(0xDAEEEEEE),
+                          child: const Text(
+                            '배경색',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                              color: const Color(0xDA363636),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
+                ),
               ],
             ),
           ),
@@ -809,8 +867,8 @@ class RecentSignalDataSource extends DataGridSource {
   RecentSignalDataSource({
     required List<RecentSignalInfo> signalList,
     required String searchQuery,
-  })  : _signalList = signalList,
-        _searchQuery = searchQuery {
+  }) : _signalList = signalList,
+       _searchQuery = searchQuery {
     buildDataGridRows();
   }
 
@@ -821,63 +879,73 @@ class RecentSignalDataSource extends DataGridSource {
   @override
   List<DataGridRow> get rows => _dataGridRows;
 
+  @override
+  Future<void> handleLoadMoreRows() async {
+    // loadMoreViewBuilder에서 호출됨
+    // 실제 데이터 로딩은 _loadMoreData()에서 처리
+    await Future.delayed(const Duration(milliseconds: 200));
+    notifyListeners();
+  }
+
   /// DataGridRow 목록 구축
   void buildDataGridRows() {
     _dataGridRows = _signalList.map<DataGridRow>((signal) {
-      return DataGridRow(cells: [
-        DataGridCell<String>(
-          columnName: 'controlManagementNumber',
-          value: signal.controlManagementNumber ?? '-',
-        ),
-        DataGridCell<String>(
-          columnName: 'controlBusinessName',
-          value: signal.controlBusinessName ?? '-',
-        ),
-        DataGridCell<String>(
-          columnName: 'receiveDateFormatted',
-          value: signal.receiveDateFormatted,
-        ),
-        DataGridCell<String>(
-          columnName: 'receiveTimeFormatted',
-          value: signal.receiveTimeFormatted,
-        ),
-        DataGridCell<String>(
-          columnName: 'signalName',
-          value: signal.signalName ?? '-',
-        ),
-        DataGridCell<String>(
-          columnName: 'signalCode',
-          value: signal.signalCode ?? '-',
-        ),
-        DataGridCell<String>(
-          columnName: 'remark',
-          value: signal.remark ?? '-',
-        ),
-        DataGridCell<String>(
-          columnName: 'controllerName',
-          value: signal.controllerName ?? '-',
-        ),
-        DataGridCell<String>(
-          columnName: 'publicLine',
-          value: signal.publicLine ?? '-',
-        ),
-        DataGridCell<String>(
-          columnName: 'dedicatedLine',
-          value: signal.dedicatedLine ?? '-',
-        ),
-        DataGridCell<String>(
-          columnName: 'inputContent',
-          value: signal.inputContent ?? '-',
-        ),
-        DataGridCell<String>(
-          columnName: 'textColor',
-          value: signal.textColor ?? '-',
-        ),
-        DataGridCell<String>(
-          columnName: 'backgroundColor',
-          value: signal.backgroundColor ?? '-',
-        ),
-      ]);
+      return DataGridRow(
+        cells: [
+          DataGridCell<String>(
+            columnName: 'controlManagementNumber',
+            value: signal.controlManagementNumber ?? '-',
+          ),
+          DataGridCell<String>(
+            columnName: 'controlBusinessName',
+            value: signal.controlBusinessName ?? '-',
+          ),
+          DataGridCell<String>(
+            columnName: 'receiveDateFormatted',
+            value: signal.receiveDateFormatted,
+          ),
+          DataGridCell<String>(
+            columnName: 'receiveTimeFormatted',
+            value: signal.receiveTimeFormatted,
+          ),
+          DataGridCell<String>(
+            columnName: 'signalName',
+            value: signal.signalName ?? '-',
+          ),
+          DataGridCell<String>(
+            columnName: 'signalCode',
+            value: signal.signalCode ?? '-',
+          ),
+          DataGridCell<String>(
+            columnName: 'remark',
+            value: signal.remark ?? '-',
+          ),
+          DataGridCell<String>(
+            columnName: 'controllerName',
+            value: signal.controllerName ?? '-',
+          ),
+          DataGridCell<String>(
+            columnName: 'publicLine',
+            value: signal.publicLine ?? '-',
+          ),
+          DataGridCell<String>(
+            columnName: 'dedicatedLine',
+            value: signal.dedicatedLine ?? '-',
+          ),
+          DataGridCell<String>(
+            columnName: 'inputContent',
+            value: signal.inputContent ?? '-',
+          ),
+          DataGridCell<String>(
+            columnName: 'textColor',
+            value: signal.textColor ?? '-',
+          ),
+          DataGridCell<String>(
+            columnName: 'backgroundColor',
+            value: signal.backgroundColor ?? '-',
+          ),
+        ],
+      );
     }).toList();
   }
 
@@ -897,15 +965,16 @@ class RecentSignalDataSource extends DataGridSource {
     return DataGridRowAdapter(
       cells: row.getCells().map<Widget>((cell) {
         final value = cell.value.toString();
-        return Container(
-          alignment: Alignment.center,
-          padding: const EdgeInsets.all(8),
-          child: HighlightedText(
-            text: value,
-            query: _searchQuery,
-            style: const TextStyle(
-              color: Color(0xFF252525),
-              fontSize: 13,
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+          child: Center(
+            child: HighlightedText(
+              text: value,
+              query: _searchQuery,
+              style: const TextStyle(color: Color(0xFF252525), fontSize: 13),
+              overflow: TextOverflow.visible,
+              softWrap: true,
+              textAlign: TextAlign.center,
             ),
           ),
         );
