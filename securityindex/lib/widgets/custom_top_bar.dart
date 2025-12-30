@@ -311,6 +311,10 @@ class HighlightedText extends StatelessWidget {
   final String query;
   final TextStyle? style;
   final TextStyle? highlightStyle;
+  final TextOverflow? overflow;
+  final int? maxLines;
+  final bool? softWrap;
+  final TextAlign? textAlign;
 
   const HighlightedText({
     Key? key,
@@ -318,19 +322,37 @@ class HighlightedText extends StatelessWidget {
     required this.query,
     this.style,
     this.highlightStyle,
+    this.overflow,
+    this.maxLines,
+    this.softWrap,
+    this.textAlign,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     if (query.isEmpty || text.isEmpty) {
-      return Text(text, style: style);
+      return Text(
+        text,
+        style: style,
+        overflow: overflow,
+        maxLines: maxLines,
+        softWrap: softWrap,
+        textAlign: textAlign,
+      );
     }
 
     final lowerText = text.toLowerCase();
     final lowerQuery = query.toLowerCase();
 
     if (!lowerText.contains(lowerQuery)) {
-      return Text(text, style: style);
+      return Text(
+        text,
+        style: style,
+        overflow: overflow,
+        maxLines: maxLines,
+        softWrap: softWrap,
+        textAlign: textAlign,
+      );
     }
 
     List<TextSpan> spans = [];
@@ -369,6 +391,10 @@ class HighlightedText extends StatelessWidget {
 
     return RichText(
       text: TextSpan(children: spans, style: style),
+      overflow: overflow ?? TextOverflow.visible,
+      maxLines: maxLines,
+      softWrap: softWrap ?? true,
+      textAlign: textAlign ?? TextAlign.start,
     );
   }
 }

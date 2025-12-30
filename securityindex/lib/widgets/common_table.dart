@@ -71,6 +71,8 @@ class CommonDataTable extends StatelessWidget {
   final bool showStripedRows; // 줄무늬 행 표시 여부
   final String? searchQuery; // 검색어 (하이라이트용, 옵션)
   final bool enableHorizontalScroll; // 가로 스크롤 활성화 여부
+  final ScrollController? scrollController; // 세로 스크롤 컨트롤러 (옵션)
+  final ScrollController? horizontalScrollController; // 가로 스크롤 컨트롤러 (옵션)
 
   const CommonDataTable({
     super.key,
@@ -82,6 +84,8 @@ class CommonDataTable extends StatelessWidget {
     this.showStripedRows = true,
     this.searchQuery,
     this.enableHorizontalScroll = false,
+    this.scrollController,
+    this.horizontalScrollController,
   });
 
   @override
@@ -127,6 +131,7 @@ class CommonDataTable extends StatelessWidget {
                   },
                 ),
                 child: SingleChildScrollView(
+                  controller: horizontalScrollController,
                   scrollDirection: Axis.horizontal,
                   child: SizedBox(
                     width: _calculateTotalWidth(),
@@ -149,6 +154,7 @@ class CommonDataTable extends StatelessWidget {
                                         },
                                       ),
                                   child: ListView.builder(
+                                    controller: scrollController,
                                     itemCount: data.length,
                                     itemBuilder: (context, index) {
                                       return _buildTableRow(index, data[index]);
@@ -183,6 +189,7 @@ class CommonDataTable extends StatelessWidget {
                               },
                             ),
                             child: ListView.builder(
+                              controller: scrollController,
                               itemCount: data.length,
                               itemBuilder: (context, index) {
                                 return _buildTableRow(index, data[index]);
