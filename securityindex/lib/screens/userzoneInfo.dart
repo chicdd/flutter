@@ -191,67 +191,223 @@ class UserZoneInfoState extends State<UserZoneInfoScreen>
           header: '순번',
           width: 80,
           valueBuilder: (data) => data.registrationNumber ?? '-',
+          cellBuilder: (data, value) => Center(
+            child: HighlightedText(
+              text: value,
+              query: _pageSearchQuery,
+              style: const TextStyle(
+                color: Color(0xFF252525),
+                fontSize: 15,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ),
         ),
         TableColumnConfig(
           header: '사용자명',
           width: 120,
           valueBuilder: (data) => data.userName ?? '-',
+          cellBuilder: (data, value) => Center(
+            child: HighlightedText(
+              text: value,
+              query: _pageSearchQuery,
+              style: const TextStyle(
+                color: Color(0xFF252525),
+                fontSize: 15,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ),
         ),
         TableColumnConfig(
           header: '관계',
           width: 100,
           valueBuilder: (data) => data.position ?? '-',
+          cellBuilder: (data, value) => Center(
+            child: HighlightedText(
+              text: value,
+              query: _pageSearchQuery,
+              style: const TextStyle(
+                color: Color(0xFF252525),
+                fontSize: 15,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ),
         ),
         TableColumnConfig(
           header: '휴대전화',
           width: 130,
           valueBuilder: (data) => data.phoneNumber ?? '-',
+          cellBuilder: (data, value) => Center(
+            child: HighlightedText(
+              text: value,
+              query: _pageSearchQuery,
+              style: const TextStyle(
+                color: Color(0xFF252525),
+                fontSize: 15,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ),
         ),
         TableColumnConfig(
           header: '자택전화',
           width: 130,
           valueBuilder: (data) => data.relationWithContractor ?? '-',
+          cellBuilder: (data, value) => Center(
+            child: HighlightedText(
+              text: value,
+              query: _pageSearchQuery,
+              style: const TextStyle(
+                color: Color(0xFF252525),
+                fontSize: 15,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ),
         ),
         TableColumnConfig(
           header: '주민번호',
           width: 140,
           valueBuilder: (data) => data.residentNumber ?? '-',
+          cellBuilder: (data, value) => Center(
+            child: HighlightedText(
+              text: value,
+              query: _pageSearchQuery,
+              style: const TextStyle(
+                color: Color(0xFF252525),
+                fontSize: 15,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ),
         ),
         TableColumnConfig(
           header: '사용자',
           width: 120,
           valueBuilder: (data) => data.ocUser ?? '-',
+          cellBuilder: (data, value) => Center(
+            child: HighlightedText(
+              text: value,
+              query: _pageSearchQuery,
+              style: const TextStyle(
+                color: Color(0xFF252525),
+                fontSize: 15,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ),
         ),
         TableColumnConfig(
           header: '비고',
           width: 150,
           valueBuilder: (data) => data.note ?? '-',
+          cellBuilder: (data, value) => Center(
+            child: HighlightedText(
+              text: value,
+              query: _pageSearchQuery,
+              style: const TextStyle(
+                color: Color(0xFF252525),
+                fontSize: 15,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ),
         ),
         TableColumnConfig(
           header: '무단허용',
           width: 100,
           valueBuilder: (data) =>
               (data.unauthorizedReleaseAllowed ?? false) ? 'O' : '',
+          cellBuilder: (data, value) => Center(
+            child: HighlightedText(
+              text: value,
+              query: _pageSearchQuery,
+              style: const TextStyle(
+                color: Color(0xFF252525),
+                fontSize: 15,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ),
         ),
         TableColumnConfig(
           header: 'SMS',
           width: 80,
           valueBuilder: (data) => (data.smsSent ?? false) ? 'O' : '',
+          cellBuilder: (data, value) => Center(
+            child: HighlightedText(
+              text: value,
+              query: _pageSearchQuery,
+              style: const TextStyle(
+                color: Color(0xFF252525),
+                fontSize: 15,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ),
         ),
         TableColumnConfig(
           header: '요원',
           width: 80,
           valueBuilder: (data) => (data.agentCard ?? false) ? 'O' : '',
+          cellBuilder: (data, value) => Center(
+            child: HighlightedText(
+              text: value,
+              query: _pageSearchQuery,
+              style: const TextStyle(
+                color: Color(0xFF252525),
+                fontSize: 15,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ),
         ),
         TableColumnConfig(
           header: 'APP',
           width: 80,
           valueBuilder: (data) => (data.unattendedSms ?? false) ? 'O' : '',
+          cellBuilder: (data, value) => Center(
+            child: HighlightedText(
+              text: value,
+              query: _pageSearchQuery,
+              style: const TextStyle(
+                color: Color(0xFF252525),
+                fontSize: 15,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ),
         ),
         TableColumnConfig(
           header: '예비',
           width: 80,
           valueBuilder: (data) => (data.reserveCard ?? false) ? 'O' : '',
+          cellBuilder: (data, value) => Center(
+            child: HighlightedText(
+              text: value,
+              query: _pageSearchQuery,
+              style: const TextStyle(
+                color: Color(0xFF252525),
+                fontSize: 15,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ),
         ),
       ],
       data: _userInfoList,
@@ -326,21 +482,69 @@ class UserZoneInfoState extends State<UserZoneInfoScreen>
           header: '존번호',
           flex: 2,
           valueBuilder: (data) => data.zoneNumber ?? '-',
+          cellBuilder: (data, value) => Center(
+            child: HighlightedText(
+              text: value,
+              query: _pageSearchQuery,
+              style: const TextStyle(
+                color: Color(0xFF252525),
+                fontSize: 15,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ),
         ),
         TableColumnConfig(
           header: '감지기설치위치',
           flex: 3,
           valueBuilder: (data) => data.detectorInstallLocation ?? '-',
+          cellBuilder: (data, value) => Center(
+            child: HighlightedText(
+              text: value,
+              query: _pageSearchQuery,
+              style: const TextStyle(
+                color: Color(0xFF252525),
+                fontSize: 15,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ),
         ),
         TableColumnConfig(
           header: '감지기명',
           flex: 2,
           valueBuilder: (data) => data.detectorName ?? '-',
+          cellBuilder: (data, value) => Center(
+            child: HighlightedText(
+              text: value,
+              query: _pageSearchQuery,
+              style: const TextStyle(
+                color: Color(0xFF252525),
+                fontSize: 15,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ),
         ),
         TableColumnConfig(
           header: '비고',
           flex: 3,
           valueBuilder: (data) => data.note ?? '-',
+          cellBuilder: (data, value) => Center(
+            child: HighlightedText(
+              text: value,
+              query: _pageSearchQuery,
+              style: const TextStyle(
+                color: Color(0xFF252525),
+                fontSize: 15,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ),
         ),
       ],
       data: _zoneInfoList,
@@ -533,6 +737,7 @@ class _AddUserModalState extends State<_AddUserModal> {
   Widget build(BuildContext context) {
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      backgroundColor: Colors.white,
       child: Container(
         width: 500,
         padding: const EdgeInsets.all(24),
@@ -562,10 +767,7 @@ class _AddUserModalState extends State<_AddUserModal> {
               ),
               const SizedBox(height: 20),
               // 폼 필드들
-              CommonTextField(
-                label: 'userName',
-                controller: _userNameController,
-              ),
+              CommonTextField(label: '사용자명', controller: _userNameController),
               const SizedBox(height: 12),
               CommonTextField(label: '관계', controller: _relationController),
               const SizedBox(height: 12),

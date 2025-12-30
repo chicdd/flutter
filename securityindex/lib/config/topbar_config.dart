@@ -86,6 +86,44 @@ class TopBarConfig {
     ];
   }
 
+  /// 약도
+  static List<TopBarButton> mapDiagramButtons(BuildContext context) {
+    return [
+      TopBarButton(
+        label: '수정',
+        onPressed: () => TopBarActions.onRemotePressed(context),
+      ),
+      TopBarButton(
+        label: '저장',
+        onPressed: () => TopBarActions.onNeoerpPressed(context),
+      ),
+      TopBarButton(
+        label: '서한약도',
+        onPressed: () => TopBarActions.onExportPressed(context),
+      ),
+      TopBarButton(
+        label: 'NeoDraw도면편집',
+        onPressed: () => TopBarActions.onEditPressed(context),
+      ),
+      TopBarButton(
+        label: '저장된 도면 새로고침',
+        onPressed: () => TopBarActions.onSavePressed(context),
+      ),
+      TopBarButton(
+        label: 'SDRAW편집',
+        onPressed: () => TopBarActions.onEditPressed(context),
+      ),
+      TopBarButton(
+        label: 'GIS 자동약도 작성',
+        onPressed: () => TopBarActions.onSavePressed(context),
+      ),
+      TopBarButton(
+        label: '약도출력',
+        onPressed: () => TopBarActions.onEditPressed(context),
+      ),
+    ];
+  }
+
   /// 기타 화면 버튼 (공통)
   static List<TopBarButton> defaultButtons(BuildContext context) {
     return [];

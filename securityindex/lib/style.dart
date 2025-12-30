@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:securityindex/services/api_service.dart';
 import 'theme.dart';
 
@@ -480,34 +481,6 @@ class RadioOption extends StatelessWidget {
   }
 }
 
-/// 체크박스 옵션
-class CheckboxOption extends StatelessWidget {
-  final String label;
-  final bool value;
-  final Function(bool?) onChanged;
-
-  const CheckboxOption({
-    super.key,
-    required this.label,
-    required this.value,
-    required this.onChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Checkbox(
-          value: value,
-          onChanged: onChanged,
-          activeColor: AppTheme.selectedColor,
-        ),
-        Text(label, style: const TextStyle(fontSize: 14)),
-      ],
-    );
-  }
-}
-
 /// ========================================
 /// 숫자 필드
 /// ========================================
@@ -680,5 +653,171 @@ String detailDateParsing(String? date) {
   } catch (e) {
     print('날짜 파싱 오류: $e');
     return date;
+  }
+}
+
+/// ========================================
+/// 날짜 관련 유틸리티 함수
+/// ========================================
+
+/// 다양한 날짜 포맷을 YYYY-MM-DD 형식으로 변환
+/// 지원 포맷:
+/// - 20240809 → 2024-08-09
+/// - 2024.08.09 → 2024-08-09
+/// - 240809 → 2024-08-09
+/// - 2024-08-09 → 2024-08-09 (그대로 반환)
+String? parseDateString(String input) {
+  if (input.isEmpty) return null;
+
+  // 구분자 제거 (-, ., /, 공백 등)
+  final cleanInput = input.replaceAll(RegExp(r'[-./\s]'), '');
+
+  try {
+    // 숫자만 남은 문자열의 길이로 형식 판단
+    if (cleanInput.length == 8) {
+      // 20240809 형식
+      final year = cleanInput.substring(0, 4);
+      final month = cleanInput.substring(4, 6);
+      final day = cleanInput.substring(6, 8);
+
+      // 유효성 검증
+      final date = DateTime(int.parse(year), int.parse(month), int.parse(day));
+
+      return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+    } else if (cleanInput.length == 6) {
+      // 240809 형식 (연도 2자리)
+      final year = '20${cleanInput.substring(0, 2)}';
+      final month = cleanInput.substring(2, 4);
+      final day = cleanInput.substring(4, 6);
+
+      // 유효성 검증
+      final date = DateTime(int.parse(year), int.parse(month), int.parse(day));
+
+      return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+    } else {
+      // 그 외의 경우 원본 반환
+      return input;
+    }
+  } catch (e) {
+    print('날짜 파싱 오류: $e, 입력값: $input');
+    return null;
+  }
+}
+
+/// ========================================
+/// 날짜 다이얼로그 및 검증 헬퍼 함수
+/// ========================================
+
+/// 날짜 선택 다이얼로그를 띄우고 선택된 날짜를 반환
+/// [initialDate] 초기 선택 날짜 (기본값: 오늘)
+/// [firstDate] 선택 가능한 최소 날짜 (기본값: 2008-08-01)
+/// [lastDate] 선택 가능한 최대 날짜 (기본값: 오늘)
+Future<DateTime?> showDatePickerDialog(
+  BuildContext context, {
+  DateTime? initialDate,
+  DateTime? firstDate,
+  DateTime? lastDate,
+}) async {
+  return await showDatePicker(
+    context: context,
+    initialDate: initialDate ?? DateTime.now(),
+    firstDate: firstDate ?? DateTime(2008, 8),
+    lastDate: lastDate ?? DateTime.now(),
+    locale: const Locale('ko', 'KR'),
+  );
+}
+
+/// 날짜 텍스트를 검증하고 파싱하여 DateTime 반환
+/// 성공 시 DateTime, 실패 시 null 반환
+/// [parseDateString] 함수를 사용하여 다양한 포맷 지원
+DateTime? validateAndParseDateText(String text) {
+  final parsedDate = parseDateString(text);
+  if (parsedDate != null) {
+    try {
+      return DateFormat('yyyy-MM-dd').parseStrict(parsedDate);
+    } catch (e) {
+      return null;
+    }
+  }
+  return null;
+}
+
+/// ========================================
+/// 날짜 입력 필드 위젯
+/// ========================================
+
+/// 날짜 선택 TextField (캘린더 아이콘 포함)
+class DateTextField extends StatelessWidget {
+  final String label;
+  final TextEditingController controller;
+  final Function(BuildContext, bool) onCalendarPressed;
+  final Function()? onSubmitted;
+
+  const DateTextField({
+    super.key,
+    required this.label,
+    required this.controller,
+    required this.onCalendarPressed,
+    this.onSubmitted,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 200,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: Color(0xFF252525),
+            ),
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            controller: controller,
+            decoration: InputDecoration(
+              hintText: 'yyyy-MM-dd',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(
+                  color: Color(0xFF4318FF),
+                  width: 2,
+                ),
+              ),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 12,
+              ),
+              suffixIcon: IconButton(
+                icon: const Icon(Icons.calendar_today, size: 20),
+                onPressed: () {
+                  // label로 시작/종료 판단
+                  final isStartDate = label.contains('시작');
+                  onCalendarPressed(context, isStartDate);
+                },
+              ),
+            ),
+            style: const TextStyle(fontSize: 14),
+            onSubmitted: (_) {
+              if (onSubmitted != null) {
+                onSubmitted!();
+              }
+            },
+          ),
+        ],
+      ),
+    );
   }
 }

@@ -10,6 +10,10 @@ import '../models/AuthRegist.dart';
 import '../models/document_info.dart';
 import '../models/userZone.dart';
 import '../models/recentsignalinfo.dart';
+import '../models/search_log.dart';
+import '../models/customer_history.dart';
+import '../models/map_diagram.dart';
+import '../models/blueprint.dart';
 
 class DatabaseService {
   static const String baseUrl = 'https://localhost:5001/api';
@@ -414,16 +418,19 @@ class DatabaseService {
       final endDateStr =
           '${endDate.year}-${endDate.month.toString().padLeft(2, '0')}-${endDate.day.toString().padLeft(2, '0')}';
 
-      final uri = Uri.parse(
-        'https://localhost:7088/api/관제고객/$encodedNumber/recent-signals',
-      ).replace(queryParameters: {
-        '시작일자': startDateStr,
-        '종료일자': endDateStr,
-        '신호필터': signalFilter,
-        '오름차순정렬': ascending.toString(),
-        'skip': skip.toString(),
-        'take': take.toString(),
-      });
+      final uri =
+          Uri.parse(
+            'https://localhost:7088/api/관제고객/$encodedNumber/recent-signals',
+          ).replace(
+            queryParameters: {
+              '시작일자': startDateStr,
+              '종료일자': endDateStr,
+              '신호필터': signalFilter,
+              '오름차순정렬': ascending.toString(),
+              'skip': skip.toString(),
+              'take': take.toString(),
+            },
+          );
 
       print('최근 수신신호 조회 API 호출: $uri');
 
@@ -438,7 +445,9 @@ class DatabaseService {
         final List<dynamic> dataList = jsonData['data'] ?? [];
         final int totalCount = jsonData['totalCount'] ?? 0;
 
-        final signals = dataList.map((json) => RecentSignalInfo.fromJson(json)).toList();
+        final signals = dataList
+            .map((json) => RecentSignalInfo.fromJson(json))
+            .toList();
         return {'data': signals, 'totalCount': totalCount};
       } else {
         print('최근 수신신호 조회 오류: ${response.statusCode}');
@@ -447,6 +456,346 @@ class DatabaseService {
     } catch (e) {
       print('최근 수신신호 조회 API 호출 오류: $e');
       return {'data': <RecentSignalInfo>[], 'totalCount': 0};
+    }
+  }
+
+  /// 관제개시 정보 조회
+  /// 관제관리번호로 관제개시 정보를 조회합니다.
+  static Future<List<Map<String, dynamic>>> getControlSignalActivations(
+    String managementNumber,
+  ) async {
+    try {
+      final httpClient = _createHttpClient();
+      final encodedNumber = Uri.encodeComponent(managementNumber);
+      final uri = Uri.parse(
+        'https://localhost:7088/api/관제개시/$encodedNumber',
+      );
+
+      print('관제개시 조회 API 호출: $uri');
+
+      final request = await httpClient.getUrl(uri);
+      final response = await request.close();
+
+      if (response.statusCode == 200) {
+        final String responseBody = await response
+            .transform(utf8.decoder)
+            .join();
+        final List<dynamic> jsonList = json.decode(responseBody);
+        return jsonList.cast<Map<String, dynamic>>();
+      } else {
+        print('관제개시 조회 오류: ${response.statusCode}');
+        return [];
+      }
+    } catch (e) {
+      print('관제개시 조회 API 호출 오류: $e');
+      return [];
+    }
+  }
+
+  /// 관제개시 정보 추가
+  static Future<bool> addControlSignalActivation(
+    Map<String, dynamic> data,
+  ) async {
+    try {
+      final httpClient = _createHttpClient();
+      final request = await httpClient.postUrl(
+        Uri.parse('https://localhost:7088/api/관제개시'),
+      );
+
+      request.headers.set('Content-Type', 'application/json; charset=utf-8');
+      request.write(json.encode(data));
+
+      final response = await request.close();
+      final String responseBody = await response.transform(utf8.decoder).join();
+
+      if (response.statusCode == 201) {
+        print('관제개시 추가 성공');
+        return true;
+      } else {
+        print('관제개시 추가 실패: $responseBody');
+        return false;
+      }
+    } catch (e) {
+      print('관제개시 추가 API 호출 오류: $e');
+      return false;
+    }
+  }
+
+  /// 보수점검 완료이력 조회
+  /// 관제관리번호로 보수점검 완료이력을 조회합니다.
+  static Future<List<Map<String, dynamic>>> getMaintenanceInspectionHistory(
+    String managementNumber,
+  ) async {
+    try {
+      final httpClient = _createHttpClient();
+      final encodedNumber = Uri.encodeComponent(managementNumber);
+      final uri = Uri.parse(
+        'https://localhost:7088/api/보수점검/$encodedNumber',
+      );
+
+      print('보수점검 완료이력 조회 API 호출: $uri');
+
+      final request = await httpClient.getUrl(uri);
+      final response = await request.close();
+
+      if (response.statusCode == 200) {
+        final String responseBody = await response
+            .transform(utf8.decoder)
+            .join();
+        final List<dynamic> jsonList = json.decode(responseBody);
+        return jsonList.cast<Map<String, dynamic>>();
+      } else {
+        print('보수점검 완료이력 조회 오류: ${response.statusCode}');
+        return [];
+      }
+    } catch (e) {
+      print('보수점검 완료이력 조회 API 호출 오류: $e');
+      return [];
+    }
+  }
+
+  /// 보수점검 정보 추가
+  static Future<bool> addMaintenanceInspection(
+    Map<String, dynamic> data,
+  ) async {
+    try {
+      final httpClient = _createHttpClient();
+      final request = await httpClient.postUrl(
+        Uri.parse('https://localhost:7088/api/보수점검'),
+      );
+
+      request.headers.set('Content-Type', 'application/json; charset=utf-8');
+      request.write(json.encode(data));
+
+      final response = await request.close();
+      final String responseBody = await response.transform(utf8.decoder).join();
+
+      if (response.statusCode == 201) {
+        print('보수점검 추가 성공');
+        return true;
+      } else {
+        print('보수점검 추가 실패: $responseBody');
+        return false;
+      }
+    } catch (e) {
+      print('보수점검 추가 API 호출 오류: $e');
+      return false;
+    }
+  }
+
+  /// 검색로그 내역조회 (페이징 지원)
+  /// 관제관리번호, 시작일자, 종료일자로 검색로그를 조회합니다.
+  /// 반환값: {data: List<SearchLogData>, totalCount: int}
+  static Future<Map<String, dynamic>> getSearchLogs({
+    required String managementNumber,
+    required DateTime startDate,
+    required DateTime endDate,
+    int skip = 0,
+    int take = 100,
+  }) async {
+    try {
+      final httpClient = _createHttpClient();
+      final encodedNumber = Uri.encodeComponent(managementNumber);
+
+      // 날짜를 YYYY-MM-DD 형식으로 변환
+      final startDateStr =
+          '${startDate.year}-${startDate.month.toString().padLeft(2, '0')}-${startDate.day.toString().padLeft(2, '0')}';
+      final endDateStr =
+          '${endDate.year}-${endDate.month.toString().padLeft(2, '0')}-${endDate.day.toString().padLeft(2, '0')}';
+
+      final uri =
+          Uri.parse(
+            'https://localhost:7088/api/관제고객/검색로그내역조회/$encodedNumber',
+          ).replace(
+            queryParameters: {
+              '시작일자': startDateStr,
+              '종료일자': endDateStr,
+              'skip': skip.toString(),
+              'take': take.toString(),
+            },
+          );
+
+      print('검색로그 내역조회 API 호출: $uri');
+
+      final request = await httpClient.getUrl(uri);
+      final response = await request.close();
+
+      if (response.statusCode == 200) {
+        final String responseBody = await response
+            .transform(utf8.decoder)
+            .join();
+        final Map<String, dynamic> jsonData = json.decode(responseBody);
+        final List<dynamic> dataList = jsonData['data'] ?? [];
+        final int totalCount = jsonData['totalCount'] ?? 0;
+
+        final logs = dataList
+            .map((json) => SearchLogData.fromJson(json))
+            .toList();
+        return {'data': logs, 'totalCount': totalCount};
+      } else {
+        print('검색로그 내역조회 오류: ${response.statusCode}');
+        return {'data': <SearchLogData>[], 'totalCount': 0};
+      }
+    } catch (e) {
+      print('검색로그 내역조회 API 호출 오류: $e');
+      return {'data': <SearchLogData>[], 'totalCount': 0};
+    }
+  }
+
+  /// 고객정보 변동이력 조회 (페이징 지원)
+  /// 관제관리번호, 시작일자, 종료일자로 고객정보 변동이력을 조회합니다.
+  /// 반환값: {data: List<CustomerHistoryData>, totalCount: int}
+  static Future<Map<String, dynamic>> getCustomerHistory({
+    required String managementNumber,
+    required DateTime startDate,
+    required DateTime endDate,
+    int skip = 0,
+    int take = 100,
+  }) async {
+    try {
+      final httpClient = _createHttpClient();
+      final encodedNumber = Uri.encodeComponent(managementNumber);
+
+      // 날짜를 YYYY-MM-DD 형식으로 변환
+      final startDateStr =
+          '${startDate.year}-${startDate.month.toString().padLeft(2, '0')}-${startDate.day.toString().padLeft(2, '0')}';
+      final endDateStr =
+          '${endDate.year}-${endDate.month.toString().padLeft(2, '0')}-${endDate.day.toString().padLeft(2, '0')}';
+
+      final uri =
+          Uri.parse(
+            'https://localhost:7088/api/관제고객/고객정보변동이력/$encodedNumber',
+          ).replace(
+            queryParameters: {
+              '시작일자': startDateStr,
+              '종료일자': endDateStr,
+              'skip': skip.toString(),
+              'take': take.toString(),
+            },
+          );
+
+      print('고객정보 변동이력 조회 API 호출: $uri');
+
+      final request = await httpClient.getUrl(uri);
+      final response = await request.close();
+
+      if (response.statusCode == 200) {
+        final String responseBody = await response
+            .transform(utf8.decoder)
+            .join();
+        final Map<String, dynamic> jsonData = json.decode(responseBody);
+        final List<dynamic> dataList = jsonData['data'] ?? [];
+        final int totalCount = jsonData['totalCount'] ?? 0;
+
+        final history = dataList
+            .map((json) => CustomerHistoryData.fromJson(json))
+            .toList();
+        return {'data': history, 'totalCount': totalCount};
+      } else {
+        print('고객정보 변동이력 조회 오류: ${response.statusCode}');
+        return {'data': <CustomerHistoryData>[], 'totalCount': 0};
+      }
+    } catch (e) {
+      print('고객정보 변동이력 조회 API 호출 오류: $e');
+      return {'data': <CustomerHistoryData>[], 'totalCount': 0};
+    }
+  }
+
+  /// 약도 데이터 조회
+  ///
+  /// [managementNumber] - 관제관리번호
+  /// 반환: MapDiagramData? - 약도 데이터 (없으면 null)
+  static Future<MapDiagramData?> getMapDiagram({
+    required String managementNumber,
+  }) async {
+    try {
+      print('약도 조회 요청: 관제관리번호=$managementNumber');
+
+      final encodedNumber = Uri.encodeComponent(managementNumber);
+      final uri = Uri.parse(
+        'https://localhost:7088/api/관제고객/약도조회/$encodedNumber',
+      );
+
+      final client = HttpClient()
+        ..badCertificateCallback =
+            (X509Certificate cert, String host, int port) => true;
+
+      final request = await client.getUrl(uri);
+      final response = await request.close();
+
+      if (response.statusCode == 200) {
+        final String responseBody = await response
+            .transform(utf8.decoder)
+            .join();
+
+        final Map<String, dynamic> data = json.decode(responseBody);
+        final mapDiagram = MapDiagramData.fromJson(data);
+
+        print('약도 조회 성공: 관제관리번호=$managementNumber');
+        return mapDiagram;
+      } else if (response.statusCode == 404) {
+        print('약도 데이터 없음: 관제관리번호=$managementNumber');
+        return null;
+      } else {
+        final String responseBody = await response
+            .transform(utf8.decoder)
+            .join();
+        print('약도 조회 오류: ${response.statusCode}, $responseBody');
+        return null;
+      }
+    } catch (e) {
+      print('약도 조회 API 호출 오류: $e');
+      return null;
+    }
+  }
+
+  /// 도면 데이터 조회 (도면마스터 및 도면마스터2)
+  ///
+  /// [managementNumber] - 관제관리번호
+  /// 반환: List<BlueprintData> - 도면 데이터 리스트 (없으면 빈 리스트)
+  static Future<List<BlueprintData>> getBlueprints({
+    required String managementNumber,
+  }) async {
+    try {
+      print('도면 조회 요청: 관제관리번호=$managementNumber');
+
+      final encodedNumber = Uri.encodeComponent(managementNumber);
+      final uri = Uri.parse(
+        'https://localhost:7088/api/관제고객/도면조회/$encodedNumber',
+      );
+
+      final client = HttpClient()
+        ..badCertificateCallback =
+            (X509Certificate cert, String host, int port) => true;
+
+      final request = await client.getUrl(uri);
+      final response = await request.close();
+
+      if (response.statusCode == 200) {
+        final String responseBody = await response
+            .transform(utf8.decoder)
+            .join();
+
+        final List<dynamic> dataList = json.decode(responseBody);
+        final blueprints = dataList
+            .map((item) => BlueprintData.fromJson(item as Map<String, dynamic>))
+            .toList();
+
+        print('도면 조회 성공: 관제관리번호=$managementNumber, 도면개수=${blueprints.length}');
+        return blueprints;
+      } else if (response.statusCode == 404) {
+        print('도면 데이터 없음: 관제관리번호=$managementNumber');
+        return [];
+      } else {
+        final String responseBody = await response
+            .transform(utf8.decoder)
+            .join();
+        print('도면 조회 오류: ${response.statusCode}, $responseBody');
+        return [];
+      }
+    } catch (e) {
+      print('도면 조회 API 호출 오류: $e');
+      return [];
     }
   }
 }

@@ -689,5 +689,507 @@ namespace securityindexAPI.Controllers
                 return StatusCode(500, new { message = "서버 오류가 발생했습니다.", error = ex.Message });
             }
         }
+
+        /// <summary>
+        /// 검색로그 내역조회
+        /// </summary>
+        [HttpGet("검색로그내역조회/{관제관리번호}")]
+        public async Task<ActionResult> Get검색로그내역(
+            string 관제관리번호,
+            [FromQuery] string? 시작일자,
+            [FromQuery] string? 종료일자,
+            [FromQuery] int skip = 0,
+            [FromQuery] int take = 100)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(관제관리번호))
+                {
+                    return BadRequest(new { message = "관제관리번호는 필수입니다." });
+                }
+
+                // 시작일자와 종료일자 파싱
+                DateTime startDate;
+                DateTime endDate;
+
+                if (!DateTime.TryParse(시작일자, out startDate))
+                {
+                    return BadRequest(new { message = "시작일자 형식이 올바르지 않습니다." });
+                }
+
+                if (!DateTime.TryParse(종료일자, out endDate))
+                {
+                    return BadRequest(new { message = "종료일자 형식이 올바르지 않습니다." });
+                }
+
+                // 월별 테이블 목록 생성 (수신YYYYMM)
+                var tableNames = new List<string>();
+                var currentDate = new DateTime(startDate.Year, startDate.Month, 1);
+                var lastDate = new DateTime(endDate.Year, endDate.Month, 1);
+
+                while (currentDate <= lastDate)
+                {
+                    tableNames.Add($"수신{currentDate:yyyyMM}");
+                    currentDate = currentDate.AddMonths(1);
+                }
+
+                if (tableNames.Count == 0)
+                {
+                    return Ok(new { data = new List<검색로그마스터>(), totalCount = 0 });
+                }
+
+                // 동적 SQL 생성
+                var unionQueries = new List<string>();
+
+                foreach (var tableName in tableNames)
+                {
+                    var query = $@"
+                        SELECT
+                            관제사용자마스터.성명,
+                            {tableName}.수신일자,
+                            {tableName}.수신시간,
+                            {tableName}.로그데이터
+                        FROM {tableName}
+                        LEFT JOIN 관제사용자마스터
+                            ON 관제사용자마스터.로그인ID = {tableName}.관제자ID
+                        WHERE {tableName}.관제관리번호 = @관제관리번호
+                            AND {tableName}.수신일자 >= @시작일자
+                            AND {tableName}.수신일자 <= @종료일자
+                            AND {tableName}.로그데이터 IS NOT NULL";
+
+                    unionQueries.Add(query);
+                }
+
+                // UNION ALL로 결합
+                var finalQuery = string.Join(" UNION ALL ", unionQueries);
+
+                // 정렬 및 페이징 추가
+                finalQuery = $"{finalQuery} ORDER BY 수신일자 DESC, 수신시간 DESC OFFSET {skip} ROWS FETCH NEXT {take} ROWS ONLY";
+
+                // 쿼리 실행
+                var connection = _context.Database.GetDbConnection();
+                await connection.OpenAsync();
+
+                using var command = connection.CreateCommand();
+                command.CommandText = finalQuery;
+
+                // 파라미터 추가
+                var param1 = command.CreateParameter();
+                param1.ParameterName = "@관제관리번호";
+                param1.Value = 관제관리번호;
+                command.Parameters.Add(param1);
+
+                var param2 = command.CreateParameter();
+                param2.ParameterName = "@시작일자";
+                param2.Value = startDate;
+                command.Parameters.Add(param2);
+
+                var param3 = command.CreateParameter();
+                param3.ParameterName = "@종료일자";
+                param3.Value = endDate.AddDays(1).AddSeconds(-1); // 종료일의 23:59:59까지 포함
+                command.Parameters.Add(param3);
+
+                using var reader = await command.ExecuteReaderAsync();
+                var 로그리스트 = new List<검색로그마스터>();
+
+                while (await reader.ReadAsync())
+                {
+                    var log = new 검색로그마스터
+                    {
+                        성명 = reader["성명"]?.ToString(),
+                        기록일자 = reader["수신일자"] as DateTime?,
+                        기록시간 = reader["수신시간"]?.ToString(),
+                        입력내용 = reader["로그데이터"]?.ToString()
+                    };
+
+                    로그리스트.Add(log);
+                }
+
+                await connection.CloseAsync();
+
+                // 전체 개수 조회
+                var totalCount = 0;
+                await connection.OpenAsync();
+
+                foreach (var tableName in tableNames)
+                {
+                    var countCmd = connection.CreateCommand();
+                    countCmd.CommandText = $@"
+                        SELECT COUNT(*)
+                        FROM {tableName}
+                        WHERE 관제관리번호 = @관제관리번호
+                            AND 수신일자 >= @시작일자
+                            AND 수신일자 <= @종료일자
+                            AND 로그데이터 IS NOT NULL";
+
+                    var p1 = countCmd.CreateParameter();
+                    p1.ParameterName = "@관제관리번호";
+                    p1.Value = 관제관리번호;
+                    countCmd.Parameters.Add(p1);
+
+                    var p2 = countCmd.CreateParameter();
+                    p2.ParameterName = "@시작일자";
+                    p2.Value = startDate;
+                    countCmd.Parameters.Add(p2);
+
+                    var p3 = countCmd.CreateParameter();
+                    p3.ParameterName = "@종료일자";
+                    p3.Value = endDate.AddDays(1).AddSeconds(-1);
+                    countCmd.Parameters.Add(p3);
+
+                    var count = await countCmd.ExecuteScalarAsync();
+                    totalCount += Convert.ToInt32(count);
+                }
+
+                await connection.CloseAsync();
+
+                _logger.LogInformation($"검색로그 내역조회 완료: 관제관리번호={관제관리번호}, 시작일자={시작일자}, 종료일자={종료일자}, skip={skip}, take={take}, 결과수={로그리스트.Count}, 전체개수={totalCount}");
+
+                return Ok(new { data = 로그리스트, totalCount = totalCount });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"검색로그 내역조회 중 오류 발생: 관제관리번호={관제관리번호}");
+                return StatusCode(500, new { message = "서버 오류가 발생했습니다.", error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// 고객정보 변동이력 조회
+        /// </summary>
+        [HttpGet("고객정보변동이력/{관제관리번호}")]
+        public async Task<ActionResult> Get고객정보변동이력(
+            string 관제관리번호,
+            [FromQuery] string? 시작일자,
+            [FromQuery] string? 종료일자,
+            [FromQuery] int skip = 0,
+            [FromQuery] int take = 100)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(관제관리번호))
+                {
+                    return BadRequest(new { message = "관제관리번호는 필수입니다." });
+                }
+
+                // 시작일자와 종료일자 파싱
+                DateTime startDate;
+                DateTime endDate;
+
+                if (!DateTime.TryParse(시작일자, out startDate))
+                {
+                    return BadRequest(new { message = "시작일자 형식이 올바르지 않습니다." });
+                }
+
+                if (!DateTime.TryParse(종료일자, out endDate))
+                {
+                    return BadRequest(new { message = "종료일자 형식이 올바르지 않습니다." });
+                }
+
+                // 쿼리 생성
+                var query = @"
+                    SELECT
+                        관제사용자마스터.성명,
+                        고객변경이력마스터.변경처리일자,
+                        고객변경이력마스터.변경전,
+                        고객변경이력마스터.변경후,
+                        고객변경이력마스터.메모
+                    FROM 고객변경이력마스터
+                    LEFT JOIN 관제사용자마스터
+                        ON 관제사용자마스터.로그인ID = 고객변경이력마스터.변경자
+                    WHERE 고객변경이력마스터.고객관리번호 = @관제관리번호
+                        AND 고객변경이력마스터.변경처리일자 >= @시작일자
+                        AND 고객변경이력마스터.변경처리일자 <= @종료일자
+                    ORDER BY 고객변경이력마스터.변경처리일자 DESC
+                    OFFSET @skip ROWS
+                    FETCH NEXT @take ROWS ONLY";
+
+                // 쿼리 실행
+                var connection = _context.Database.GetDbConnection();
+                await connection.OpenAsync();
+
+                using var command = connection.CreateCommand();
+                command.CommandText = query;
+
+                // 파라미터 추가
+                var param1 = command.CreateParameter();
+                param1.ParameterName = "@관제관리번호";
+                param1.Value = 관제관리번호;
+                command.Parameters.Add(param1);
+
+                var param2 = command.CreateParameter();
+                param2.ParameterName = "@시작일자";
+                param2.Value = startDate;
+                command.Parameters.Add(param2);
+
+                var param3 = command.CreateParameter();
+                param3.ParameterName = "@종료일자";
+                param3.Value = endDate.AddDays(1).AddSeconds(-1); // 종료일의 23:59:59까지 포함
+                command.Parameters.Add(param3);
+
+                var param4 = command.CreateParameter();
+                param4.ParameterName = "@skip";
+                param4.Value = skip;
+                command.Parameters.Add(param4);
+
+                var param5 = command.CreateParameter();
+                param5.ParameterName = "@take";
+                param5.Value = take;
+                command.Parameters.Add(param5);
+
+                using var reader = await command.ExecuteReaderAsync();
+                var 이력리스트 = new List<고객변경이력마스터>();
+
+                while (await reader.ReadAsync())
+                {
+                    var history = new 고객변경이력마스터
+                    {
+                        처리자 = reader["성명"]?.ToString(),
+                        변경처리일시 = reader["변경처리일자"] as DateTime?,
+                        변경전 = reader["변경전"]?.ToString(),
+                        변경후 = reader["변경후"]?.ToString(),
+                        메모 = reader["메모"]?.ToString()
+                    };
+
+                    이력리스트.Add(history);
+                }
+
+                await connection.CloseAsync();
+
+                // 전체 개수 조회
+                await connection.OpenAsync();
+
+                var countCmd = connection.CreateCommand();
+                countCmd.CommandText = @"
+                    SELECT COUNT(*)
+                    FROM 고객변경이력마스터
+                    WHERE 고객관리번호 = @관제관리번호
+                        AND 변경처리일자 >= @시작일자
+                        AND 변경처리일자 <= @종료일자";
+
+                var p1 = countCmd.CreateParameter();
+                p1.ParameterName = "@관제관리번호";
+                p1.Value = 관제관리번호;
+                countCmd.Parameters.Add(p1);
+
+                var p2 = countCmd.CreateParameter();
+                p2.ParameterName = "@시작일자";
+                p2.Value = startDate;
+                countCmd.Parameters.Add(p2);
+
+                var p3 = countCmd.CreateParameter();
+                p3.ParameterName = "@종료일자";
+                p3.Value = endDate.AddDays(1).AddSeconds(-1);
+                countCmd.Parameters.Add(p3);
+
+                var count = await countCmd.ExecuteScalarAsync();
+                var totalCount = Convert.ToInt32(count);
+
+                await connection.CloseAsync();
+
+                _logger.LogInformation($"고객정보 변동이력 조회 완료: 관제관리번호={관제관리번호}, 시작일자={시작일자}, 종료일자={종료일자}, skip={skip}, take={take}, 결과수={이력리스트.Count}, 전체개수={totalCount}");
+
+                return Ok(new { data = 이력리스트, totalCount = totalCount });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"고객정보 변동이력 조회 중 오류 발생: 관제관리번호={관제관리번호}");
+                return StatusCode(500, new { message = "서버 오류가 발생했습니다.", error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// 약도 데이터 조회 (관제관리번호 기준, 최신 데이터 반환)
+        /// </summary>
+        /// <param name="관제관리번호">관제관리번호</param>
+        /// <returns>약도 이미지 데이터</returns>
+        [HttpGet("약도조회/{관제관리번호}")]
+        public async Task<ActionResult> Get약도(string 관제관리번호)
+        {
+            try
+            {
+                _logger.LogInformation($"약도 조회 시작: 관제관리번호={관제관리번호}");
+
+                var connection = _context.Database.GetDbConnection();
+                await connection.OpenAsync();
+
+                var command = connection.CreateCommand();
+                command.CommandText = @"
+                    SELECT TOP 1
+                        관제관리번호,
+                        등록일자,
+                        순번,
+                        DATA구분코드,
+                        약도데이터,
+                        비지오,
+                        WMF
+                    FROM 약도마스터
+                    WHERE 관제관리번호 = @관제관리번호
+                    ORDER BY 등록일자 DESC, 순번 DESC
+                ";
+
+                var param = command.CreateParameter();
+                param.ParameterName = "@관제관리번호";
+                param.Value = 관제관리번호;
+                command.Parameters.Add(param);
+
+                using var reader = await command.ExecuteReaderAsync();
+
+                if (await reader.ReadAsync())
+                {
+                    var 약도 = new 약도마스터
+                    {
+                        관제관리번호 = reader["관제관리번호"]?.ToString(),
+                        등록일자 = reader["등록일자"] == DBNull.Value ? null : Convert.ToDateTime(reader["등록일자"]),
+                        순번 = reader["순번"]?.ToString(),
+                        DATA구분코드 = reader["DATA구분코드"]?.ToString(),
+                        약도데이터 = reader["약도데이터"] == DBNull.Value ? null : (byte[])reader["약도데이터"],
+                        비지오 = reader["비지오"] == DBNull.Value ? null : (byte[])reader["비지오"],
+                        WMF = reader["WMF"] == DBNull.Value ? null : (byte[])reader["WMF"]
+                    };
+
+                    await connection.CloseAsync();
+
+                    _logger.LogInformation($"약도 조회 완료: 관제관리번호={관제관리번호}, 등록일자={약도.등록일자}, 순번={약도.순번}");
+
+                    // 바이트 배열을 Base64로 인코딩하여 반환
+                    var response = new
+                    {
+                        관제관리번호 = 약도.관제관리번호,
+                        등록일자 = 약도.등록일자,
+                        순번 = 약도.순번,
+                        DATA구분코드 = 약도.DATA구분코드,
+                        약도데이터 = 약도.약도데이터 != null ? Convert.ToBase64String(약도.약도데이터) : null,
+                        비지오 = 약도.비지오 != null ? Convert.ToBase64String(약도.비지오) : null,
+                        WMF = 약도.WMF != null ? Convert.ToBase64String(약도.WMF) : null
+                    };
+
+                    return Ok(response);
+                }
+                else
+                {
+                    await connection.CloseAsync();
+                    _logger.LogWarning($"약도 데이터 없음: 관제관리번호={관제관리번호}");
+                    return NotFound(new { message = "약도 데이터가 없습니다." });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"약도 조회 중 오류 발생: 관제관리번호={관제관리번호}");
+                return StatusCode(500, new { message = "서버 오류가 발생했습니다.", error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// 도면 데이터 조회 (관제관리번호 기준, 도면마스터 및 도면마스터2 모두 조회)
+        /// </summary>
+        /// <param name="관제관리번호">관제관리번호</param>
+        /// <returns>도면 이미지 데이터 리스트</returns>
+        [HttpGet("도면조회/{관제관리번호}")]
+        public async Task<ActionResult> Get도면(string 관제관리번호)
+        {
+            try
+            {
+                _logger.LogInformation($"도면 조회 시작: 관제관리번호={관제관리번호}");
+
+                var connection = _context.Database.GetDbConnection();
+                await connection.OpenAsync();
+
+                var 도면리스트 = new List<object>();
+
+                // 도면마스터 조회
+                var command1 = connection.CreateCommand();
+                command1.CommandText = @"
+                    SELECT TOP 1
+                        관제관리번호,
+                        DATA구분코드,
+                        등록일자,
+                        도면데이터,
+                        비지오
+                    FROM 도면마스터
+                    WHERE 관제관리번호 = @관제관리번호
+                    ORDER BY 등록일자 DESC
+                ";
+
+                var param1 = command1.CreateParameter();
+                param1.ParameterName = "@관제관리번호";
+                param1.Value = 관제관리번호;
+                command1.Parameters.Add(param1);
+
+                using (var reader = await command1.ExecuteReaderAsync())
+                {
+                    if (await reader.ReadAsync())
+                    {
+                        var 도면데이터 = reader["도면데이터"] == DBNull.Value ? null : (byte[])reader["도면데이터"];
+                        var 비지오 = reader["비지오"] == DBNull.Value ? null : (byte[])reader["비지오"];
+
+                        도면리스트.Add(new
+                        {
+                            관제관리번호 = reader["관제관리번호"]?.ToString(),
+                            DATA구분코드 = reader["DATA구분코드"]?.ToString(),
+                            등록일자 = reader["등록일자"] == DBNull.Value ? (DateTime?)null : Convert.ToDateTime(reader["등록일자"]),
+                            도면데이터 = 도면데이터 != null ? Convert.ToBase64String(도면데이터) : null,
+                            비지오 = 비지오 != null ? Convert.ToBase64String(비지오) : null,
+                            테이블명 = "도면마스터"
+                        });
+                    }
+                }
+
+                // 도면마스터2 조회
+                var command2 = connection.CreateCommand();
+                command2.CommandText = @"
+                    SELECT TOP 1
+                        관제관리번호,
+                        DATA구분코드,
+                        등록일자,
+                        도면데이터,
+                        비지오
+                    FROM 도면마스터2
+                    WHERE 관제관리번호 = @관제관리번호
+                    ORDER BY 등록일자 DESC
+                ";
+
+                var param2 = command2.CreateParameter();
+                param2.ParameterName = "@관제관리번호";
+                param2.Value = 관제관리번호;
+                command2.Parameters.Add(param2);
+
+                using (var reader = await command2.ExecuteReaderAsync())
+                {
+                    if (await reader.ReadAsync())
+                    {
+                        var 도면데이터 = reader["도면데이터"] == DBNull.Value ? null : (byte[])reader["도면데이터"];
+                        var 비지오 = reader["비지오"] == DBNull.Value ? null : (byte[])reader["비지오"];
+
+                        도면리스트.Add(new
+                        {
+                            관제관리번호 = reader["관제관리번호"]?.ToString(),
+                            DATA구분코드 = reader["DATA구분코드"]?.ToString(),
+                            등록일자 = reader["등록일자"] == DBNull.Value ? (DateTime?)null : Convert.ToDateTime(reader["등록일자"]),
+                            도면데이터 = 도면데이터 != null ? Convert.ToBase64String(도면데이터) : null,
+                            비지오 = 비지오 != null ? Convert.ToBase64String(비지오) : null,
+                            테이블명 = "도면마스터2"
+                        });
+                    }
+                }
+
+                await connection.CloseAsync();
+
+                if (도면리스트.Count == 0)
+                {
+                    _logger.LogWarning($"도면 데이터 없음: 관제관리번호={관제관리번호}");
+                    return NotFound(new { message = "도면 데이터가 없습니다." });
+                }
+
+                _logger.LogInformation($"도면 조회 완료: 관제관리번호={관제관리번호}, 도면개수={도면리스트.Count}");
+
+                return Ok(도면리스트);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"도면 조회 중 오류 발생: 관제관리번호={관제관리번호}");
+                return StatusCode(500, new { message = "서버 오류가 발생했습니다.", error = ex.Message });
+            }
+        }
     }
 }

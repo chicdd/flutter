@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:securityindex/screens/maintenance_inspection_history.dart';
 import 'package:securityindex/screens/materialstatus.dart';
+import '../screens/control_signal_activation.dart';
 import '../screens/recentsignallist.dart';
 import '../screens/smartphone_app_auth_registration.dart';
 import '../screens/document_support.dart';
 import '../screens/userzoneInfo.dart';
+import '../screens/search_log_inquiry.dart';
+import '../screens/customer_info_history.dart';
+import '../screens/map_diagram.dart';
+import '../screens/blueprint_screen.dart';
 import '../style.dart';
 import '../theme.dart';
 import '../models/search_panel.dart';
@@ -39,7 +45,16 @@ class _ContentAreaState extends State<ContentArea> {
   final GlobalKey<DocumentSupportState> _documentSupportKey = GlobalKey();
   final GlobalKey<MaterialStatusState> _materialstatusKey = GlobalKey();
   final GlobalKey<UserZoneInfoState> _userZoneInfoKey = GlobalKey();
-  final GlobalKey<UserZoneInfoState> _recentSignalListKey = GlobalKey();
+  final GlobalKey<RecentSignalListState> _recentSignalListKey = GlobalKey();
+  final GlobalKey<SearchLogInquiryState> _searchLogInquiryKey = GlobalKey();
+  final GlobalKey<CustomerInfoHistoryState> _customerInfoHistoryKey =
+      GlobalKey();
+  final GlobalKey<MapDiagramState> _mapDiagramKey = GlobalKey();
+  final GlobalKey<BlueprintState> _blueprintKey = GlobalKey();
+  final GlobalKey<ControlSignalActivationState> _controlSignalActivationtKey =
+      GlobalKey();
+  final GlobalKey<MaintenanceInspectionHistoryState>
+  _maintenanceInspectionHistoryKey = GlobalKey();
   final GlobalKey<CustomTopBarState> _topBarKey = GlobalKey();
 
   @override
@@ -87,10 +102,18 @@ class _ContentAreaState extends State<ContentArea> {
       _documentSupportKey.currentState?.updateSearchQuery(query);
     } else if (widget.selectedSubMenu == '설치자재현황') {
       _materialstatusKey.currentState?.updateSearchQuery(query);
+    } else if (widget.selectedSubMenu == '검색로그 내역조회') {
+      _searchLogInquiryKey.currentState?.updateSearchQuery(query);
+    } else if (widget.selectedSubMenu == '고객정보 변동이력') {
+      _customerInfoHistoryKey.currentState?.updateSearchQuery(query);
     } else if (widget.selectedMenu == '사용자 / 존정보') {
       _userZoneInfoKey.currentState?.updateSearchQuery(query);
     } else if (widget.selectedMenu == '최근신호이력') {
       _recentSignalListKey.currentState?.updateSearchQuery(query);
+    } else if (widget.selectedSubMenu == '관제신호 개통처리') {
+      _controlSignalActivationtKey.currentState?.updateSearchQuery(query);
+    } else if (widget.selectedSubMenu == '보수점검 완료이력') {
+      _maintenanceInspectionHistoryKey.currentState?.updateSearchQuery(query);
     }
   }
 
@@ -153,6 +176,18 @@ class _ContentAreaState extends State<ContentArea> {
       return TopBarConfig.defaultButtons(context);
     } else if (widget.selectedMenu == '최근신호이력') {
       return TopBarConfig.defaultButtons(context);
+    } else if (widget.selectedSubMenu == '검색로그 내역조회') {
+      return TopBarConfig.defaultButtons(context);
+    } else if (widget.selectedSubMenu == '고객정보 변동이력') {
+      return TopBarConfig.defaultButtons(context);
+    } else if (widget.selectedMenu == '약도') {
+      return TopBarConfig.mapDiagramButtons(context);
+    } else if (widget.selectedMenu == '도면') {
+      return TopBarConfig.mapDiagramButtons(context);
+    } else if (widget.selectedSubMenu == '관제신호 개통처리') {
+      return TopBarConfig.defaultButtons(context);
+    } else if (widget.selectedSubMenu == '보수점검 완료이력') {
+      return TopBarConfig.defaultButtons(context);
     }
     // 기타 화면
     else {
@@ -194,10 +229,36 @@ class _ContentAreaState extends State<ContentArea> {
 
     // 최근신호이력 메뉴
     if (widget.selectedMenu == '최근신호이력') {
-      return RecentSignalListScreen(
+      return RecentSignalList(
         key: _recentSignalListKey,
         searchpanel: widget.selectedCustomer!,
       );
+    }
+
+    // 관제 / 고객로그 메뉴
+    if (widget.selectedMenu == '관제 / 고객로그') {
+      return _buildCustomerLogContent(context);
+    }
+
+    // 약도 메뉴
+    if (widget.selectedMenu == '약도') {
+      return MapDiagram(
+        key: _mapDiagramKey,
+        searchpanel: widget.selectedCustomer!,
+      );
+    }
+
+    // 도면 메뉴
+    if (widget.selectedMenu == '도면') {
+      return Blueprint(
+        key: _blueprintKey,
+        searchpanel: widget.selectedCustomer!,
+      );
+    }
+
+    // 관제 / 고객로그 메뉴
+    if (widget.selectedMenu == '관제개통 / 루프') {
+      return _buildCustomerOpenContent(context);
     }
 
     return SingleChildScrollView(
@@ -288,6 +349,46 @@ class _ContentAreaState extends State<ContentArea> {
         ),
       ),
     );
+  }
+
+  Widget _buildCustomerLogContent(BuildContext context) {
+    // 검색로그 내역조회
+    if (widget.selectedSubMenu == '검색로그 내역조회') {
+      return SearchLogInquiry(
+        key: _searchLogInquiryKey,
+        searchpanel: widget.selectedCustomer!,
+      );
+    }
+
+    // 고객정보 변동이력
+    if (widget.selectedSubMenu == '고객정보 변동이력') {
+      return CustomerInfoHistory(
+        key: _customerInfoHistoryKey,
+        searchpanel: widget.selectedCustomer!,
+      );
+    }
+
+    return SingleChildScrollView();
+  }
+
+  Widget _buildCustomerOpenContent(BuildContext context) {
+    // 관제신호 개통처리
+    if (widget.selectedSubMenu == '관제신호 개통처리') {
+      return ControlSignalActivation(
+        key: _controlSignalActivationtKey,
+        searchpanel: widget.selectedCustomer!,
+      );
+    }
+
+    // 보수점검 완료이력
+    if (widget.selectedSubMenu == '보수점검 완료이력') {
+      return MaintenanceInspectionHistory(
+        key: _maintenanceInspectionHistoryKey,
+        searchpanel: widget.selectedCustomer!,
+      );
+    }
+
+    return SingleChildScrollView();
   }
 
   Widget _buildMenuContent(BuildContext context) {

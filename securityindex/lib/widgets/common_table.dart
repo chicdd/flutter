@@ -1,6 +1,45 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import '../theme.dart';
+import 'custom_top_bar.dart'; // HighlightedText import
+
+/// 열 구분선 위젯 (공통 함수)
+Widget buildColumnDivider() {
+  return Container(
+    width: 8,
+    decoration: BoxDecoration(
+      border: Border(
+        left: BorderSide(color: const Color(0xFFE0E0E0), width: 0.5),
+        right: BorderSide(color: const Color(0xFFE0E0E0), width: 0.5),
+      ),
+    ),
+  );
+}
+
+/// 테이블 셀 위젯 (공통 함수)
+Widget buildTableCell({
+  required String value,
+  required Map<int, double> columnWidths,
+  required int columnIndex,
+  String searchQuery = '',
+}) {
+  return Container(
+    width: columnWidths[columnIndex],
+    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+    child: Center(
+      child: HighlightedText(
+        text: value,
+        query: searchQuery,
+        style: const TextStyle(
+          color: Color(0xFF252525),
+          fontSize: 15,
+          fontFamily: 'Inter',
+          fontWeight: FontWeight.w400,
+        ),
+      ),
+    ),
+  );
+}
 
 /// 테이블 컬럼 설정 클래스
 class TableColumnConfig {
@@ -102,12 +141,13 @@ class CommonDataTable extends StatelessWidget {
                           child: data.isEmpty
                               ? _buildEmptyState()
                               : ScrollConfiguration(
-                                  behavior: ScrollConfiguration.of(context).copyWith(
-                                    dragDevices: {
-                                      PointerDeviceKind.touch,
-                                      PointerDeviceKind.mouse,
-                                    },
-                                  ),
+                                  behavior: ScrollConfiguration.of(context)
+                                      .copyWith(
+                                        dragDevices: {
+                                          PointerDeviceKind.touch,
+                                          PointerDeviceKind.mouse,
+                                        },
+                                      ),
                                   child: ListView.builder(
                                     itemCount: data.length,
                                     itemBuilder: (context, index) {
@@ -198,17 +238,11 @@ class CommonDataTable extends StatelessWidget {
 
           // 가로 스크롤 활성화 시 고정 너비 사용
           if (enableHorizontalScroll && column.width != null) {
-            return SizedBox(
-              width: column.width,
-              child: child,
-            );
+            return SizedBox(width: column.width, child: child);
           }
 
           // 일반 모드는 Expanded 사용
-          return Expanded(
-            flex: column.flex,
-            child: child,
-          );
+          return Expanded(flex: column.flex, child: child);
         }).toList(),
       ),
     );
@@ -277,17 +311,11 @@ class CommonDataTable extends StatelessWidget {
 
           // 가로 스크롤 활성화 시 고정 너비 사용
           if (enableHorizontalScroll && column.width != null) {
-            return SizedBox(
-              width: column.width,
-              child: child,
-            );
+            return SizedBox(width: column.width, child: child);
           }
 
           // 일반 모드는 Expanded 사용
-          return Expanded(
-            flex: column.flex,
-            child: child,
-          );
+          return Expanded(flex: column.flex, child: child);
         }).toList(),
       ),
     );

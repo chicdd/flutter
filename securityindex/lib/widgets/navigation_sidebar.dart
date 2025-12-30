@@ -54,7 +54,8 @@ class _NavigationSidebarState extends State<NavigationSidebar> {
         selectedMainItem = widget.initialSelectedMenu;
         selectedSubItem = widget.initialSelectedSubMenu;
         // 서브 메뉴가 있으면 해당 메인 메뉴를 펼친 상태로
-        if (widget.initialSelectedSubMenu != null && widget.initialSelectedMenu != null) {
+        if (widget.initialSelectedSubMenu != null &&
+            widget.initialSelectedMenu != null) {
           expandedItem = widget.initialSelectedMenu;
         }
       });
@@ -69,10 +70,18 @@ class _NavigationSidebarState extends State<NavigationSidebar> {
     ),
     NavigationItem(title: '사용자 / 존정보', icon: Icons.person_outline),
     NavigationItem(title: '최근신호이력', icon: Icons.history),
-    NavigationItem(title: '관제 / 고객로그', icon: Icons.article_outlined),
+    NavigationItem(
+      title: '관제 / 고객로그',
+      icon: Icons.article_outlined,
+      subItems: ['검색로그 내역조회', '고객정보 변동이력'],
+    ),
     NavigationItem(title: '약도', icon: Icons.map_outlined),
     NavigationItem(title: '도면', icon: Icons.architecture_outlined),
-    NavigationItem(title: '관제개통 / 루프', icon: Icons.settings_input_antenna),
+    NavigationItem(
+      title: '관제개통 / 루프',
+      icon: Icons.settings_input_antenna,
+      subItems: ['관제신호 개통처리', '보수점검 완료이력'],
+    ),
     NavigationItem(title: 'AS접수', icon: Icons.build_outlined),
     NavigationItem(title: '녹취조회', icon: Icons.mic_outlined),
     NavigationItem(title: '영업정보', icon: Icons.business_center_outlined),

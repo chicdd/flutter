@@ -39,6 +39,12 @@ namespace securityindexAPI.Data
         // 존코드테이블 매핑
         public DbSet<존마스터> 존마스터 { get; set; }
 
+        // 관제개시마스터 테이블 매핑
+        public DbSet<관제개시마스터> 관제개시마스터 { get; set; }
+
+        // 보수점검지시마스터 테이블 매핑
+        public DbSet<보수점검지시마스터> 보수점검지시마스터 { get; set; }
+
         // 코드 테이블들 (드롭다운용)
         public DbSet<관리구역코드모델> 관리구역코드 { get; set; }
         public DbSet<출동권역코드모델> 출동권역코드 { get; set; }
@@ -107,6 +113,16 @@ namespace securityindexAPI.Data
             modelBuilder.Entity<존마스터>()
                 .ToTable("존코드테이블")
                 .HasKey(z => z.존번호);
+
+            // 관제개시마스터 테이블 매핑
+            modelBuilder.Entity<관제개시마스터>()
+                .ToTable("관제개시마스터")
+                .HasKey(g => g.관제관리번호);
+
+            // 보수점검지시마스터 테이블 매핑
+            modelBuilder.Entity<보수점검지시마스터>()
+                .ToTable("보수점검지시마스터")
+                .HasKey(b => b.관제관리번호);
 
             // 코드 테이블 매핑 (모델의 [Table] 어트리뷰트를 사용하므로 키만 설정)
             modelBuilder.Entity<관리구역코드모델>()
