@@ -23,7 +23,7 @@ class AuthRegist {
       userName: json['사용자이름'] as String?,
       armaStatus: json['원격경계여부'] as bool?,
       disarmaStatus: json['원격해제여부'] as bool?,
-      registrationDate: dateToString(json['등록일자']),
+      registrationDate: dateParsing(json['등록일자']),
       customerName: json['상호명'] as String?,
     );
   }

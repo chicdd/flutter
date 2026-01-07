@@ -189,12 +189,23 @@ namespace securityindexAPI.Controllers
                             .ToListAsync();
                         break;
 
-                    case "documenttype": // 지사구분
+                    case "documenttype": // 문서종류
                         result = await _context.문서종류코드마스터
                             .Select(x => new CodeData
                             {
                                 Code = x.문서종류코드,
                                 Name = x.문서종류코드명,
+                            })
+                            .OrderBy(x => x.Code)
+                            .ToListAsync();
+                        break;
+
+                    case "managercode": // 담당자 코드
+                        result = await _context.담당자코드마스터
+                            .Select(x => new CodeData
+                            {
+                                Code = x.담당자코드,
+                                Name = x.담당자코드명 ?? string.Empty,
                             })
                             .OrderBy(x => x.Code)
                             .ToListAsync();

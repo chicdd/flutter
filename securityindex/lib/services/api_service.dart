@@ -14,6 +14,8 @@ import '../models/search_log.dart';
 import '../models/customer_history.dart';
 import '../models/map_diagram.dart';
 import '../models/blueprint.dart';
+import '../models/aslog.dart';
+import '../models/sales_info.dart';
 
 class DatabaseService {
   static const String baseUrl = 'https://localhost:5001/api';
@@ -467,9 +469,7 @@ class DatabaseService {
     try {
       final httpClient = _createHttpClient();
       final encodedNumber = Uri.encodeComponent(managementNumber);
-      final uri = Uri.parse(
-        'https://localhost:7088/api/관제개시/$encodedNumber',
-      );
+      final uri = Uri.parse('https://localhost:7088/api/관제개시/$encodedNumber');
 
       print('관제개시 조회 API 호출: $uri');
 
@@ -529,9 +529,7 @@ class DatabaseService {
     try {
       final httpClient = _createHttpClient();
       final encodedNumber = Uri.encodeComponent(managementNumber);
-      final uri = Uri.parse(
-        'https://localhost:7088/api/보수점검/$encodedNumber',
-      );
+      final uri = Uri.parse('https://localhost:7088/api/보수점검/$encodedNumber');
 
       print('보수점검 완료이력 조회 API 호출: $uri');
 
@@ -796,6 +794,113 @@ class DatabaseService {
     } catch (e) {
       print('도면 조회 API 호출 오류: $e');
       return [];
+    }
+  }
+
+  /// AS접수 정보 조회
+  /// 관제관리번호로 AS접수 정보를 조회합니다.
+  static Future<List<AsLog>> getASLog(
+    String managementNumber,
+  ) async {
+    try {
+      final httpClient = _createHttpClient();
+      final encodedNumber = Uri.encodeComponent(managementNumber);
+      final uri = Uri.parse(
+        'https://localhost:7088/api/관제고객/$encodedNumber/ashistory',
+      );
+
+      print('AS접수 정보 조회 API 호출: $uri');
+
+      final request = await httpClient.getUrl(uri);
+      final response = await request.close();
+
+      if (response.statusCode == 200) {
+        final String responseBody = await response
+            .transform(utf8.decoder)
+            .join();
+        final List<dynamic> jsonList = json.decode(responseBody);
+        return jsonList.map((json) => AsLog.fromJson(json)).toList();
+      } else {
+        print('AS접수 정보 조회 오류: ${response.statusCode}');
+        return [];
+      }
+    } catch (e) {
+      print('AS접수 정보 조회 API 호출 오류: $e');
+      return [];
+    }
+  }
+
+  /// AS접수 정보 추가
+  static Future<bool> addASLog(Map<String, dynamic> data) async {
+    try {
+      final httpClient = _createHttpClient();
+      final request = await httpClient.postUrl(
+        Uri.parse('https://localhost:7088/api/Insert/aslog'),
+      );
+
+      request.headers.set('Content-Type', 'application/json; charset=utf-8');
+      request.write(json.encode(data));
+
+      final response = await request.close();
+      final String responseBody = await response.transform(utf8.decoder).join();
+
+      if (response.statusCode == 201) {
+        print('AS접수 추가 성공');
+        return true;
+      } else {
+        print('AS접수 추가 실패: $responseBody');
+        return false;
+      }
+    } catch (e) {
+      print('AS접수 추가 API 호출 오류: $e');
+      return false;
+    }
+  }
+
+  /// 영업정보 조회
+  /// 고객번호로 영업정보를 조회합니다.
+  static Future<SalesInfo?> getSalesInfo(String customerNumber) async {
+    try {
+      // 고객번호 유효성 검사
+      if (customerNumber.isEmpty) {
+        print('영업정보 조회 실패: 고객번호가 비어있습니다.');
+        return null;
+      }
+
+      final httpClient = _createHttpClient();
+      final encodedNumber = Uri.encodeComponent(customerNumber);
+      final uri = Uri.parse(
+        'https://localhost:7088/api/관제고객/sales-info/$encodedNumber',
+      );
+
+      print('영업정보 조회 API 호출: $uri (고객번호: $customerNumber)');
+
+      final request = await httpClient.getUrl(uri);
+      final response = await request.close();
+
+      if (response.statusCode == 200) {
+        final String responseBody = await response
+            .transform(utf8.decoder)
+            .join();
+        final Map<String, dynamic> jsonData = json.decode(responseBody);
+        return SalesInfo.fromJson(jsonData);
+      } else if (response.statusCode == 503) {
+        // ERP DB 연결 오류
+        final String responseBody = await response
+            .transform(utf8.decoder)
+            .join();
+        print('ERP DB 연결 오류: $responseBody');
+        throw Exception('ERP_DB_NOT_CONNECTED');
+      } else if (response.statusCode == 404) {
+        print('영업정보를 찾을 수 없음: $customerNumber');
+        return null;
+      } else {
+        print('영업정보 조회 오류: ${response.statusCode}');
+        return null;
+      }
+    } catch (e) {
+      print('영업정보 조회 API 호출 오류: $e');
+      rethrow; // Exception을 다시 던짐
     }
   }
 }

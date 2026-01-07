@@ -38,7 +38,7 @@ class DVRInfo {
       connectionPort: json['접속포트']?.toString(),
       connectionId: json['접속ID']?.toString(),
       connectionPassword: json['접속암호']?.toString(),
-      addedDate: dateToString(json['추가일자']),
+      addedDate: dateParsing(json['추가일자']),
     );
   }
 

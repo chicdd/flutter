@@ -114,12 +114,12 @@ class RecentSignalListState extends State<RecentSignalList>
       TableColumnConfig(
         header: '수신일자',
         width: _columnWidths[2],
-        valueBuilder: (data) => data.receiveDateFormatted,
+        valueBuilder: (data) => data.receiveDate,
       ),
       TableColumnConfig(
         header: '수신시간',
         width: _columnWidths[3],
-        valueBuilder: (data) => data.receiveTimeFormatted,
+        valueBuilder: (data) => dateParsing(data.receiveTime),
       ),
       TableColumnConfig(
         header: '신호명',
@@ -649,54 +649,47 @@ class RecentSignalListState extends State<RecentSignalList>
           ),
           const SizedBox(height: 16),
           Expanded(
-            child: _signalList.isEmpty && !_isLoading
-                ? Center(
-                    child: Text(
-                      '조회된 신호가 없습니다.',
-                      style: const TextStyle(color: Colors.grey, fontSize: 16),
-                    ),
-                  )
-                : Stack(
-                    children: [
-                      // 테이블 (항상 렌더링)
-                      _buildResizableTable(),
-                      // 로딩 인디케이터 (테이블 중앙)
-                      if (_isLoadingMore)
-                        Container(
-                          color: Colors.black.withOpacity(0.1),
-                          child: Center(
-                            child: Container(
-                              padding: const EdgeInsets.all(20),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(12),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.1),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ],
-                              ),
-                              child: const Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  CircularProgressIndicator(),
-                                  SizedBox(height: 12),
-                                  Text(
-                                    '데이터를 불러오는 중...',
-                                    style: TextStyle(
-                                      color: Color(0xFF252525),
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ],
+            child: Stack(
+              children: [
+                // 테이블 (항상 렌더링)
+                _buildResizableTable(),
+                // 로딩 인디케이터 (테이블 중앙)
+                if (_isLoadingMore)
+                  Container(
+                    color: Colors.black.withOpacity(0.1),
+                    child: Center(
+                      child: Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: const Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            CircularProgressIndicator(),
+                            SizedBox(height: 12),
+                            Text(
+                              '데이터를 불러오는 중...',
+                              style: TextStyle(
+                                color: Color(0xFF252525),
+                                fontSize: 14,
                               ),
                             ),
-                          ),
+                          ],
                         ),
-                    ],
+                      ),
+                    ),
                   ),
+              ],
+            ),
           ),
         ],
       ),

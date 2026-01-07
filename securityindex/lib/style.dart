@@ -598,7 +598,7 @@ bool stringToBool(String text) {
 }
 
 //datetime 형식을 String으로 가져 와
-String dateToString(String? date) {
+String dateParsing(String? date) {
   // null 또는 빈 문자열 체크
   if (date == null || date.isEmpty) return '';
 
@@ -742,6 +742,12 @@ DateTime? validateAndParseDateText(String text) {
   return null;
 }
 
+// 날짜 형식 변환 (yyyy-MM-dd)
+String recordDateFormatted(DateTime date) {
+  if (date == null) return '';
+  return '${date!.year}-${date!.month.toString().padLeft(2, '0')}-${date!.day.toString().padLeft(2, '0')}';
+}
+
 /// ========================================
 /// 날짜 입력 필드 위젯
 /// ========================================
@@ -815,6 +821,126 @@ class DateTextField extends StatelessWidget {
                 onSubmitted!();
               }
             },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// ========================================
+/// 시간 입력 필드 위젯
+/// ========================================
+
+/// 시간 선택 TextField (시계 아이콘 포함)
+class TimePickerField extends StatelessWidget {
+  final String label;
+  final TextEditingController hourController;
+  final TextEditingController minuteController;
+  final VoidCallback? onTimePickerPressed;
+
+  const TimePickerField({
+    super.key,
+    required this.label,
+    required this.hourController,
+    required this.minuteController,
+    this.onTimePickerPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 200,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: Color(0xFF252525),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              // 시 입력
+              Expanded(
+                child: TextField(
+                  controller: hourController,
+                  keyboardType: TextInputType.number,
+                  textAlign: TextAlign.center,
+                  decoration: InputDecoration(
+                    hintText: '00',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(
+                        color: Color(0xFF4318FF),
+                        width: 2,
+                      ),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 12,
+                    ),
+                  ),
+                  style: const TextStyle(fontSize: 14),
+                ),
+              ),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 8),
+                child: Text(
+                  ':',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ),
+              // 분 입력
+              Expanded(
+                child: TextField(
+                  controller: minuteController,
+                  keyboardType: TextInputType.number,
+                  textAlign: TextAlign.center,
+                  decoration: InputDecoration(
+                    hintText: '00',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(
+                        color: Color(0xFF4318FF),
+                        width: 2,
+                      ),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 12,
+                    ),
+                  ),
+                  style: const TextStyle(fontSize: 14),
+                ),
+              ),
+              // 시계 아이콘
+              if (onTimePickerPressed != null)
+                IconButton(
+                  icon: const Icon(Icons.access_time, size: 20),
+                  onPressed: onTimePickerPressed,
+                ),
+            ],
           ),
         ],
       ),

@@ -82,7 +82,7 @@ class _NavigationSidebarState extends State<NavigationSidebar> {
       icon: Icons.settings_input_antenna,
       subItems: ['관제신호 개통처리', '보수점검 완료이력'],
     ),
-    NavigationItem(title: 'AS접수', icon: Icons.build_outlined),
+    NavigationItem(title: 'AS 접수', icon: Icons.build_outlined),
     NavigationItem(title: '녹취조회', icon: Icons.mic_outlined),
     NavigationItem(title: '영업정보', icon: Icons.business_center_outlined),
   ];

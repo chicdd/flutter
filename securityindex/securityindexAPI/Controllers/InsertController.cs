@@ -130,6 +130,46 @@ namespace securityindexAPI.Controllers
                 return StatusCode(500, new { message = "서버 오류가 발생했습니다.", error = ex.Message });
             }
         }
+
+        /// <summary>
+        /// AS접수 정보 추가
+        /// </summary>
+        [HttpPost("assummit")]
+        public async Task<ActionResult> InsertAS접수([FromBody] AS접수요청 request)
+        {
+            try
+            {
+                _logger.LogInformation($"AS접수 정보 추가 요청: 관제관리번호={request.관제관리번호}");
+
+                // 새 AS접수 정보 생성
+                var asData = new AS접수마스터
+                {
+                    관제관리번호 = request.관제관리번호,
+                    고객이름 = request.고객이름,
+                    고객연락처 = request.고객연락처,
+                    요청일자 = request.요청일자,
+                    요청시간 = request.요청시간,
+                    요청제목 = request.요청제목,
+                    접수일자 = request.접수일자,
+                    접수시간 = request.접수시간,
+                    담당구역 = request.담당구역,
+                    처리여부 = "미처리",
+                    입력자 = request.입력자,
+                    세부내용 = request.세부내용
+                };
+
+                _context.AS접수마스터.Add(asData);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation($"AS접수 정보 추가 완료: 관제관리번호={request.관제관리번호}");
+                return StatusCode(201, new { message = "AS접수 정보가 추가되었습니다." });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "AS접수 정보 추가 중 오류 발생");
+                return StatusCode(500, new { message = "서버 오류가 발생했습니다.", error = ex.Message });
+            }
+        }
     }
 
     /// <summary>
@@ -139,6 +179,24 @@ namespace securityindexAPI.Controllers
     {
         public string code { get; set; } = string.Empty;
         public string codeName { get; set; } = string.Empty;
+    }
+
+    /// <summary>
+    /// AS접수 추가 요청 모델
+    /// </summary>
+    public class AS접수요청
+    {
+        public string 관제관리번호 { get; set; } = string.Empty;
+        public string? 고객이름 { get; set; }
+        public string? 고객연락처 { get; set; }
+        public DateTime? 요청일자 { get; set; }
+        public string? 요청시간 { get; set; }
+        public DateTime? 접수일자 { get; set; }
+        public string? 접수시간 { get; set; }
+        public string? 요청제목 { get; set; }
+        public string? 담당구역 { get; set; }
+        public string? 입력자 { get; set; }
+        public string? 세부내용 { get; set; }
     }
 
     /// <summary>

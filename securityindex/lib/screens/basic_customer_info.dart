@@ -479,7 +479,7 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
           Row(
             children: [
               Expanded(
-                child: buildSearchableTextField(
+                child: CommonTextField(
                   label: '관제 상호명',
                   controller: _controlTypeController,
                   searchQuery: _pageSearchQuery,
@@ -487,7 +487,7 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: buildSearchableTextField(
+                child: CommonTextField(
                   label: 'SMS용 상호',
                   controller: _smsNameController,
                   searchQuery: _pageSearchQuery,

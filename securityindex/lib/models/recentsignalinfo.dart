@@ -35,7 +35,7 @@ class RecentSignalInfo {
     return RecentSignalInfo(
       controlManagementNumber: json['관제관리번호']?.toString(),
       controlBusinessName: json['관제상호']?.toString(),
-      receiveDate: dateToString(json['수신일자'] as String),
+      receiveDate: dateParsing(json['수신일자'] as String),
       receiveTime: json['수신시간']?.toString(),
       signalName: json['신호명']?.toString(),
       signalCode: json['신호코드']?.toString(),
@@ -47,17 +47,5 @@ class RecentSignalInfo {
       textColor: json['글자색']?.toString(),
       backgroundColor: json['바탕색']?.toString(),
     );
-  }
-
-  // 수신일자 포맷 (YYYY-MM-DD)
-  String get receiveDateFormatted {
-    if (receiveDate == null) return '';
-    return dateToString(receiveDate.toString());
-  }
-
-  // 수신시간 포맷 (HH:mm:ss)
-  String get receiveTimeFormatted {
-    if (receiveTime == null || receiveTime!.isEmpty) return '';
-    return receiveTime!;
   }
 }

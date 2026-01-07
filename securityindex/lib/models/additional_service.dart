@@ -20,7 +20,7 @@ class AdditionalService {
       controlManagementNumber: json['관제관리번호'] as String?,
       serviceName: json['부가서비스코드명'] as String?,
       provisionType: json['부가서비스제공코드명'] as String?,
-      provisionDate: dateToString(json['부가서비스일자'] as String),
+      provisionDate: dateParsing(json['부가서비스일자'] as String),
       memo: json['추가메모'] as String?,
     );
   }
@@ -37,6 +37,6 @@ class AdditionalService {
 
   @override
   String toString() {
-    return 'AdditionalService(serviceName: $serviceName, provisionType: $provisionType, provisionDate: ${dateToString(provisionDate)})';
+    return 'AdditionalService(serviceName: $serviceName, provisionType: $provisionType, provisionDate: ${dateParsing(provisionDate)})';
   }
 }

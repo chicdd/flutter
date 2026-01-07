@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:securityindex/screens/maintenance_inspection_history.dart';
 import 'package:securityindex/screens/materialstatus.dart';
+import '../screens/as_log.dart';
 import '../screens/control_signal_activation.dart';
 import '../screens/recentsignallist.dart';
+import '../screens/sales_info.dart';
 import '../screens/smartphone_app_auth_registration.dart';
 import '../screens/document_support.dart';
 import '../screens/userzoneInfo.dart';
@@ -11,7 +13,6 @@ import '../screens/search_log_inquiry.dart';
 import '../screens/customer_info_history.dart';
 import '../screens/map_diagram.dart';
 import '../screens/blueprint_screen.dart';
-import '../style.dart';
 import '../theme.dart';
 import '../models/search_panel.dart';
 import '../screens/basic_customer_info.dart';
@@ -55,6 +56,8 @@ class _ContentAreaState extends State<ContentArea> {
       GlobalKey();
   final GlobalKey<MaintenanceInspectionHistoryState>
   _maintenanceInspectionHistoryKey = GlobalKey();
+  final GlobalKey<AsLogState> _asLogKey = GlobalKey();
+  final GlobalKey<AsLogState> _salesKey = GlobalKey();
   final GlobalKey<CustomTopBarState> _topBarKey = GlobalKey();
 
   @override
@@ -114,6 +117,10 @@ class _ContentAreaState extends State<ContentArea> {
       _controlSignalActivationtKey.currentState?.updateSearchQuery(query);
     } else if (widget.selectedSubMenu == '보수점검 완료이력') {
       _maintenanceInspectionHistoryKey.currentState?.updateSearchQuery(query);
+    } else if (widget.selectedSubMenu == 'AS 접수') {
+      _asLogKey.currentState?.updateSearchQuery(query);
+    } else if (widget.selectedSubMenu == '영업정보') {
+      _salesKey.currentState?.updateSearchQuery(query);
     }
   }
 
@@ -188,6 +195,10 @@ class _ContentAreaState extends State<ContentArea> {
       return TopBarConfig.defaultButtons(context);
     } else if (widget.selectedSubMenu == '보수점검 완료이력') {
       return TopBarConfig.defaultButtons(context);
+    } else if (widget.selectedSubMenu == 'AS 접수') {
+      return TopBarConfig.defaultButtons(context);
+    } else if (widget.selectedSubMenu == '영업정보') {
+      return TopBarConfig.defaultButtons(context);
     }
     // 기타 화면
     else {
@@ -259,6 +270,19 @@ class _ContentAreaState extends State<ContentArea> {
     // 관제 / 고객로그 메뉴
     if (widget.selectedMenu == '관제개통 / 루프') {
       return _buildCustomerOpenContent(context);
+    }
+
+    // A/S 접수 메뉴
+    if (widget.selectedMenu == 'AS 접수') {
+      return AsLogScreen(key: _asLogKey, searchpanel: widget.selectedCustomer!);
+    }
+
+    // 영업정보 메뉴
+    if (widget.selectedMenu == '영업정보') {
+      return SalesInfoScreen(
+        key: _salesKey,
+        searchpanel: widget.selectedCustomer!,
+      );
     }
 
     return SingleChildScrollView(

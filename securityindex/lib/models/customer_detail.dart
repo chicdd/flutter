@@ -193,7 +193,7 @@ class CustomerDetail {
       responsePath1: json['대처경로1']?.toString(),
       representative: json['대표자']?.toString(),
       representativeHP: json['대표자HP']?.toString(),
-      securityStartDate: dateToString(json['개통일자']?.toString()),
+      securityStartDate: dateParsing(json['개통일자']?.toString()),
       managementAreaCode: json['관리구역코드']?.toString(),
       managementAreaName: json['관리구역코드명']?.toString(),
       dispatchAreaCode: json['출동권역코드']?.toString(),

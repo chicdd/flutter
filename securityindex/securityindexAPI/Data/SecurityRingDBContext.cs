@@ -60,7 +60,10 @@ namespace securityindexAPI.Data
         public DbSet<회사구분코드모델> 회사구분코드 { get; set; }
         public DbSet<지사구분코드모델> 지사구분코드 { get; set; }
         public DbSet<문서종류코드모델> 문서종류코드마스터 { get; set; }
+        public DbSet<담당자코드마스터> 담당자코드마스터 { get; set; }
+        public DbSet<AS접수마스터> AS접수마스터 { get; set; }
         public DbSet<차량코드모델> 차량코드 { get; set; }
+        public DbSet<영업연결마스터> 영업연결마스터 { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -166,6 +169,11 @@ namespace securityindexAPI.Data
 
             modelBuilder.Entity<문서종류코드모델>()
                 .HasKey(c => c.문서종류코드);
+            modelBuilder.Entity<담당자코드마스터>()
+               .HasKey(c => c.담당자코드);
+
+            modelBuilder.Entity<영업연결마스터>()
+                .HasKey(e => e.업체코드);
         }
     }
 }
