@@ -64,3 +64,9 @@ obj/
 # ASP.NET Core - 민감한 설정 파일
 securityindexAPI/appsettings.json
 securityindexAPI/appsettings.Development.json
+
+# Claude Code settings - ignore all .claude folders in subdirectories
+**/.claude/
+
+# API settings - ignore appsettings.json files
+**/appsettings.json

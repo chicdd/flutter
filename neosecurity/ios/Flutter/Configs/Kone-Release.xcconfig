@@ -1,0 +1,16 @@
+#include "../Release.xcconfig"
+
+// 한국안전시스템 Release Flavor 설정
+FLUTTER_APP_NAME = 한국안전시스템
+FLUTTER_GAETONG_CODE = 53220129
+PRODUCT_BUNDLE_IDENTIFIER = com.neo.Kone
+PRODUCT_NAME = 한국안전시스템
+
+// App Store 업로드 설정
+CODE_SIGN_STYLE = Manual
+CODE_SIGN_IDENTITY = iPhone Distribution
+PROVISIONING_PROFILE_SPECIFIER = Kone App Store
+
+// Release 최적화 설정
+SWIFT_COMPILATION_MODE = wholemodule
+SWIFT_OPTIMIZATION_LEVEL = -O

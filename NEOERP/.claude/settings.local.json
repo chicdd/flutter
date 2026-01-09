@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(flutter pub get:*)",
+      "Bash(flutter run:*)",
+      "Bash(flutter analyze:*)",
+      "Bash(flutter build:*)",
+      "WebSearch",
+      "WebFetch(domain:pub.dev)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:caduandrade.github.io)",
+      "Bash(flutter pub deps:*)",
+      "Bash(flutter pub cache:*)",
+      "Read(//d/flutter_pub_cache/hosted/pub.dev/docking-1.16.1/example/**)",
+      "Read(//d/flutter_pub_cache/hosted/pub.dev/tabbed_view-1.18.1/**)",
+      "Bash(taskkill:*)",
+      "Bash(nc:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Read(//d/flutter_pub_cache/hosted/pub.dev/docking-1.16.1/**)",
+      "Bash(start buildwindowsx64runnerDebugneoerp.exe)",
+      "Bash(start \"\" \"build\\windows\\x64\\runner\\Debug\\neoerp.exe\")",
+      "Read(//d/flutter_pub_cache/hosted/pub.dev/**)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

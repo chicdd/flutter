@@ -1,0 +1,74 @@
+<<<<<<< HEAD
+# Claude Code settings - ignore all .claude folders in subdirectories
+**/.claude/
+
+# API settings - ignore appsettings.json files
+**/appsettings.json
+=======
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# The .vscode folder contains launch configuration and tasks you configure in
+# VS Code which you may wish to be included in version control, so this line
+# is commented out by default.
+#.vscode/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+# Firebase 보안 파일 (절대 커밋하지 마세요!)
+serviceAccountKey.json
+**/google-services.json
+**/GoogleService-Info.plist
+firebase-debug.log
+.firebase/
+
+# Visual Studio related
+.vs/
+*.vsidx
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+bin/
+obj/
+
+# ASP.NET Core - 민감한 설정 파일
+securityindexAPI/appsettings.json
+securityindexAPI/appsettings.Development.json
+>>>>>>> baf0473 (주기 업로드)

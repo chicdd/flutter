@@ -1,0 +1,8 @@
+#include? "Pods/Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig"
+#include "Generated.xcconfig"
+#include "Pods/Target Support Files/Pods-Runner/Pods-Runner.profile.xcconfig"
+
+// Flavor 설정을 위한 기본값 (Scheme에서 오버라이드됨)
+FLUTTER_APP_NAME = neosecurity
+FLUTTER_GAETONG_CODE = 00000000
+PRODUCT_BUNDLE_IDENTIFIER = com.neo.neosecurity
