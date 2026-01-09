@@ -77,10 +77,10 @@ packages:
     dependency: transitive
     description:
       name: ffi
-      sha256: "289279317b4b16eb2bb7e271abccd4bf84ec9bdcbe999e278a94b804f5630418"
+      sha256: d07d37192dbf97461359c1518788f203b0c9102cfd2c35a716b823741219542c
       url: "https://pub.dev"
     source: hosted
-    version: "2.1.4"
+    version: "2.1.5"
   file_picker:
     dependency: "direct main"
     description:
@@ -350,18 +350,18 @@ packages:
     dependency: transitive
     description:
       name: syncfusion_flutter_core
-      sha256: a984dfd5496ad318e7c42fb26e29a17d1132fe264e45ad11d15dc19a34921af4
+      sha256: "7363e3a7489c71874c624945d8dcbbe1e2486bb7bce7ee5b7693f14c00581f52"
       url: "https://pub.dev"
     source: hosted
-    version: "32.1.19"
+    version: "32.1.22"
   syncfusion_flutter_datagrid:
     dependency: "direct main"
     description:
       name: syncfusion_flutter_datagrid
-      sha256: ddd030bac40a543e4b671da12f4f281a514d1b9914a2fc277975dd15fc99ef69
+      sha256: fb51dad69e6208ebaddeaeaedf48e9f756f88dfe2dd6f9399da53bca3b41b46f
       url: "https://pub.dev"
     source: hosted
-    version: "32.1.19"
+    version: "32.1.22"
   term_glyph:
     dependency: transitive
     description:

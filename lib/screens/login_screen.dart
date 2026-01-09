@@ -31,6 +31,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     // 창을 최대화하고 메인 화면으로 이동
     await windowManager.setResizable(true);
+    await windowManager.setMinimumSize(const Size(1280, 720));
     await windowManager.maximize();
 
     if (mounted) {

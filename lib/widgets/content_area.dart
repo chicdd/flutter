@@ -57,7 +57,7 @@ class _ContentAreaState extends State<ContentArea> {
   final GlobalKey<MaintenanceInspectionHistoryState>
   _maintenanceInspectionHistoryKey = GlobalKey();
   final GlobalKey<AsLogState> _asLogKey = GlobalKey();
-  final GlobalKey<AsLogState> _salesKey = GlobalKey();
+  final GlobalKey<SalesInfoScreenState> _salesKey = GlobalKey();
   final GlobalKey<CustomTopBarState> _topBarKey = GlobalKey();
 
   @override
@@ -117,10 +117,14 @@ class _ContentAreaState extends State<ContentArea> {
       _controlSignalActivationtKey.currentState?.updateSearchQuery(query);
     } else if (widget.selectedSubMenu == '보수점검 완료이력') {
       _maintenanceInspectionHistoryKey.currentState?.updateSearchQuery(query);
-    } else if (widget.selectedSubMenu == 'AS 접수') {
+    } else if (widget.selectedMenu == 'AS 접수') {
       _asLogKey.currentState?.updateSearchQuery(query);
     } else if (widget.selectedSubMenu == '영업정보') {
       _salesKey.currentState?.updateSearchQuery(query);
+    } else if (widget.selectedSubMenu == '최근 수금 이력') {
+      _controlSignalActivationtKey.currentState?.updateSearchQuery(query);
+    } else if (widget.selectedSubMenu == '최근 방문 및 A/S 이력') {
+      _maintenanceInspectionHistoryKey.currentState?.updateSearchQuery(query);
     }
   }
 
@@ -195,9 +199,13 @@ class _ContentAreaState extends State<ContentArea> {
       return TopBarConfig.defaultButtons(context);
     } else if (widget.selectedSubMenu == '보수점검 완료이력') {
       return TopBarConfig.defaultButtons(context);
-    } else if (widget.selectedSubMenu == 'AS 접수') {
+    } else if (widget.selectedMenu == 'AS 접수') {
       return TopBarConfig.defaultButtons(context);
     } else if (widget.selectedSubMenu == '영업정보') {
+      return TopBarConfig.defaultButtons(context);
+    } else if (widget.selectedSubMenu == '최근 수금 이력') {
+      return TopBarConfig.defaultButtons(context);
+    } else if (widget.selectedSubMenu == '최근 방문 및 A/S 이력') {
       return TopBarConfig.defaultButtons(context);
     }
     // 기타 화면
@@ -279,10 +287,7 @@ class _ContentAreaState extends State<ContentArea> {
 
     // 영업정보 메뉴
     if (widget.selectedMenu == '영업정보') {
-      return SalesInfoScreen(
-        key: _salesKey,
-        searchpanel: widget.selectedCustomer!,
-      );
+      return _buildERPContent(context);
     }
 
     return SingleChildScrollView(
@@ -408,6 +413,26 @@ class _ContentAreaState extends State<ContentArea> {
     if (widget.selectedSubMenu == '보수점검 완료이력') {
       return MaintenanceInspectionHistory(
         key: _maintenanceInspectionHistoryKey,
+        searchpanel: widget.selectedCustomer!,
+      );
+    }
+
+    return SingleChildScrollView();
+  }
+
+  Widget _buildERPContent(BuildContext context) {
+    // 검색로그 내역조회
+    if (widget.selectedSubMenu == '최근 수금 이력') {
+      return SearchLogInquiry(
+        key: _searchLogInquiryKey,
+        searchpanel: widget.selectedCustomer!,
+      );
+    }
+
+    // 고객정보 변동이력
+    if (widget.selectedSubMenu == '최근 방문 및 A/S 이력') {
+      return CustomerInfoHistory(
+        key: _customerInfoHistoryKey,
         searchpanel: widget.selectedCustomer!,
       );
     }

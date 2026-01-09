@@ -284,7 +284,7 @@ class CustomerDetail {
 
       // YYYYMMDD 형식 (8자리 숫자) 처리
       if (securityStartDate!.length == 8 && !securityStartDate!.contains('-')) {
-        return '${securityStartDate!.substring(0, 4)}-${securityStartDate!.substring(4, 6)}-${openingDate!.substring(6, 8)}';
+        return '${securityStartDate!.substring(0, 4)}-${securityStartDate!.substring(4, 6)}-${securityStartDate!.substring(6, 8)}';
       }
 
       // 이미 YYYY-MM-DD 형식이면 그대로 반환

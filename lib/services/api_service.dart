@@ -16,6 +16,8 @@ import '../models/map_diagram.dart';
 import '../models/blueprint.dart';
 import '../models/aslog.dart';
 import '../models/sales_info.dart';
+import '../models/payment_history.dart';
+import '../models/visit_as_history.dart';
 
 class DatabaseService {
   static const String baseUrl = 'https://localhost:5001/api';
@@ -900,6 +902,100 @@ class DatabaseService {
       }
     } catch (e) {
       print('영업정보 조회 API 호출 오류: $e');
+      rethrow; // Exception을 다시 던짐
+    }
+  }
+
+  /// 최근수금이력 조회
+  /// 고객번호로 최근수금이력을 조회합니다.
+  static Future<List<PaymentHistory>> getPaymentHistory(String customerNumber) async {
+    try {
+      // 고객번호 유효성 검사
+      if (customerNumber.isEmpty) {
+        print('최근수금이력 조회 실패: 고객번호가 비어있습니다.');
+        return [];
+      }
+
+      final httpClient = _createHttpClient();
+      final encodedNumber = Uri.encodeComponent(customerNumber);
+      final uri = Uri.parse(
+        'https://localhost:7088/api/관제고객/payment-history/$encodedNumber',
+      );
+
+      print('최근수금이력 조회 API 호출: $uri (고객번호: $customerNumber)');
+
+      final request = await httpClient.getUrl(uri);
+      final response = await request.close();
+
+      if (response.statusCode == 200) {
+        final String responseBody = await response
+            .transform(utf8.decoder)
+            .join();
+        final List<dynamic> jsonList = json.decode(responseBody);
+        return jsonList.map((json) => PaymentHistory.fromJson(json)).toList();
+      } else if (response.statusCode == 503) {
+        // ERP DB 연결 오류
+        final String responseBody = await response
+            .transform(utf8.decoder)
+            .join();
+        print('ERP DB 연결 오류: $responseBody');
+        throw Exception('ERP_DB_NOT_CONNECTED');
+      } else if (response.statusCode == 404) {
+        print('최근수금이력을 찾을 수 없음: $customerNumber');
+        return [];
+      } else {
+        print('최근수금이력 조회 오류: ${response.statusCode}');
+        return [];
+      }
+    } catch (e) {
+      print('최근수금이력 조회 API 호출 오류: $e');
+      rethrow; // Exception을 다시 던짐
+    }
+  }
+
+  /// 최근 방문 및 A/S이력 조회
+  /// 고객번호로 최근 방문 및 A/S이력을 조회합니다.
+  static Future<List<VisitAsHistory>> getVisitAsHistory(String customerNumber) async {
+    try {
+      // 고객번호 유효성 검사
+      if (customerNumber.isEmpty) {
+        print('최근 방문 및 A/S이력 조회 실패: 고객번호가 비어있습니다.');
+        return [];
+      }
+
+      final httpClient = _createHttpClient();
+      final encodedNumber = Uri.encodeComponent(customerNumber);
+      final uri = Uri.parse(
+        'https://localhost:7088/api/관제고객/visit-as-history/$encodedNumber',
+      );
+
+      print('최근 방문 및 A/S이력 조회 API 호출: $uri (고객번호: $customerNumber)');
+
+      final request = await httpClient.getUrl(uri);
+      final response = await request.close();
+
+      if (response.statusCode == 200) {
+        final String responseBody = await response
+            .transform(utf8.decoder)
+            .join();
+        final List<dynamic> jsonList = json.decode(responseBody);
+        return jsonList.map((json) => VisitAsHistory.fromJson(json)).toList();
+      } else if (response.statusCode == 503) {
+        // ERP DB 연결 오류
+        final String responseBody = await response
+            .transform(utf8.decoder)
+            .join();
+        print('ERP DB 연결 오류: $responseBody');
+        throw Exception('ERP_DB_NOT_CONNECTED');
+      } else if (response.statusCode == 404) {
+        print('최근 방문 및 A/S이력을 찾을 수 없음: $customerNumber');
+        return [];
+      } else {
+        print('최근 방문 및 A/S이력 조회 오류: ${response.statusCode}');
+        return [];
+      }
+    } catch (e) {
+      print('최근 방문 및 A/S이력 조회 API 호출 오류: $e');
       rethrow; // Exception을 다시 던짐
     }
   }

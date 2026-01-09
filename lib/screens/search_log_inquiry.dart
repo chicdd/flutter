@@ -95,7 +95,7 @@ class SearchLogInquiryState extends State<SearchLogInquiry>
       TableColumnConfig(
         header: '기록일자',
         width: _columnWidths[1],
-        valueBuilder: (data) => data.recordDateFormatted,
+        valueBuilder: (data) => dateParsing(data.recordDate),
       ),
       TableColumnConfig(
         header: '기록시간',
@@ -529,7 +529,8 @@ class SearchLogInquiryState extends State<SearchLogInquiry>
               ),
 
               // 크기 조절 핸들 (마지막 열 제외)
-              if (columnIndex < _columns.length - 1) _buildResizeHandle(columnIndex),
+              if (columnIndex < _columns.length - 1)
+                _buildResizeHandle(columnIndex),
             ],
           );
         }).toList(),

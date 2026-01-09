@@ -16,8 +16,8 @@ class CustomerSearchPanel extends StatefulWidget {
 }
 
 class _CustomerSearchPanelState extends State<CustomerSearchPanel> {
-  String selectedFilter = '고객번호';
-  String selectedSort = '번호정렬';
+  String selectedFilter = '상호';
+  String selectedSort = '상호정렬';
   String searchQuery = '';
   SearchPanel? selectedCustomer;
   List<SearchPanel> customers = [];
@@ -25,9 +25,9 @@ class _CustomerSearchPanelState extends State<CustomerSearchPanel> {
   Timer? _debounceTimer;
   final TextEditingController _searchController = TextEditingController();
 
-  final List<String> filters = ['고객번호', '상호', '대표자', '주소', '전화번호', '사용자HP'];
+  final List<String> filters = ['상호', '고객번호', '대표자', '주소', '전화번호', '사용자HP'];
 
-  final List<String> sorts = ['번호정렬', '상호정렬'];
+  final List<String> sorts = ['상호정렬', '번호정렬'];
 
   @override
   void initState() {

@@ -1438,5 +1438,209 @@ namespace securityindexAPI.Controllers
                 return StatusCode(500, new { message = "서버 오류가 발생했습니다.", error = ex.Message });
             }
         }
+
+        /// <summary>
+        /// 고객번호로 최근수금이력 조회 (ERP 데이터베이스)
+        /// </summary>
+        /// <param name="customerNumber">고객번호</param>
+        /// <returns>최근수금이력 리스트</returns>
+        [HttpGet("payment-history/{customerNumber}")]
+        public async Task<ActionResult<IEnumerable<매출마스터뷰>>> Get최근수금이력(string customerNumber)
+        {
+            try
+            {
+                _logger.LogInformation($"최근수금이력 조회 요청: 고객번호={customerNumber}");
+
+                if (string.IsNullOrWhiteSpace(customerNumber))
+                {
+                    _logger.LogWarning("고객번호가 비어있거나 null입니다.");
+                    return BadRequest(new { message = "고객번호는 필수입니다.", receivedValue = customerNumber });
+                }
+
+                // ERP DB 연결 확인
+                var connection = _erpContext.Database.GetDbConnection();
+                if (string.IsNullOrWhiteSpace(connection.ConnectionString))
+                {
+                    _logger.LogError("ERP 데이터베이스 연결 문자열이 없습니다.");
+                    return StatusCode(503, new
+                    {
+                        message = "ERP_DB_NOT_CONNECTED",
+                        detail = "영업DB에 연결되지 않음. 관리자에게 문의하세요."
+                    });
+                }
+
+                try
+                {
+                    await connection.OpenAsync();
+                }
+                catch (Exception dbEx)
+                {
+                    _logger.LogError(dbEx, "ERP 데이터베이스 연결 실패");
+                    return StatusCode(503, new
+                    {
+                        message = "ERP_DB_NOT_CONNECTED",
+                        detail = "영업DB에 연결되지 않음. 관리자에게 문의하세요."
+                    });
+                }
+
+                // 최근수금이력 조회
+                var query = @"
+                    SELECT TOP (1000)
+                        매출년월,
+                        청구금액,
+                        실입금액,
+                        입금방법코드마스터.입금방법코드명,
+                        납입일자,
+                        수금여부,
+                        인사관리마스터.성명,
+                        비고
+                    FROM [NeoERP].[dbo].[매출마스터뷰]
+                    LEFT JOIN 입금방법코드마스터 ON 입금방법코드마스터.입금방법코드 = 매출마스터뷰.입금방법코드
+                    LEFT JOIN 인사관리마스터 ON 인사관리마스터.사번 = 매출마스터뷰.처리자ID
+                    WHERE 고객번호 = @고객번호
+                    ORDER BY 매출년월 DESC";
+
+                var command = connection.CreateCommand();
+                command.CommandText = query;
+                var param = command.CreateParameter();
+                param.ParameterName = "@고객번호";
+                param.Value = customerNumber;
+                command.Parameters.Add(param);
+
+                var paymentHistoryList = new List<매출마스터뷰>();
+
+                using (var reader = await command.ExecuteReaderAsync())
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        var 수금여부 = reader["수금여부"] != DBNull.Value && Convert.ToBoolean(reader["수금여부"]);
+
+                        paymentHistoryList.Add(new 매출마스터뷰
+                        {
+                            매출년월 = reader["매출년월"]?.ToString(),
+                            청구금액 = reader["청구금액"] == DBNull.Value ? null : Convert.ToDecimal(reader["청구금액"]),
+                            실입금액 = reader["실입금액"] == DBNull.Value ? null : Convert.ToDecimal(reader["실입금액"]),
+                            입금방법 = reader["입금방법코드명"]?.ToString(),
+                            납입일자 = reader["납입일자"] == DBNull.Value ? null : Convert.ToDateTime(reader["납입일자"]),
+                            수금여부 = reader["수금여부"] == DBNull.Value ? false : Convert.ToBoolean(reader["수금여부"]),
+                            처리자 = reader["성명"]?.ToString(),
+                            비고 = reader["비고"]?.ToString()
+                        });
+                    }
+                }
+
+                await connection.CloseAsync();
+
+                _logger.LogInformation($"최근수금이력 조회 완료: 고객번호={customerNumber}, 결과수={paymentHistoryList.Count}");
+                return Ok(paymentHistoryList);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"최근수금이력 조회 중 오류 발생: 고객번호={customerNumber}");
+                return StatusCode(500, new { message = "서버 오류가 발생했습니다.", error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// 고객번호로 최근 방문 및 A/S이력 조회 (ERP 데이터베이스)
+        /// </summary>
+        /// <param name="customerNumber">고객번호</param>
+        /// <returns>최근 방문 및 A/S이력 리스트</returns>
+        [HttpGet("visit-as-history/{customerNumber}")]
+        public async Task<ActionResult<IEnumerable<AS접수마스터뷰>>> Get최근방문AS이력(string customerNumber)
+        {
+            try
+            {
+                _logger.LogInformation($"최근 방문 및 A/S이력 조회 요청: 고객번호={customerNumber}");
+
+                if (string.IsNullOrWhiteSpace(customerNumber))
+                {
+                    _logger.LogWarning("고객번호가 비어있거나 null입니다.");
+                    return BadRequest(new { message = "고객번호는 필수입니다.", receivedValue = customerNumber });
+                }
+
+                // ERP DB 연결 확인
+                var connection = _erpContext.Database.GetDbConnection();
+                if (string.IsNullOrWhiteSpace(connection.ConnectionString))
+                {
+                    _logger.LogError("ERP 데이터베이스 연결 문자열이 없습니다.");
+                    return StatusCode(503, new
+                    {
+                        message = "ERP_DB_NOT_CONNECTED",
+                        detail = "영업DB에 연결되지 않음. 관리자에게 문의하세요."
+                    });
+                }
+
+                try
+                {
+                    await connection.OpenAsync();
+                }
+                catch (Exception dbEx)
+                {
+                    _logger.LogError(dbEx, "ERP 데이터베이스 연결 실패");
+                    return StatusCode(503, new
+                    {
+                        message = "ERP_DB_NOT_CONNECTED",
+                        detail = "영업DB에 연결되지 않음. 관리자에게 문의하세요."
+                    });
+                }
+
+                // 최근 방문 및 A/S이력 조회
+                var query = @"
+                    SELECT TOP (1000)
+                        요청일자,
+                        권역명,
+                        요청제목,
+                        처리여부,
+                        처리일시,
+                        처리비고,
+                        입력자성명,
+                        처리자성명,
+                        처리개인
+                    FROM AS접수마스터뷰
+                    WHERE 고객번호 = @고객번호
+                    ORDER BY 요청일자 DESC";
+
+                var command = connection.CreateCommand();
+                command.CommandText = query;
+                var param = command.CreateParameter();
+                param.ParameterName = "@고객번호";
+                param.Value = customerNumber;
+                command.Parameters.Add(param);
+
+                var visitAsHistoryList = new List<AS접수마스터뷰>();
+
+                using (var reader = await command.ExecuteReaderAsync())
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        var 처리여부 = reader["처리여부"] != DBNull.Value && Convert.ToBoolean(reader["처리여부"]);
+
+                        visitAsHistoryList.Add(new AS접수마스터뷰
+                        {
+                            요청일자 = reader["요청일자"]?.ToString(),
+                            권역명 = reader["권역명"]?.ToString(),
+                            요청제목 = reader["요청제목"]?.ToString(),
+                            처리여부 = reader["처리여부"] == DBNull.Value ? false : Convert.ToBoolean(reader["처리여부"]),
+                            처리일시 = reader["처리일시"]?.ToString(),
+                            처리비고 = reader["처리비고"]?.ToString(),
+                            접수자성명 = reader["입력자성명"]?.ToString(),
+                            처리자성명 = reader["처리자성명"]?.ToString(),
+                            개인AS처리자 = reader["처리개인"]?.ToString()
+                        });
+                    }
+                }
+
+                await connection.CloseAsync();
+
+                _logger.LogInformation($"최근 방문 및 A/S이력 조회 완료: 고객번호={customerNumber}, 결과수={visitAsHistoryList.Count}");
+                return Ok(visitAsHistoryList);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"최근 방문 및 A/S이력 조회 중 오류 발생: 고객번호={customerNumber}");
+                return StatusCode(500, new { message = "서버 오류가 발생했습니다.", error = ex.Message });
+            }
+        }
     }
 }

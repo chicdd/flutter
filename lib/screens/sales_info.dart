@@ -1,11 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import '../models/search_panel.dart';
 import '../theme.dart';
 import '../models/sales_info.dart';
+import '../models/payment_history.dart';
+import '../models/visit_as_history.dart';
 import '../services/api_service.dart';
 import '../services/selected_customer_service.dart';
 import '../style.dart';
 import '../widgets/component.dart';
+import '../widgets/common_table.dart';
+import '../functions.dart';
+import 'payment_history_table.dart';
+import 'visit_as_history_table.dart';
 
 class SalesInfoScreen extends StatefulWidget {
   final SearchPanel? searchpanel;
@@ -25,6 +32,43 @@ class SalesInfoScreenState extends State<SalesInfoScreen> {
 
   // 페이지 내 검색
   String _pageSearchQuery = '';
+
+  // 탭 선택 상태
+  int _selectedTabIndex = 0;
+
+  // 최근수금이력 데이터
+  List<PaymentHistory> _paymentHistoryList = [];
+  bool _isLoadingPaymentHistory = false;
+
+  // 최근 방문 및 A/S이력 데이터
+  List<VisitAsHistory> _visitAsHistoryList = [];
+  bool _isLoadingVisitAsHistory = false;
+
+  // TextEditingController들
+  final _customerNumberController = TextEditingController();
+  final _businessNameController = TextEditingController();
+  final _representativeController = TextEditingController();
+  final _businessPhoneController = TextEditingController();
+  final _faxNumberController = TextEditingController();
+  final _mobilePhoneController = TextEditingController();
+  final _customerStatusController = TextEditingController();
+  final _paymentMethodController = TextEditingController();
+  final _responsibleAreaController = TextEditingController();
+  final _salesManagerController = TextEditingController();
+  final _businessRegNumberController = TextEditingController();
+  final _businessRegNameController = TextEditingController();
+  final _businessRepresentativeController = TextEditingController();
+  final _businessTypeController = TextEditingController();
+  final _businessCategoryController = TextEditingController();
+  final _invoiceEmailController = TextEditingController();
+  final _businessAddressController = TextEditingController();
+  final _monthlyFeeController = TextEditingController();
+  final _vatController = TextEditingController();
+  final _totalAmountController = TextEditingController();
+  final _depositController = TextEditingController();
+  final _integratedCountController = TextEditingController();
+  final _unpaidMonthsController = TextEditingController();
+  final _unpaidAmountController = TextEditingController();
 
   // 검색 쿼리 업데이트 메서드
   void updateSearchQuery(String query) {
@@ -47,6 +91,33 @@ class SalesInfoScreenState extends State<SalesInfoScreen> {
   @override
   void dispose() {
     _customerService.removeListener(_onCustomerServiceChanged);
+
+    // 모든 컨트롤러 해제
+    _customerNumberController.dispose();
+    _businessNameController.dispose();
+    _representativeController.dispose();
+    _businessPhoneController.dispose();
+    _faxNumberController.dispose();
+    _mobilePhoneController.dispose();
+    _customerStatusController.dispose();
+    _paymentMethodController.dispose();
+    _responsibleAreaController.dispose();
+    _salesManagerController.dispose();
+    _businessRegNumberController.dispose();
+    _businessRegNameController.dispose();
+    _businessRepresentativeController.dispose();
+    _businessTypeController.dispose();
+    _businessCategoryController.dispose();
+    _invoiceEmailController.dispose();
+    _businessAddressController.dispose();
+    _monthlyFeeController.dispose();
+    _vatController.dispose();
+    _totalAmountController.dispose();
+    _depositController.dispose();
+    _integratedCountController.dispose();
+    _unpaidMonthsController.dispose();
+    _unpaidAmountController.dispose();
+
     super.dispose();
   }
 
@@ -112,6 +183,10 @@ class SalesInfoScreenState extends State<SalesInfoScreen> {
           _isLoading = false;
           _isErpDbError = false;
         });
+
+        // 최근수금이력 및 방문AS이력 로드
+        _loadPaymentHistory(erpCusNumber);
+        _loadVisitAsHistory(erpCusNumber);
       }
     } catch (e) {
       print('영업정보 로드 오류: $e');
@@ -133,88 +208,195 @@ class SalesInfoScreenState extends State<SalesInfoScreen> {
     }
   }
 
+  /// 최근수금이력 로드
+  Future<void> _loadPaymentHistory(String customerNumber) async {
+    setState(() {
+      _isLoadingPaymentHistory = true;
+    });
+
+    try {
+      final paymentHistory = await DatabaseService.getPaymentHistory(
+        customerNumber,
+      );
+
+      if (mounted) {
+        setState(() {
+          _paymentHistoryList = paymentHistory;
+          _isLoadingPaymentHistory = false;
+        });
+      }
+    } catch (e) {
+      print('최근수금이력 로드 오류: $e');
+      if (mounted) {
+        setState(() {
+          _paymentHistoryList = [];
+          _isLoadingPaymentHistory = false;
+        });
+      }
+    }
+  }
+
+  /// 최근 방문 및 A/S이력 로드
+  Future<void> _loadVisitAsHistory(String customerNumber) async {
+    setState(() {
+      _isLoadingVisitAsHistory = true;
+    });
+
+    try {
+      final visitAsHistory = await DatabaseService.getVisitAsHistory(
+        customerNumber,
+      );
+
+      if (mounted) {
+        setState(() {
+          _visitAsHistoryList = visitAsHistory;
+          _isLoadingVisitAsHistory = false;
+        });
+      }
+    } catch (e) {
+      print('최근 방문 및 A/S이력 로드 오류: $e');
+      if (mounted) {
+        setState(() {
+          _visitAsHistoryList = [];
+          _isLoadingVisitAsHistory = false;
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
       body: LayoutBuilder(
         builder: (context, constraints) {
+          final isExtraWideScreen = constraints.maxWidth >= 1920;
           final isWideScreen = constraints.maxWidth >= 1200;
-          return _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : _isErpDbError
-              ? const Center(
-                  child: Text(
-                    '영업DB에 연결되지 않음.\n관리자에게 문의하세요.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.red,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                )
-              : _salesInfo == null
-              ? const Center(
-                  child: Text(
-                    '영업정보를 불러올 수 없습니다.\n영업관리번호를 확인해주세요.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: AppTheme.textSecondary,
-                    ),
-                  ),
-                )
-              : SingleChildScrollView(
-                  padding: const EdgeInsets.all(24),
-                  child: isWideScreen
-                      ? Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // 상단 : 영업정보
-                            Expanded(
-                              flex: 1,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  _buildBasicInfoSection(),
-                                  const SizedBox(height: 24),
-                                  _buildMonthlyFeeSection(),
-                                ],
-                              ),
+          return
+          // _isLoading
+          //   ? const Center(child: CircularProgressIndicator())
+          //   : _isErpDbError
+          //   ? const Center(
+          //       child: Text(
+          //         '영업DB에 연결되지 않음.\n관리자에게 문의하세요.',
+          //         textAlign: TextAlign.center,
+          //         style: TextStyle(
+          //           fontSize: 16,
+          //           color: Colors.red,
+          //           fontWeight: FontWeight.w600,
+          //         ),
+          //       ),
+          //     )
+          //   : _salesInfo == null
+          //   ? const Center(
+          //       child: Text(
+          //         '영업정보를 불러올 수 없습니다.\n영업관리번호를 확인해주세요.',
+          //         textAlign: TextAlign.center,
+          //         style: TextStyle(
+          //           fontSize: 16,
+          //           color: AppTheme.textSecondary,
+          //         ),
+          //       ),
+          //     )
+          //   :
+          SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: isExtraWideScreen
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // 상단 : 영업정보
+                          Expanded(
+                            flex: 1,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [_buildBasicInfoSection()],
                             ),
-                            const SizedBox(width: 24),
-                            // 하단: 최근수금이력 / 최근 방문 및 A/S 이력
-                            Expanded(
-                              flex: 1,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [_buildBusinessInfoSection()],
-                              ),
+                          ),
+                          const SizedBox(width: 24),
+                          // 하단: 최근수금이력 / 최근 방문 및 A/S 이력
+                          Expanded(
+                            flex: 1,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [_buildBusinessInfoSection()],
                             ),
-                          ],
-                        )
-                      : Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            _buildBasicInfoSection(),
-                            const SizedBox(height: 24),
-                            _buildBusinessInfoSection(),
-                            const SizedBox(height: 24),
-                            _buildMonthlyFeeSection(),
-                          ],
-                        ),
-                  // child: Column(
-                  //   crossAxisAlignment: CrossAxisAlignment.stretch,
-                  //   children: [
-                  //     _buildBasicInfoSection(),
-                  //     const SizedBox(height: 24),
-                  //     _buildBusinessInfoSection(),
-                  //     const SizedBox(height: 24),
-                  //     _buildMonthlyFeeSection(),
-                  //   ],
-                  // ),
-                );
+                          ),
+                          const SizedBox(width: 24),
+                          // 하단: 최근수금이력 / 최근 방문 및 A/S 이력
+                          Expanded(
+                            flex: 1,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [_buildMonthlyFeeSection()],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                      // 최근수금이력 / 최근 방문 및 A/S 이력 탭
+                      _buildHistoryTabSection(),
+                    ],
+                  )
+                : isWideScreen
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // 상단 : 영업정보
+                          Expanded(
+                            flex: 1,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _buildBasicInfoSection(),
+                                SizedBox(height: 24),
+                                _buildMonthlyFeeSection(),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 24),
+                          // 하단: 최근수금이력 / 최근 방문 및 A/S 이력
+                          Expanded(
+                            flex: 1,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [_buildBusinessInfoSection()],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                      // 최근수금이력 / 최근 방문 및 A/S 이력 탭
+                      _buildHistoryTabSection(),
+                    ],
+                  )
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _buildBasicInfoSection(),
+                      const SizedBox(height: 24),
+                      _buildBusinessInfoSection(),
+                      const SizedBox(height: 24),
+                      _buildMonthlyFeeSection(),
+                    ],
+                  ),
+            // child: Column(
+            //   crossAxisAlignment: CrossAxisAlignment.stretch,
+            //   children: [
+            //     _buildBasicInfoSection(),
+            //     const SizedBox(height: 24),
+            //     _buildBusinessInfoSection(),
+            //     const SizedBox(height: 24),
+            //     _buildMonthlyFeeSection(),
+            //   ],
+            // ),
+          );
         },
       ),
     );
@@ -583,4 +765,71 @@ class SalesInfoScreenState extends State<SalesInfoScreen> {
     if (amount == null) return '-';
     return '${amount.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}원';
   }
+
+  /// 최근수금이력 / 최근 방문 및 A/S 이력 탭 섹션
+  Widget _buildHistoryTabSection() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: AppTheme.cardShadow,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 탭 버튼
+          Row(
+            children: [
+              _buildTabButton('최근 수금 이력', 0),
+              const SizedBox(width: 8),
+              _buildTabButton('최근 방문 및 A/S 이력', 1),
+            ],
+          ),
+          const SizedBox(height: 16),
+          // 탭 내용
+          SizedBox(
+            height: 400,
+            child: _selectedTabIndex == 0
+                ? PaymentHistoryTable(
+                    paymentHistoryList: _paymentHistoryList,
+                    isLoading: _isLoadingPaymentHistory,
+                  )
+                : VisitAsHistoryTable(
+                    visitAsHistoryList: _visitAsHistoryList,
+                    isLoading: _isLoadingVisitAsHistory,
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 탭 버튼
+  Widget _buildTabButton(String label, int index) {
+    final isSelected = _selectedTabIndex == index;
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _selectedTabIndex = index;
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? AppTheme.selectedColor : Colors.grey[200],
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? Colors.white : Colors.black87,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+            fontSize: 14,
+          ),
+        ),
+      ),
+    );
+  }
+
 }

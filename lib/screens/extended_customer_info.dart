@@ -273,30 +273,6 @@ class ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
   //   }
   // }
 
-  // 검색 쿼리를 포함한 CommonTextField 빌더
-  Widget _buildSearchableTextField({
-    required String label,
-    TextEditingController? controller,
-    String? hintText,
-    IconData? suffixIcon,
-    bool readOnly = false,
-    VoidCallback? onTap,
-    TextInputType? keyboardType,
-    int? maxLines,
-  }) {
-    return CommonTextField(
-      label: label,
-      controller: controller,
-      hintText: hintText,
-      suffixIcon: suffixIcon,
-      readOnly: readOnly,
-      onTap: onTap,
-      keyboardType: keyboardType,
-      maxLines: maxLines,
-      searchQuery: _pageSearchQuery,
-    );
-  }
-
   /// 고객 서비스 변경 시 호출
   void _onCustomerServiceChanged() {
     if (mounted && !_customerService.isLoadingDetail) {
@@ -597,15 +573,9 @@ class ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
                           ],
                         ),
                         const SizedBox(height: 24),
-                        SizedBox(
-                          height: 400,
-                          child: _buildServiceSection(),
-                        ),
+                        SizedBox(height: 400, child: _buildServiceSection()),
                         const SizedBox(height: 24),
-                        SizedBox(
-                          height: 400,
-                          child: _buildDVRSection(),
-                        ),
+                        SizedBox(height: 400, child: _buildDVRSection()),
                       ],
                     )
                   : isWideScreen
@@ -649,15 +619,9 @@ class ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
                           ],
                         ),
                         const SizedBox(height: 24),
-                        SizedBox(
-                          height: 400,
-                          child: _buildServiceSection(),
-                        ),
+                        SizedBox(height: 400, child: _buildServiceSection()),
                         const SizedBox(height: 24),
-                        SizedBox(
-                          height: 400,
-                          child: _buildDVRSection(),
-                        ),
+                        SizedBox(height: 400, child: _buildDVRSection()),
                       ],
                     )
                   : Column(
@@ -685,15 +649,9 @@ class ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
                           ],
                         ),
                         const SizedBox(height: 24),
-                        SizedBox(
-                          height: 400,
-                          child: _buildServiceSection(),
-                        ),
+                        SizedBox(height: 400, child: _buildServiceSection()),
                         const SizedBox(height: 24),
-                        SizedBox(
-                          height: 400,
-                          child: _buildDVRSection(),
-                        ),
+                        SizedBox(height: 400, child: _buildDVRSection()),
                       ],
                     ),
             );
@@ -1227,24 +1185,28 @@ class ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
         children: [
           buildSectionTitle('고객 추가 메모사항'),
           const SizedBox(height: 16),
-          _buildSearchableTextField(
+          CommonTextField(
             label: '개통일자',
             controller: _openingDateController,
+            searchQuery: _pageSearchQuery,
           ),
           const SizedBox(height: 12),
-          _buildSearchableTextField(
+          CommonTextField(
             label: '개통전화번호',
             controller: _openingPhoneController,
+            searchQuery: _pageSearchQuery,
           ),
           const SizedBox(height: 12),
-          _buildSearchableTextField(
+          CommonTextField(
             label: '모뎀일련번호',
             controller: _modemSerialController,
+            searchQuery: _pageSearchQuery,
           ),
           const SizedBox(height: 12),
-          _buildSearchableTextField(
+          CommonTextField(
             label: '추가메모',
             controller: _additionalMemoController,
+            searchQuery: _pageSearchQuery,
           ),
         ],
       ),

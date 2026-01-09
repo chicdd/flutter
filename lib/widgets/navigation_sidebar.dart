@@ -84,7 +84,11 @@ class _NavigationSidebarState extends State<NavigationSidebar> {
     ),
     NavigationItem(title: 'AS 접수', icon: Icons.build_outlined),
     NavigationItem(title: '녹취조회', icon: Icons.mic_outlined),
-    NavigationItem(title: '영업정보', icon: Icons.business_center_outlined),
+    NavigationItem(
+      title: '영업정보',
+      icon: Icons.business_center_outlined,
+      subItems: ['영업정보', '최근 수금 이력', '최근 방문 및 A/S 이력'],
+    ),
   ];
 
   @override
