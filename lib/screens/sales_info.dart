@@ -3,8 +3,6 @@ import 'package:flutter/gestures.dart';
 import '../models/search_panel.dart';
 import '../theme.dart';
 import '../models/sales_info.dart';
-import '../models/payment_history.dart';
-import '../models/visit_as_history.dart';
 import '../services/api_service.dart';
 import '../services/selected_customer_service.dart';
 import '../style.dart';
@@ -35,14 +33,6 @@ class SalesInfoScreenState extends State<SalesInfoScreen> {
 
   // 탭 선택 상태
   int _selectedTabIndex = 0;
-
-  // 최근수금이력 데이터
-  List<PaymentHistory> _paymentHistoryList = [];
-  bool _isLoadingPaymentHistory = false;
-
-  // 최근 방문 및 A/S이력 데이터
-  List<VisitAsHistory> _visitAsHistoryList = [];
-  bool _isLoadingVisitAsHistory = false;
 
   // TextEditingController들
   final _customerNumberController = TextEditingController();
@@ -183,10 +173,6 @@ class SalesInfoScreenState extends State<SalesInfoScreen> {
           _isLoading = false;
           _isErpDbError = false;
         });
-
-        // 최근수금이력 및 방문AS이력 로드
-        _loadPaymentHistory(erpCusNumber);
-        _loadVisitAsHistory(erpCusNumber);
       }
     } catch (e) {
       print('영업정보 로드 오류: $e');
@@ -204,62 +190,6 @@ class SalesInfoScreenState extends State<SalesInfoScreen> {
             _isErpDbError = false;
           });
         }
-      }
-    }
-  }
-
-  /// 최근수금이력 로드
-  Future<void> _loadPaymentHistory(String customerNumber) async {
-    setState(() {
-      _isLoadingPaymentHistory = true;
-    });
-
-    try {
-      final paymentHistory = await DatabaseService.getPaymentHistory(
-        customerNumber,
-      );
-
-      if (mounted) {
-        setState(() {
-          _paymentHistoryList = paymentHistory;
-          _isLoadingPaymentHistory = false;
-        });
-      }
-    } catch (e) {
-      print('최근수금이력 로드 오류: $e');
-      if (mounted) {
-        setState(() {
-          _paymentHistoryList = [];
-          _isLoadingPaymentHistory = false;
-        });
-      }
-    }
-  }
-
-  /// 최근 방문 및 A/S이력 로드
-  Future<void> _loadVisitAsHistory(String customerNumber) async {
-    setState(() {
-      _isLoadingVisitAsHistory = true;
-    });
-
-    try {
-      final visitAsHistory = await DatabaseService.getVisitAsHistory(
-        customerNumber,
-      );
-
-      if (mounted) {
-        setState(() {
-          _visitAsHistoryList = visitAsHistory;
-          _isLoadingVisitAsHistory = false;
-        });
-      }
-    } catch (e) {
-      print('최근 방문 및 A/S이력 로드 오류: $e');
-      if (mounted) {
-        setState(() {
-          _visitAsHistoryList = [];
-          _isLoadingVisitAsHistory = false;
-        });
       }
     }
   }
@@ -317,7 +247,6 @@ class SalesInfoScreenState extends State<SalesInfoScreen> {
                             ),
                           ),
                           const SizedBox(width: 24),
-                          // 하단: 최근수금이력 / 최근 방문 및 A/S 이력
                           Expanded(
                             flex: 1,
                             child: Column(
@@ -326,7 +255,6 @@ class SalesInfoScreenState extends State<SalesInfoScreen> {
                             ),
                           ),
                           const SizedBox(width: 24),
-                          // 하단: 최근수금이력 / 최근 방문 및 A/S 이력
                           Expanded(
                             flex: 1,
                             child: Column(
@@ -336,9 +264,6 @@ class SalesInfoScreenState extends State<SalesInfoScreen> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 24),
-                      // 최근수금이력 / 최근 방문 및 A/S 이력 탭
-                      _buildHistoryTabSection(),
                     ],
                   )
                 : isWideScreen
@@ -361,7 +286,6 @@ class SalesInfoScreenState extends State<SalesInfoScreen> {
                             ),
                           ),
                           const SizedBox(width: 24),
-                          // 하단: 최근수금이력 / 최근 방문 및 A/S 이력
                           Expanded(
                             flex: 1,
                             child: Column(
@@ -371,9 +295,6 @@ class SalesInfoScreenState extends State<SalesInfoScreen> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 24),
-                      // 최근수금이력 / 최근 방문 및 A/S 이력 탭
-                      _buildHistoryTabSection(),
                     ],
                   )
                 : Column(
@@ -765,71 +686,4 @@ class SalesInfoScreenState extends State<SalesInfoScreen> {
     if (amount == null) return '-';
     return '${amount.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}원';
   }
-
-  /// 최근수금이력 / 최근 방문 및 A/S 이력 탭 섹션
-  Widget _buildHistoryTabSection() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: AppTheme.cardShadow,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 탭 버튼
-          Row(
-            children: [
-              _buildTabButton('최근 수금 이력', 0),
-              const SizedBox(width: 8),
-              _buildTabButton('최근 방문 및 A/S 이력', 1),
-            ],
-          ),
-          const SizedBox(height: 16),
-          // 탭 내용
-          SizedBox(
-            height: 400,
-            child: _selectedTabIndex == 0
-                ? PaymentHistoryTable(
-                    paymentHistoryList: _paymentHistoryList,
-                    isLoading: _isLoadingPaymentHistory,
-                  )
-                : VisitAsHistoryTable(
-                    visitAsHistoryList: _visitAsHistoryList,
-                    isLoading: _isLoadingVisitAsHistory,
-                  ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// 탭 버튼
-  Widget _buildTabButton(String label, int index) {
-    final isSelected = _selectedTabIndex == index;
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _selectedTabIndex = index;
-        });
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? AppTheme.selectedColor : Colors.grey[200],
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: isSelected ? Colors.white : Colors.black87,
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-            fontSize: 14,
-          ),
-        ),
-      ),
-    );
-  }
-
 }

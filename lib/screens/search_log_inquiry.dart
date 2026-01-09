@@ -95,7 +95,7 @@ class SearchLogInquiryState extends State<SearchLogInquiry>
       TableColumnConfig(
         header: '기록일자',
         width: _columnWidths[1],
-        valueBuilder: (data) => dateParsing(data.recordDate),
+        valueBuilder: (data) => data.recordDateFormatted,
       ),
       TableColumnConfig(
         header: '기록시간',

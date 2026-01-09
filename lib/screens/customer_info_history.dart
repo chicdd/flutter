@@ -63,7 +63,7 @@ class CustomerInfoHistoryState extends State<CustomerInfoHistory>
   final Map<int, double> _columnWidths = {
     0: 120.0, // 처리자
     1: 180.0, // 변경처리일시
-    2: 150.0, // 변경전
+    2: 300.0, // 변경전
     3: 150.0, // 변경후
     4: 300.0, // 메모
   };
@@ -534,7 +534,8 @@ class CustomerInfoHistoryState extends State<CustomerInfoHistory>
               ),
 
               // 크기 조절 핸들 (마지막 열 제외)
-              if (columnIndex < _columns.length - 1) _buildResizeHandle(columnIndex),
+              if (columnIndex < _columns.length - 1)
+                _buildResizeHandle(columnIndex),
             ],
           );
         }).toList(),

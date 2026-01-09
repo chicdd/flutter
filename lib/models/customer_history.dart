@@ -26,10 +26,9 @@ class CustomerHistoryData {
     );
   }
 
-  // 날짜 시간 형식 변환 (yyyy-MM-dd HH:mm:ss)
+  // 날짜 시간 형식 변환 (yyyy-MM-dd)
   String get changeDateTimeFormatted {
     if (changeDateTime == null) return '';
-    return '${changeDateTime!.year}-${changeDateTime!.month.toString().padLeft(2, '0')}-${changeDateTime!.day.toString().padLeft(2, '0')} '
-        '${changeDateTime!.hour.toString().padLeft(2, '0')}:${changeDateTime!.minute.toString().padLeft(2, '0')}:${changeDateTime!.second.toString().padLeft(2, '0')}';
+    return '${changeDateTime!.year}-${changeDateTime!.month.toString().padLeft(2, '0')}-${changeDateTime!.day.toString().padLeft(2, '0')}';
   }
 }

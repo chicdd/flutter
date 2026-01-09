@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:securityindex/screens/maintenance_inspection_history.dart';
 import 'package:securityindex/screens/materialstatus.dart';
+import 'package:securityindex/screens/payment_history_table.dart';
+import 'package:securityindex/screens/visit_as_history_table.dart';
 import '../screens/as_log.dart';
 import '../screens/control_signal_activation.dart';
 import '../screens/recentsignallist.dart';
@@ -26,11 +28,11 @@ class ContentArea extends StatefulWidget {
   final String? selectedSubMenu;
 
   const ContentArea({
-    Key? key,
+    super.key,
     this.selectedCustomer,
     this.selectedMenu,
     this.selectedSubMenu,
-  }) : super(key: key);
+  });
 
   @override
   State<ContentArea> createState() => _ContentAreaState();
@@ -58,6 +60,8 @@ class _ContentAreaState extends State<ContentArea> {
   _maintenanceInspectionHistoryKey = GlobalKey();
   final GlobalKey<AsLogState> _asLogKey = GlobalKey();
   final GlobalKey<SalesInfoScreenState> _salesKey = GlobalKey();
+  final GlobalKey<PaymentHistoryTableState> _pamenthistoryKey = GlobalKey();
+  final GlobalKey<VisitAsHistoryTableState> _visitashistoryKey = GlobalKey();
   final GlobalKey<CustomTopBarState> _topBarKey = GlobalKey();
 
   @override
@@ -122,9 +126,9 @@ class _ContentAreaState extends State<ContentArea> {
     } else if (widget.selectedSubMenu == '영업정보') {
       _salesKey.currentState?.updateSearchQuery(query);
     } else if (widget.selectedSubMenu == '최근 수금 이력') {
-      _controlSignalActivationtKey.currentState?.updateSearchQuery(query);
+      _pamenthistoryKey.currentState?.updateSearchQuery(query);
     } else if (widget.selectedSubMenu == '최근 방문 및 A/S 이력') {
-      _maintenanceInspectionHistoryKey.currentState?.updateSearchQuery(query);
+      _visitashistoryKey.currentState?.updateSearchQuery(query);
     }
   }
 
@@ -421,18 +425,26 @@ class _ContentAreaState extends State<ContentArea> {
   }
 
   Widget _buildERPContent(BuildContext context) {
-    // 검색로그 내역조회
-    if (widget.selectedSubMenu == '최근 수금 이력') {
-      return SearchLogInquiry(
-        key: _searchLogInquiryKey,
+    // 영업정보
+    if (widget.selectedSubMenu == '영업정보') {
+      return SalesInfoScreen(
+        key: _salesKey,
         searchpanel: widget.selectedCustomer!,
       );
     }
 
-    // 고객정보 변동이력
+    // 최근 수금 이력
+    if (widget.selectedSubMenu == '최근 수금 이력') {
+      return PaymentHistoryTable(
+        key: _pamenthistoryKey,
+        searchpanel: widget.selectedCustomer!,
+      );
+    }
+
+    // 최근 방문 및 A/S 이력
     if (widget.selectedSubMenu == '최근 방문 및 A/S 이력') {
-      return CustomerInfoHistory(
-        key: _customerInfoHistoryKey,
+      return VisitAsHistoryTable(
+        key: _visitashistoryKey,
         searchpanel: widget.selectedCustomer!,
       );
     }
