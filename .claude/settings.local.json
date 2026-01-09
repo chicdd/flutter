@@ -22,7 +22,8 @@
       "Bash(git mv:*)",
       "Bash(dotnet build:*)",
       "Bash(flutter:*)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(git pull:*)"
     ],
     "deny": [
       "Read(./securityindexAPI/appsettings.json)"

@@ -33,6 +33,32 @@ class UserZoneInfoState extends State<UserZoneInfoScreen>
   // 페이지 내 검색
   String _pageSearchQuery = '';
 
+  // 사용자 테이블 관련 변수
+  final ScrollController _userHeaderScrollController = ScrollController();
+  final ScrollController _userBodyScrollController = ScrollController();
+  bool _isUserSyncingScroll = false;
+  final Map<int, double> _userColumnWidths = {
+    0: 80.0, // 순번
+    1: 120.0, // 사용자명
+    2: 100.0, // 관계
+    3: 130.0, // 휴대전화
+    4: 130.0, // 자택전화
+    5: 150.0, // 비밀번호
+  };
+  late final List<TableColumnConfig> _userColumns;
+
+  // 존정보 테이블 관련 변수
+  final ScrollController _zoneHeaderScrollController = ScrollController();
+  final ScrollController _zoneBodyScrollController = ScrollController();
+  bool _isZoneSyncingScroll = false;
+  final Map<int, double> _zoneColumnWidths = {
+    0: 100.0, // 존번호
+    1: 250.0, // 감지기설치위치
+    2: 150.0, // 감지기명
+    3: 250.0, // 비고
+  };
+  late final List<TableColumnConfig> _zoneColumns;
+
   // 검색 쿼리 업데이트 메서드
   void updateSearchQuery(String query) {
     setState(() {
@@ -45,6 +71,71 @@ class UserZoneInfoState extends State<UserZoneInfoScreen>
     super.initState();
     // 공통 리스너 초기화
     initCustomerServiceListener();
+
+    // 사용자 테이블 컬럼 설정
+    _userColumns = [
+      TableColumnConfig(
+        header: '순번',
+        width: _userColumnWidths[0],
+        valueBuilder: (data) => data.registrationNumber ?? '-',
+      ),
+      TableColumnConfig(
+        header: '사용자명',
+        width: _userColumnWidths[1],
+        valueBuilder: (data) => data.userName ?? '-',
+      ),
+      TableColumnConfig(
+        header: '관계',
+        width: _userColumnWidths[2],
+        valueBuilder: (data) => data.position ?? '-',
+      ),
+      TableColumnConfig(
+        header: '휴대전화',
+        width: _userColumnWidths[3],
+        valueBuilder: (data) => data.phoneNumber ?? '-',
+      ),
+      TableColumnConfig(
+        header: '자택전화',
+        width: _userColumnWidths[4],
+        valueBuilder: (data) => data.homePhone ?? '-',
+      ),
+      TableColumnConfig(
+        header: '비밀번호',
+        width: _userColumnWidths[5],
+        valueBuilder: (data) => data.password ?? '-',
+      ),
+    ];
+
+    // 존정보 테이블 컬럼 설정
+    _zoneColumns = [
+      TableColumnConfig(
+        header: '존번호',
+        width: _zoneColumnWidths[0],
+        valueBuilder: (data) => data.zoneNumber ?? '-',
+      ),
+      TableColumnConfig(
+        header: '감지기설치위치',
+        width: _zoneColumnWidths[1],
+        valueBuilder: (data) => data.detectorInstallLocation ?? '-',
+      ),
+      TableColumnConfig(
+        header: '감지기명',
+        width: _zoneColumnWidths[2],
+        valueBuilder: (data) => data.detectorName ?? '-',
+      ),
+      TableColumnConfig(
+        header: '비고',
+        width: _zoneColumnWidths[3],
+        valueBuilder: (data) => data.note ?? '-',
+      ),
+    ];
+
+    // 스크롤 동기화
+    _userHeaderScrollController.addListener(_syncUserHeaderScroll);
+    _userBodyScrollController.addListener(_syncUserBodyScroll);
+    _zoneHeaderScrollController.addListener(_syncZoneHeaderScroll);
+    _zoneBodyScrollController.addListener(_syncZoneBodyScroll);
+
     // 초기 데이터 로드
     _initializeData();
   }
@@ -54,6 +145,10 @@ class UserZoneInfoState extends State<UserZoneInfoScreen>
     // 공통 리스너 해제
     disposeCustomerServiceListener();
     _searchController.dispose();
+    _userHeaderScrollController.dispose();
+    _userBodyScrollController.dispose();
+    _zoneHeaderScrollController.dispose();
+    _zoneBodyScrollController.dispose();
     super.dispose();
   }
 
