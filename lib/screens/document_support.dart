@@ -1,169 +1,89 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 import '../models/document_info.dart';
-import '../models/search_panel.dart';
-import '../models/customer_detail.dart';
 import '../services/api_service.dart';
 import '../functions.dart';
 import '../style.dart';
 import '../theme.dart';
 import '../widgets/component.dart';
-import '../widgets/custom_top_bar.dart';
 import '../widgets/common_table.dart';
+import 'base_table_screen.dart';
 
 /// 문서지원 화면
-class DocumentSupport extends StatefulWidget {
-  final SearchPanel? searchpanel;
-  const DocumentSupport({super.key, this.searchpanel});
+class DocumentSupport extends BaseTableScreen<DocumentInfo> {
+  const DocumentSupport({super.key, super.searchpanel});
 
   @override
   State<DocumentSupport> createState() => DocumentSupportState();
 }
 
-class DocumentSupportState extends State<DocumentSupport>
-    with CustomerServiceHandler {
-  // 검색 컨트롤러
-  final TextEditingController _searchController = TextEditingController();
-  // 문서 데이터 목록
-  List<DocumentInfo> _dataList = [];
+class DocumentSupportState extends BaseTableScreenState<DocumentInfo, DocumentSupport> {
+  @override
+  String get tableTitle => '첨부 데이터 리스트';
 
-  // 페이지 내 검색
-  String _pageSearchQuery = '';
+  @override
+  bool get showAddButton => true;
 
-  final Map<int, double> _columnWidths = {
-    0: 150.0, // 문서일련번호
-    1: 300.0, // 문서명
-    2: 100.0, // 확장자
-    3: 150.0, // 문서종류
-    4: 300.0, // 문서설명
-    5: 150.0, // 첨부일자
-    6: 120.0, // 첨부자
-  };
-  late final List<TableColumnConfig> _columns = [
-    TableColumnConfig(
-      header: '문서일련번호',
-      width: _columnWidths[0],
-      valueBuilder: (data) => data.documentSerialNumber ?? '-',
-    ),
-    TableColumnConfig(
-      header: '문서명',
-      width: _columnWidths[1],
-      valueBuilder: (data) => data.documentName ?? '-',
-    ),
-    TableColumnConfig(
-      header: '확장자',
-      width: _columnWidths[2],
-      valueBuilder: (data) => data.documentExtension ?? '-',
-    ),
-    TableColumnConfig(
-      header: '문서종류',
-      width: _columnWidths[3],
-      valueBuilder: (data) => data.documentType ?? '-',
-    ),
-    TableColumnConfig(
-      header: '문서설명',
-      width: _columnWidths[4],
-      valueBuilder: (data) => data.documentDescription ?? '-',
-    ),
-    TableColumnConfig(
-      header: '첨부일자',
-      width: _columnWidths[5],
-      valueBuilder: (data) => data.attachmentDate ?? '-',
-    ),
-    TableColumnConfig(
-      header: '첨부자',
-      width: _columnWidths[6],
-      valueBuilder: (data) => data.attacher ?? '-',
-    ),
-  ];
+  @override
+  Map<int, double> get initialColumnWidths => {
+        0: 150.0, // 문서일련번호
+        1: 300.0, // 문서명
+        2: 100.0, // 확장자
+        3: 150.0, // 문서종류
+        4: 300.0, // 문서설명
+        5: 150.0, // 첨부일자
+        6: 120.0, // 첨부자
+      };
 
-  // 검색 쿼리 업데이트 메서드
-  void updateSearchQuery(String query) {
-    setState(() {
-      _pageSearchQuery = query;
-    });
+  @override
+  Future<List<DocumentInfo>> loadDataFromApi(String key) async {
+    return await DatabaseService.getDocumentInfo(key);
   }
 
   @override
-  void initState() {
-    super.initState();
-    // 공통 리스너 초기화
-    initCustomerServiceListener();
-
-    // 초기 데이터 로드
-    _initializeData();
+  List<TableColumnConfig> buildColumns() {
+    return [
+      TableColumnConfig(
+        header: '문서일련번호',
+        width: columnWidths[0],
+        valueBuilder: (data) => (data as DocumentInfo).documentSerialNumber ?? '-',
+      ),
+      TableColumnConfig(
+        header: '문서명',
+        width: columnWidths[1],
+        valueBuilder: (data) => (data as DocumentInfo).documentName ?? '-',
+      ),
+      TableColumnConfig(
+        header: '확장자',
+        width: columnWidths[2],
+        valueBuilder: (data) => (data as DocumentInfo).documentExtension ?? '-',
+      ),
+      TableColumnConfig(
+        header: '문서종류',
+        width: columnWidths[3],
+        valueBuilder: (data) => (data as DocumentInfo).documentType ?? '-',
+      ),
+      TableColumnConfig(
+        header: '문서설명',
+        width: columnWidths[4],
+        valueBuilder: (data) => (data as DocumentInfo).documentDescription ?? '-',
+      ),
+      TableColumnConfig(
+        header: '첨부일자',
+        width: columnWidths[5],
+        valueBuilder: (data) => (data as DocumentInfo).attachmentDate ?? '-',
+      ),
+      TableColumnConfig(
+        header: '첨부자',
+        width: columnWidths[6],
+        valueBuilder: (data) => (data as DocumentInfo).attacher ?? '-',
+      ),
+    ];
   }
 
   @override
-  void dispose() {
-    // 공통 리스너 해제
-    disposeCustomerServiceListener();
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  /// 초기 데이터 로드
-  Future<void> _initializeData() async {
-    // 드롭다운 데이터 로드
-
-    // 서비스에서 고객 데이터 로드
-    await _loadCustomerDataFromService();
-  }
-
-  /// 전역 서비스에서 고객 데이터 로드
-  Future<void> _loadCustomerDataFromService() async {
-    final customer = customerService.selectedCustomer;
-
-    if (customer != null) {
-      await _loadDocumentData(customer.controlManagementNumber);
-    } else {
-      setState(() {
-        _dataList = [];
-      });
-    }
-  }
-
-  /// CustomerServiceHandler 콜백 구현
-  @override
-  void onCustomerChanged(SearchPanel? customer, CustomerDetail? detail) {
-    if (customer != null) {
-      _loadDocumentData(customer.controlManagementNumber);
-    } else {
-      setState(() {
-        _dataList = [];
-      });
-    }
-  }
-
-  /// 문서 데이터 로드
-  Future<void> _loadDocumentData(String managementNumber) async {
-    try {
-      final documentList = await DatabaseService.getDocumentInfo(
-        managementNumber,
-      );
-
-      if (mounted) {
-        setState(() {
-          _dataList = documentList;
-        });
-      }
-
-      print('문서 데이터 로드 완료: ${documentList.length}개');
-    } catch (e) {
-      print('문서 데이터 로드 오류: $e');
-      if (mounted) {
-        setState(() {
-          _dataList = [];
-        });
-      }
-    }
-  }
-
-  /// 문서 추가 모달 표시
-  void _showAddDocumentModal() {
+  void onAddButtonPressed() {
     final customer = customerService.selectedCustomer;
     if (customer == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -192,49 +112,9 @@ class DocumentSupportState extends State<DocumentSupport>
       context: context,
       builder: (context) => _AddDocumentModal(
         managementNumber: managementNumber,
-        onDocumentAdded: () async {
-          // 문서 목록 새로고침
-          await _loadDocumentData(managementNumber);
+        onDocumentAdded: () {
+          refreshData();
         },
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
-      body: Column(
-        children: [
-          // 상단바
-          // 메인 컨텐츠
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: buildTable(
-                      context: context,
-                      title: '첨부 데이터 리스트',
-                      dataList: _dataList,
-                      columns: _columns,
-                      columnWidths: _columnWidths,
-                      onColumnResize: (columnIndex, newWidth) {
-                        setState(() {
-                          _columnWidths[columnIndex] = newWidth;
-                        });
-                      },
-                      searchQuery: _pageSearchQuery,
-                      onAdd: _showAddDocumentModal,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }
