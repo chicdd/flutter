@@ -289,7 +289,6 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
   /// 서비스에서 UI 업데이트 (무한 루프 방지)
   Future<void> _updateUIFromService() async {
     final detail = _customerService.customerDetail;
-    final customer = _customerService.selectedCustomer;
 
     if (detail != null) {
       setState(() {

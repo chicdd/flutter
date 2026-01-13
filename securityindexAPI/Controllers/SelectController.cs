@@ -429,11 +429,65 @@ namespace securityindexAPI.Controllers
                     return BadRequest(new { message = "관제관리번호는 필수입니다." });
                 }
 
-                var 사용자리스트 = await _context.사용자마스터
-                    .Where(u => u.관제관리번호 == 관제관리번호)
-                    .OrderBy(u => u.등록번호)
-                    .Take(1000)
-                    .ToListAsync();
+                var query = @"
+                    SELECT TOP 1000
+                        등록번호,
+                        관제관리번호,
+                        사용자명,
+                        직급,
+                        휴대전화,
+                        계약자와관계,
+                        주민번호,
+                        OC사용자,
+                        비고,
+                        무단해제허용,
+                        SMS발송,
+                        요원카드,
+                        미경계SMS,
+                        예비카드여부
+                    FROM 사용자마스터
+                    WHERE 관제관리번호 = @관제관리번호
+                    ORDER BY Convert(int, 등록번호)";
+
+                var connection = _context.Database.GetDbConnection();
+                await connection.OpenAsync();
+
+                using var command = connection.CreateCommand();
+                command.CommandText = query;
+
+                var param = command.CreateParameter();
+                param.ParameterName = "@관제관리번호";
+                param.Value = 관제관리번호;
+                command.Parameters.Add(param);
+
+                using var reader = await command.ExecuteReaderAsync();
+                var 사용자리스트 = new List<사용자마스터>();
+
+                while (await reader.ReadAsync())
+                {
+                    var userData = new 사용자마스터
+                    {
+                        등록번호 = reader["등록번호"]?.ToString(),
+                        관제관리번호 = reader["관제관리번호"]?.ToString(),
+                        사용자명 = reader["사용자명"]?.ToString(),
+                        직급 = reader["직급"]?.ToString(),
+                        휴대전화 = reader["휴대전화"]?.ToString(),
+                        계약자와관계 = reader["계약자와관계"]?.ToString(),
+                        주민번호 = reader["주민번호"]?.ToString(),
+                        OC사용자 = reader["OC사용자"]?.ToString(),
+                        비고 = reader["비고"]?.ToString(),
+                        무단해제허용 = reader["무단해제허용"] == DBNull.Value ? false : Convert.ToBoolean(reader["무단해제허용"]),
+                        SMS발송 = reader["SMS발송"] == DBNull.Value ? false : Convert.ToBoolean(reader["SMS발송"]),
+                        요원카드 = reader["요원카드"] == DBNull.Value ? false : Convert.ToBoolean(reader["요원카드"]),
+                        미경계SMS = reader["미경계SMS"] == DBNull.Value ? false : Convert.ToBoolean(reader["미경계SMS"]),
+                        예비카드여부 = reader["예비카드여부"] == DBNull.Value ? false : Convert.ToBoolean(reader["예비카드여부"]),
+
+                    };
+
+                    사용자리스트.Add(userData);
+                }
+
+                await connection.CloseAsync();
 
                 _logger.LogInformation($"사용자 정보 조회 완료: 관제관리번호={관제관리번호}, 결과수={사용자리스트.Count}");
                 return Ok(사용자리스트);
@@ -460,11 +514,46 @@ namespace securityindexAPI.Controllers
                     return BadRequest(new { message = "관제관리번호는 필수입니다." });
                 }
 
-                var 존정보리스트 = await _context.존마스터
-                    .Where(z => z.관제관리번호 == 관제관리번호)
-                    .OrderBy(z => z.존번호)
-                    .Take(1000)
-                    .ToListAsync();
+                var query = @"
+                    SELECT TOP 1000
+                        존번호,
+                        관제관리번호,
+                        감지기설치위치,
+                        감지기명,
+                        비고
+                    FROM 존코드테이블
+                    WHERE 관제관리번호 = @관제관리번호
+                    ORDER BY 존번호";
+
+                var connection = _context.Database.GetDbConnection();
+                await connection.OpenAsync();
+
+                using var command = connection.CreateCommand();
+                command.CommandText = query;
+
+                var param = command.CreateParameter();
+                param.ParameterName = "@관제관리번호";
+                param.Value = 관제관리번호;
+                command.Parameters.Add(param);
+
+                using var reader = await command.ExecuteReaderAsync();
+                var 존정보리스트 = new List<존마스터>();
+
+                while (await reader.ReadAsync())
+                {
+                    var zoneData = new 존마스터
+                    {
+                        존번호 = reader["존번호"]?.ToString(),
+                        관제관리번호 = reader["관제관리번호"]?.ToString(),
+                        감지기설치위치 = reader["감지기설치위치"]?.ToString(),
+                        감지기명 = reader["감지기명"]?.ToString(),
+                        비고 = reader["비고"]?.ToString()
+                    };
+
+                    존정보리스트.Add(zoneData);
+                }
+
+                await connection.CloseAsync();
 
                 _logger.LogInformation($"존정보 조회 완료: 관제관리번호={관제관리번호}, 결과수={존정보리스트.Count}");
                 return Ok(존정보리스트);

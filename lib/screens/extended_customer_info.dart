@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import '../theme.dart';
 import '../models/search_panel.dart';
@@ -11,7 +9,6 @@ import '../services/selected_customer_service.dart';
 import '../widgets/component.dart';
 import '../widgets/time_picker_modal.dart';
 import '../style.dart';
-import '../widgets/custom_top_bar.dart';
 import '../widgets/common_table.dart';
 
 class ExtendedCustomerInfo extends StatefulWidget {
@@ -86,7 +83,7 @@ class ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
   String? branchType; // 지사구분
 
   // 부가서비스 데이터 목록
-  List<AdditionalService> _additionalServices = [];
+  List<AdditionalService> _additionalServicesList = [];
 
   // DVR 연동 데이터 목록
   List<DVRInfo> _dvrInfoList = [];
@@ -95,22 +92,36 @@ class ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
   List<CodeData> _companyTypeList = [];
   List<CodeData> _branchTypeList = [];
 
-  // 부가서비스 테이블 관련 변수
-  final ScrollController _serviceHeaderScrollController = ScrollController();
-  final ScrollController _serviceBodyScrollController = ScrollController();
-  bool _isServiceSyncingScroll = false;
   final Map<int, double> _serviceColumnWidths = {
     0: 200.0, // 서비스명
     1: 150.0, // 제공구분
     2: 150.0, // 제공일자
     3: 250.0, // 메모
   };
-  late final List<TableColumnConfig> _serviceColumns;
+  late final List<TableColumnConfig> // 부가서비스 테이블 컬럼 설정
+  _serviceColumns = [
+    TableColumnConfig(
+      header: '서비스명',
+      width: _serviceColumnWidths[0],
+      valueBuilder: (data) => data.serviceName ?? '-',
+    ),
+    TableColumnConfig(
+      header: '제공구분',
+      width: _serviceColumnWidths[1],
+      valueBuilder: (data) => data.provisionType ?? '-',
+    ),
+    TableColumnConfig(
+      header: '제공일자',
+      width: _serviceColumnWidths[2],
+      valueBuilder: (data) => data.provisionDate ?? '-',
+    ),
+    TableColumnConfig(
+      header: '메모',
+      width: _serviceColumnWidths[3],
+      valueBuilder: (data) => data.memo ?? '-',
+    ),
+  ];
 
-  // DVR 테이블 관련 변수
-  final ScrollController _dvrHeaderScrollController = ScrollController();
-  final ScrollController _dvrBodyScrollController = ScrollController();
-  bool _isDvrSyncingScroll = false;
   final Map<int, double> _dvrColumnWidths = {
     0: 120.0, // 접속방식
     1: 130.0, // DVR종류코드
@@ -121,7 +132,48 @@ class ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
     6: 120.0, // 접속암호
     7: 120.0, // 추가일자
   };
-  late final List<TableColumnConfig> _dvrColumns;
+  late final List<TableColumnConfig> _dvrColumns = [
+    TableColumnConfig(
+      header: '접속방식',
+      width: _dvrColumnWidths[0],
+      valueBuilder: (data) => data.connectionMethodText,
+    ),
+    TableColumnConfig(
+      header: 'DVR종류코드',
+      width: _dvrColumnWidths[1],
+      valueBuilder: (data) => data.dvrTypeCode ?? '-',
+    ),
+    TableColumnConfig(
+      header: '종류',
+      width: _dvrColumnWidths[2],
+      valueBuilder: (data) => data.dvrTypeName ?? '-',
+    ),
+    TableColumnConfig(
+      header: '접속주소',
+      width: _dvrColumnWidths[3],
+      valueBuilder: (data) => data.connectionAddress ?? '-',
+    ),
+    TableColumnConfig(
+      header: '접속포트',
+      width: _dvrColumnWidths[4],
+      valueBuilder: (data) => data.connectionPort ?? '-',
+    ),
+    TableColumnConfig(
+      header: '접속ID',
+      width: _dvrColumnWidths[5],
+      valueBuilder: (data) => data.connectionId ?? '-',
+    ),
+    TableColumnConfig(
+      header: '접속암호',
+      width: _dvrColumnWidths[6],
+      valueBuilder: (data) => data.connectionPassword ?? '-',
+    ),
+    TableColumnConfig(
+      header: '추가일자',
+      width: _dvrColumnWidths[7],
+      valueBuilder: (data) => data.addedDate ?? '-',
+    ),
+  ];
   @override
   void dispose() {
     _customerService.removeListener(_onCustomerServiceChanged);
@@ -135,10 +187,6 @@ class ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
     _gpsY2Controller.dispose();
     _dedicatedNumberController.dispose();
     _dedicatedMemoController.dispose();
-    _serviceHeaderScrollController.dispose();
-    _serviceBodyScrollController.dispose();
-    _dvrHeaderScrollController.dispose();
-    _dvrBodyScrollController.dispose();
     super.dispose();
   }
 
@@ -169,7 +217,7 @@ class ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
         }
 
         // 부가서비스 및 DVR 목록 초기화
-        _additionalServices = [];
+        _additionalServicesList = [];
         _dvrInfoList = [];
 
         // 경계/해제 시간 초기화 - 평일
@@ -207,17 +255,6 @@ class ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
       });
     }
   }
-
-  // @override
-  // void didUpdateWidget(ExtendedCustomerInfo oldWidget) {
-  //   super.didUpdateWidget(oldWidget);
-  //   // 고객이 변경되었을 때 새로운 데이터 로드
-  //   if (widget.searchpanel != oldWidget.searchpanel &&
-  //       widget.searchpanel != null) {
-  //     _loadDropdownData(); // 드롭다운 데이터 먼저 로드
-  //     _updateUIFromService(); // 전역 서비스에서 고객 상세 정보 로드
-  //   }
-  // }
 
   /// 상세 정보로부터 필드 업데이트
   Future<void> _updateFieldsFromDetail(CustomerDetail detail) async {
@@ -272,80 +309,6 @@ class ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
     // ChangeNotifier 리스너 등록
     _customerService.addListener(_onCustomerServiceChanged);
 
-    // 부가서비스 테이블 컬럼 설정
-    _serviceColumns = [
-      TableColumnConfig(
-        header: '서비스명',
-        width: _serviceColumnWidths[0],
-        valueBuilder: (data) => data.serviceName ?? '-',
-      ),
-      TableColumnConfig(
-        header: '제공구분',
-        width: _serviceColumnWidths[1],
-        valueBuilder: (data) => data.provisionType ?? '-',
-      ),
-      TableColumnConfig(
-        header: '제공일자',
-        width: _serviceColumnWidths[2],
-        valueBuilder: (data) => data.provisionDate ?? '-',
-      ),
-      TableColumnConfig(
-        header: '메모',
-        width: _serviceColumnWidths[3],
-        valueBuilder: (data) => data.memo ?? '-',
-      ),
-    ];
-
-    // DVR 테이블 컬럼 설정
-    _dvrColumns = [
-      TableColumnConfig(
-        header: '접속방식',
-        width: _dvrColumnWidths[0],
-        valueBuilder: (data) => data.connectionMethodText,
-      ),
-      TableColumnConfig(
-        header: 'DVR종류코드',
-        width: _dvrColumnWidths[1],
-        valueBuilder: (data) => data.dvrTypeCode ?? '-',
-      ),
-      TableColumnConfig(
-        header: '종류',
-        width: _dvrColumnWidths[2],
-        valueBuilder: (data) => data.dvrTypeName ?? '-',
-      ),
-      TableColumnConfig(
-        header: '접속주소',
-        width: _dvrColumnWidths[3],
-        valueBuilder: (data) => data.connectionAddress ?? '-',
-      ),
-      TableColumnConfig(
-        header: '접속포트',
-        width: _dvrColumnWidths[4],
-        valueBuilder: (data) => data.connectionPort ?? '-',
-      ),
-      TableColumnConfig(
-        header: '접속ID',
-        width: _dvrColumnWidths[5],
-        valueBuilder: (data) => data.connectionId ?? '-',
-      ),
-      TableColumnConfig(
-        header: '접속암호',
-        width: _dvrColumnWidths[6],
-        valueBuilder: (data) => data.connectionPassword ?? '-',
-      ),
-      TableColumnConfig(
-        header: '추가일자',
-        width: _dvrColumnWidths[7],
-        valueBuilder: (data) => data.addedDate ?? '-',
-      ),
-    ];
-
-    // 스크롤 동기화
-    _serviceHeaderScrollController.addListener(_syncServiceHeaderScroll);
-    _serviceBodyScrollController.addListener(_syncServiceBodyScroll);
-    _dvrHeaderScrollController.addListener(_syncDvrHeaderScroll);
-    _dvrBodyScrollController.addListener(_syncDvrBodyScroll);
-
     // 고객 데이터 로드
     _initializeData();
   }
@@ -369,17 +332,6 @@ class ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
       _pageSearchQuery = query;
     });
   }
-
-  // /// 드롭다운 데이터 로드
-  // Future<void> _loadDropdownData() async {
-  //   try {
-  //     // 캐시를 통해 드롭다운 데이터 로드
-  //     _companyTypeList = await CodeDataCache.getCodeData('companytype');
-  //     _branchTypeList = await CodeDataCache.getCodeData('branchtype');
-  //   } catch (e) {
-  //     print('드롭다운 데이터 로드 오류: $e');
-  //   }
-  // }
 
   /// 고객 서비스 변경 시 호출
   void _onCustomerServiceChanged() {
@@ -408,36 +360,6 @@ class ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
       _clearAllFields();
     }
   }
-
-  // /// 전역 서비스에서 고객 데이터 로드
-  // Future<void> _loadCustomerDataFromService() async {
-  //   final selectedCustomer = _customerService.selectedCustomer;
-  //
-  //   if (selectedCustomer == null) {
-  //     // 선택된 고객이 없으면 필드 초기화
-  //     _clearAllFields();
-  //     return;
-  //   }
-  //
-  //   try {
-  //     // 전역 서비스에서 상세 정보 로드
-  //     await _customerService.loadCustomerDetail();
-  //
-  //     final detail = _customerService.customerDetail;
-  //
-  //     if (detail != null && mounted) {
-  //       setState(() {});
-  //
-  //       // // 휴일주간, 부가서비스, DVR 데이터 로드
-  //       await _updateFieldsFromDetail(detail);
-  //       await _loadHolidayData(selectedCustomer.controlManagementNumber);
-  //       await _loadAdditionalServices(selectedCustomer.controlManagementNumber);
-  //       await _loadDVRInfo(selectedCustomer.controlManagementNumber);
-  //     }
-  //   } catch (e) {
-  //     print('고객 상세 정보 로드 오류: $e');
-  //   }
-  // }
 
   /// 휴일주간 데이터 로드 및 체크박스 업데이트
   Future<void> _loadHolidayData(String managementNumber) async {
@@ -503,7 +425,7 @@ class ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
 
       if (mounted) {
         setState(() {
-          _additionalServices = services;
+          _additionalServicesList = services;
         });
       }
 
@@ -681,9 +603,12 @@ class ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
                           ],
                         ),
                         const SizedBox(height: 24),
-                        SizedBox(height: 400, child: _buildServiceTable()),
+                        SizedBox(
+                          height: 400,
+                          child: SizedBox(height: 400, child: _buildService()),
+                        ),
                         const SizedBox(height: 24),
-                        SizedBox(height: 400, child: _buildDVRTable()),
+                        SizedBox(height: 400, child: _buildDVR()),
                       ],
                     )
                   : isWideScreen
@@ -727,9 +652,9 @@ class ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
                           ],
                         ),
                         const SizedBox(height: 24),
-                        SizedBox(height: 400, child: _buildServiceTable()),
+                        SizedBox(height: 400, child: _buildService()),
                         const SizedBox(height: 24),
-                        SizedBox(height: 400, child: _buildDVRTable()),
+                        SizedBox(height: 400, child: _buildDVR()),
                       ],
                     )
                   : Column(
@@ -757,9 +682,9 @@ class ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
                           ],
                         ),
                         const SizedBox(height: 24),
-                        SizedBox(height: 400, child: _buildServiceTable()),
+                        SizedBox(height: 400, child: _buildService()),
                         const SizedBox(height: 24),
-                        SizedBox(height: 400, child: _buildDVRTable()),
+                        SizedBox(height: 400, child: _buildDVR()),
                       ],
                     ),
             );
@@ -781,6 +706,38 @@ class ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
         //   ),
         // ),
       ),
+    );
+  }
+
+  _buildService() {
+    return buildTable(
+      context: context,
+      title: '부가서비스 제공',
+      dataList: _additionalServicesList,
+      columns: _serviceColumns,
+      columnWidths: _serviceColumnWidths,
+      onColumnResize: (columnIndex, newWidth) {
+        setState(() {
+          _serviceColumnWidths[columnIndex] = newWidth;
+        });
+      },
+      searchQuery: _pageSearchQuery,
+    );
+  }
+
+  _buildDVR() {
+    return buildTable(
+      context: context,
+      title: 'DVR 설치현황',
+      dataList: _dvrInfoList,
+      columns: _dvrColumns,
+      columnWidths: _dvrColumnWidths,
+      onColumnResize: (columnIndex, newWidth) {
+        setState(() {
+          _dvrColumnWidths[columnIndex] = newWidth;
+        });
+      },
+      searchQuery: _pageSearchQuery,
     );
   }
 
@@ -1408,446 +1365,6 @@ class ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
           CommonTextField(label: '추가메모', controller: _dedicatedMemoController),
         ],
       ),
-    );
-  }
-
-  Widget _buildAdditionalInfoSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Expanded(child: _buildCustomerMemoSection()),
-            const SizedBox(width: 16),
-            Expanded(child: _buildGPSSection()),
-          ],
-        ),
-        const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(child: _buildCompanyBranchSection()),
-            const SizedBox(width: 16),
-            Expanded(child: _buildDedicatedLineSection()),
-          ],
-        ),
-      ],
-    );
-  }
-
-  /// 부가서비스 테이블 헤더 스크롤 동기화
-  void _syncServiceHeaderScroll() {
-    if (_isServiceSyncingScroll) return;
-    _isServiceSyncingScroll = true;
-
-    if (_serviceBodyScrollController.hasClients &&
-        _serviceBodyScrollController.offset !=
-            _serviceHeaderScrollController.offset) {
-      _serviceBodyScrollController.jumpTo(
-        _serviceHeaderScrollController.offset,
-      );
-    }
-
-    _isServiceSyncingScroll = false;
-  }
-
-  /// 부가서비스 테이블 바디 스크롤 동기화
-  void _syncServiceBodyScroll() {
-    if (_isServiceSyncingScroll) return;
-    _isServiceSyncingScroll = true;
-
-    if (_serviceHeaderScrollController.hasClients &&
-        _serviceHeaderScrollController.offset !=
-            _serviceBodyScrollController.offset) {
-      _serviceHeaderScrollController.jumpTo(
-        _serviceBodyScrollController.offset,
-      );
-    }
-
-    _isServiceSyncingScroll = false;
-  }
-
-  /// DVR 테이블 헤더 스크롤 동기화
-  void _syncDvrHeaderScroll() {
-    if (_isDvrSyncingScroll) return;
-    _isDvrSyncingScroll = true;
-
-    if (_dvrBodyScrollController.hasClients &&
-        _dvrBodyScrollController.offset != _dvrHeaderScrollController.offset) {
-      _dvrBodyScrollController.jumpTo(_dvrHeaderScrollController.offset);
-    }
-
-    _isDvrSyncingScroll = false;
-  }
-
-  /// DVR 테이블 바디 스크롤 동기화
-  void _syncDvrBodyScroll() {
-    if (_isDvrSyncingScroll) return;
-    _isDvrSyncingScroll = true;
-
-    if (_dvrHeaderScrollController.hasClients &&
-        _dvrHeaderScrollController.offset != _dvrBodyScrollController.offset) {
-      _dvrHeaderScrollController.jumpTo(_dvrBodyScrollController.offset);
-    }
-
-    _isDvrSyncingScroll = false;
-  }
-
-  /// 부가서비스 테이블 구성 (새 구조)
-  Widget _buildServiceTable() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: AppTheme.cardShadow,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Text(
-                '부가서비스 제공',
-                style: TextStyle(
-                  color: Color(0xFF252525),
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Expanded(
-            child: _additionalServices.isEmpty
-                ? const Center(
-                    child: Text(
-                      '부가서비스 데이터가 없습니다.',
-                      style: TextStyle(color: Colors.grey, fontSize: 16),
-                    ),
-                  )
-                : _buildServiceResizableTable(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// 부가서비스 크기 조절 가능한 테이블
-  Widget _buildServiceResizableTable() {
-    return ScrollConfiguration(
-      behavior: ScrollConfiguration.of(context).copyWith(
-        dragDevices: {PointerDeviceKind.touch, PointerDeviceKind.mouse},
-      ),
-      child: Column(
-        children: [
-          SingleChildScrollView(
-            controller: _serviceHeaderScrollController,
-            scrollDirection: Axis.horizontal,
-            physics: const ClampingScrollPhysics(),
-            child: _buildServiceTableHeader(),
-          ),
-          Expanded(
-            child: SingleChildScrollView(
-              scrollDirection: Axis.vertical,
-              child: SingleChildScrollView(
-                controller: _serviceBodyScrollController,
-                scrollDirection: Axis.horizontal,
-                physics: const ClampingScrollPhysics(),
-                child: _buildServiceTableBody(),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// 부가서비스 테이블 헤더
-  Widget _buildServiceTableHeader() {
-    return Container(
-      height: 45,
-      decoration: BoxDecoration(
-        color: const Color(0xFFF5F7FA),
-        border: Border.all(color: const Color(0xFFE0E0E0)),
-      ),
-      child: Row(
-        children: _serviceColumns.asMap().entries.map((entry) {
-          final columnIndex = entry.key;
-          final column = entry.value;
-
-          return Row(
-            children: [
-              Container(
-                width: _serviceColumnWidths[columnIndex],
-                padding: const EdgeInsets.symmetric(
-                  vertical: 12,
-                  horizontal: 8,
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  column.header,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF252525),
-                  ),
-                ),
-              ),
-              if (columnIndex < _serviceColumns.length - 1)
-                _buildServiceResizeHandle(columnIndex),
-            ],
-          );
-        }).toList(),
-      ),
-    );
-  }
-
-  /// 부가서비스 테이블 크기 조절 핸들
-  Widget _buildServiceResizeHandle(int columnIndex) {
-    return MouseRegion(
-      cursor: SystemMouseCursors.resizeColumn,
-      child: GestureDetector(
-        onHorizontalDragUpdate: (details) {
-          setState(() {
-            final newWidth =
-                (_serviceColumnWidths[columnIndex]! + details.delta.dx).clamp(
-                  50.0,
-                  500.0,
-                );
-            _serviceColumnWidths[columnIndex] = newWidth;
-          });
-        },
-        child: Container(
-          width: 8,
-          decoration: BoxDecoration(
-            border: Border(
-              left: BorderSide(color: const Color(0xFFE0E0E0), width: 0.5),
-              right: BorderSide(color: const Color(0xFFE0E0E0), width: 0.5),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// 부가서비스 테이블 바디
-  Widget _buildServiceTableBody() {
-    return Column(
-      children: List.generate(_additionalServices.length, (index) {
-        final service = _additionalServices[index];
-        final isEven = index % 2 == 0;
-
-        return Container(
-          decoration: BoxDecoration(
-            color: isEven ? Colors.white : const Color(0xFFFAFAFA),
-            border: const Border(
-              left: BorderSide(color: Color(0xFFE0E0E0)),
-              right: BorderSide(color: Color(0xFFE0E0E0)),
-              bottom: BorderSide(color: Color(0xFFE0E0E0)),
-            ),
-          ),
-          child: Row(
-            children: _serviceColumns.asMap().entries.map((entry) {
-              final columnIndex = entry.key;
-              final column = entry.value;
-              final value = column.valueBuilder?.call(service) ?? '';
-              final cellWidget = buildTableCell(
-                value: value,
-                columnWidths: _serviceColumnWidths,
-                columnIndex: columnIndex,
-                searchQuery: _pageSearchQuery,
-              );
-
-              return Row(
-                children: [
-                  cellWidget,
-                  if (columnIndex < _serviceColumns.length - 1)
-                    buildColumnDivider(),
-                ],
-              );
-            }).toList(),
-          ),
-        );
-      }),
-    );
-  }
-
-  /// DVR 테이블 구성 (새 구조)
-  Widget _buildDVRTable() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: AppTheme.cardShadow,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Text(
-                'DVR 설치현황',
-                style: TextStyle(
-                  color: Color(0xFF252525),
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Expanded(
-            child: _dvrInfoList.isEmpty
-                ? const Center(
-                    child: Text(
-                      'DVR 정보가 없습니다.',
-                      style: TextStyle(color: Colors.grey, fontSize: 16),
-                    ),
-                  )
-                : _buildResizableTable(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// DVR 크기 조절 가능한 테이블
-  Widget _buildResizableTable() {
-    return ScrollConfiguration(
-      behavior: ScrollConfiguration.of(context).copyWith(
-        dragDevices: {PointerDeviceKind.touch, PointerDeviceKind.mouse},
-      ),
-      child: Column(
-        children: [
-          SingleChildScrollView(
-            controller: _dvrHeaderScrollController,
-            scrollDirection: Axis.horizontal,
-            physics: const ClampingScrollPhysics(),
-            child: _buildTableHeader(),
-          ),
-          Expanded(
-            child: SingleChildScrollView(
-              scrollDirection: Axis.vertical,
-              child: SingleChildScrollView(
-                controller: _dvrBodyScrollController,
-                scrollDirection: Axis.horizontal,
-                physics: const ClampingScrollPhysics(),
-                child: _buildTableBody(),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// DVR 테이블 헤더
-  Widget _buildTableHeader() {
-    return Container(
-      height: 45,
-      decoration: BoxDecoration(
-        color: const Color(0xFFF5F7FA),
-        border: Border.all(color: const Color(0xFFE0E0E0)),
-      ),
-      child: Row(
-        children: _dvrColumns.asMap().entries.map((entry) {
-          final columnIndex = entry.key;
-          final column = entry.value;
-
-          return Row(
-            children: [
-              Container(
-                width: _dvrColumnWidths[columnIndex],
-                padding: const EdgeInsets.symmetric(
-                  vertical: 12,
-                  horizontal: 8,
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  column.header,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF252525),
-                  ),
-                ),
-              ),
-              if (columnIndex < _dvrColumns.length - 1)
-                _buildResizeHandle(columnIndex),
-            ],
-          );
-        }).toList(),
-      ),
-    );
-  }
-
-  /// DVR 테이블 크기 조절 핸들
-  Widget _buildResizeHandle(int columnIndex) {
-    return MouseRegion(
-      cursor: SystemMouseCursors.resizeColumn,
-      child: GestureDetector(
-        onHorizontalDragUpdate: (details) {
-          setState(() {
-            final newWidth = (_dvrColumnWidths[columnIndex]! + details.delta.dx)
-                .clamp(50.0, 500.0);
-            _dvrColumnWidths[columnIndex] = newWidth;
-          });
-        },
-        child: Container(
-          width: 8,
-          decoration: BoxDecoration(
-            border: Border(
-              left: BorderSide(color: const Color(0xFFE0E0E0), width: 0.5),
-              right: BorderSide(color: const Color(0xFFE0E0E0), width: 0.5),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// DVR 테이블 바디
-  Widget _buildTableBody() {
-    return Column(
-      children: List.generate(_dvrInfoList.length, (index) {
-        final dvr = _dvrInfoList[index];
-        final isEven = index % 2 == 0;
-
-        return Container(
-          decoration: BoxDecoration(
-            color: isEven ? Colors.white : const Color(0xFFFAFAFA),
-            border: const Border(
-              left: BorderSide(color: Color(0xFFE0E0E0)),
-              right: BorderSide(color: Color(0xFFE0E0E0)),
-              bottom: BorderSide(color: Color(0xFFE0E0E0)),
-            ),
-          ),
-          child: Row(
-            children: _dvrColumns.asMap().entries.map((entry) {
-              final columnIndex = entry.key;
-              final column = entry.value;
-              final value = column.valueBuilder?.call(dvr) ?? '';
-              final cellWidget = buildTableCell(
-                value: value,
-                columnWidths: _dvrColumnWidths,
-                columnIndex: columnIndex,
-                searchQuery: _pageSearchQuery,
-              );
-
-              return Row(
-                children: [
-                  cellWidget,
-                  if (columnIndex < _dvrColumns.length - 1)
-                    buildColumnDivider(),
-                ],
-              );
-            }).toList(),
-          ),
-        );
-      }),
     );
   }
 }

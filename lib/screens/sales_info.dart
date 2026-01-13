@@ -1,16 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/gestures.dart';
 import '../models/search_panel.dart';
 import '../theme.dart';
 import '../models/sales_info.dart';
 import '../services/api_service.dart';
 import '../services/selected_customer_service.dart';
 import '../style.dart';
-import '../widgets/component.dart';
-import '../widgets/common_table.dart';
-import '../functions.dart';
-import 'payment_history_table.dart';
-import 'visit_as_history_table.dart';
 
 class SalesInfoScreen extends StatefulWidget {
   final SearchPanel? searchpanel;
@@ -202,34 +196,7 @@ class SalesInfoScreenState extends State<SalesInfoScreen> {
         builder: (context, constraints) {
           final isExtraWideScreen = constraints.maxWidth >= 1920;
           final isWideScreen = constraints.maxWidth >= 1200;
-          return
-          // _isLoading
-          //   ? const Center(child: CircularProgressIndicator())
-          //   : _isErpDbError
-          //   ? const Center(
-          //       child: Text(
-          //         '영업DB에 연결되지 않음.\n관리자에게 문의하세요.',
-          //         textAlign: TextAlign.center,
-          //         style: TextStyle(
-          //           fontSize: 16,
-          //           color: Colors.red,
-          //           fontWeight: FontWeight.w600,
-          //         ),
-          //       ),
-          //     )
-          //   : _salesInfo == null
-          //   ? const Center(
-          //       child: Text(
-          //         '영업정보를 불러올 수 없습니다.\n영업관리번호를 확인해주세요.',
-          //         textAlign: TextAlign.center,
-          //         style: TextStyle(
-          //           fontSize: 16,
-          //           color: AppTheme.textSecondary,
-          //         ),
-          //       ),
-          //     )
-          //   :
-          SingleChildScrollView(
+          return SingleChildScrollView(
             padding: const EdgeInsets.all(24),
             child: isExtraWideScreen
                 ? Column(
@@ -307,16 +274,6 @@ class SalesInfoScreenState extends State<SalesInfoScreen> {
                       _buildMonthlyFeeSection(),
                     ],
                   ),
-            // child: Column(
-            //   crossAxisAlignment: CrossAxisAlignment.stretch,
-            //   children: [
-            //     _buildBasicInfoSection(),
-            //     const SizedBox(height: 24),
-            //     _buildBusinessInfoSection(),
-            //     const SizedBox(height: 24),
-            //     _buildMonthlyFeeSection(),
-            //   ],
-            // ),
           );
         },
       ),

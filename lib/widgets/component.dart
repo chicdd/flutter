@@ -381,7 +381,9 @@ Widget buildCheckbox(String label, bool value, Function(bool?) onChanged) {
             value: value,
             onChanged: onChanged,
             activeColor: const Color(0xFF007AFF),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(4),
+            ),
           ),
         ),
         const SizedBox(width: 8),
@@ -394,6 +396,20 @@ Widget buildCheckbox(String label, bool value, Function(bool?) onChanged) {
           ),
         ),
       ],
+    ),
+  );
+}
+
+/// 체크박스 셀 생성
+Widget buildCheckboxCell(bool isChecked, double width) {
+  return Container(
+    width: width,
+    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+    alignment: Alignment.center,
+    child: Icon(
+      isChecked ? Icons.check_box : Icons.check_box_outline_blank,
+      size: 18,
+      color: isChecked ? AppTheme.selectedColor : AppTheme.textSecondary,
     ),
   );
 }

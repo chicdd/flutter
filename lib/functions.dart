@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'services/selected_customer_service.dart';
 import 'models/customer_detail.dart';
 import 'models/search_panel.dart';
+import 'style.dart';
 
 /// 공통 함수 모음
 ///
@@ -93,9 +95,8 @@ class DataLoadingHelper {
         showDialog(
           context: context,
           barrierDismissible: false,
-          builder: (context) => const Center(
-            child: CircularProgressIndicator(),
-          ),
+          builder: (context) =>
+              const Center(child: CircularProgressIndicator()),
         );
       }
 
@@ -119,9 +120,9 @@ class DataLoadingHelper {
         onError(e);
       } else if (context.mounted) {
         // 기본 에러 처리
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('데이터 로딩 중 오류가 발생했습니다: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('데이터 로딩 중 오류가 발생했습니다: $e')));
       }
     }
   }
@@ -191,6 +192,40 @@ class FieldInitializationHelper {
   static void disposeControllers(List<TextEditingController> controllers) {
     for (final controller in controllers) {
       controller.dispose();
+    }
+  }
+}
+
+class DateParsingHelper {
+  /// 여러 화면에서 공통으로 사용할 날짜 선택 실행 함수
+  static Future<void> openDatePicker({
+    required BuildContext context,
+    required bool isStartDate,
+    required DateTime startDate,
+    required DateTime endDate,
+    required TextEditingController startController,
+    required TextEditingController endController,
+    required Function(DateTime newStartDate, DateTime newEndDate) onConfirm,
+  }) async {
+    final picked = await showDatePickerDialog(
+      context,
+      initialDate: isStartDate ? startDate : endDate,
+    );
+
+    if (picked != null) {
+      DateTime updatedStartDate = startDate;
+      DateTime updatedEndDate = endDate;
+
+      if (isStartDate) {
+        updatedStartDate = picked;
+        startController.text = DateFormat('yyyy-MM-dd').format(picked);
+      } else {
+        updatedEndDate = picked;
+        endController.text = DateFormat('yyyy-MM-dd').format(picked);
+      }
+
+      // 화면측에 변경된 날짜들을 전달 (여기서 setState와 데이터 로드 수행)
+      await onConfirm(updatedStartDate, updatedEndDate);
     }
   }
 }

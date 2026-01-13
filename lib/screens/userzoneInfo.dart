@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import '../models/search_panel.dart';
 import '../models/customer_detail.dart';
@@ -33,31 +35,121 @@ class UserZoneInfoState extends State<UserZoneInfoScreen>
   // 페이지 내 검색
   String _pageSearchQuery = '';
 
-  // 사용자 테이블 관련 변수
-  final ScrollController _userHeaderScrollController = ScrollController();
-  final ScrollController _userBodyScrollController = ScrollController();
-  bool _isUserSyncingScroll = false;
+  // 테이블 컬럼 너비 설정
   final Map<int, double> _userColumnWidths = {
     0: 80.0, // 순번
     1: 120.0, // 사용자명
     2: 100.0, // 관계
     3: 130.0, // 휴대전화
     4: 130.0, // 자택전화
-    5: 150.0, // 비밀번호
+    5: 140.0, // 주민번호
+    6: 120.0, // 사용자
+    7: 150.0, // 비고
+    8: 100.0, // 무단허용
+    9: 80.0, // SMS
+    10: 80.0, // 요원
+    11: 80.0, // APP
+    12: 80.0, // 예비
   };
-  late final List<TableColumnConfig> _userColumns;
 
-  // 존정보 테이블 관련 변수
-  final ScrollController _zoneHeaderScrollController = ScrollController();
-  final ScrollController _zoneBodyScrollController = ScrollController();
-  bool _isZoneSyncingScroll = false;
+  late List<TableColumnConfig> userColumns = [
+    TableColumnConfig(
+      header: '순번',
+      width: _userColumnWidths[0],
+      valueBuilder: (data) => data.registrationNumber ?? '-',
+    ),
+    TableColumnConfig(
+      header: '사용자명',
+      width: _userColumnWidths[1],
+      valueBuilder: (data) => data.userName ?? '-',
+    ),
+    TableColumnConfig(
+      header: '관계',
+      width: _userColumnWidths[2],
+      valueBuilder: (data) => data.position ?? '-',
+    ),
+    TableColumnConfig(
+      header: '휴대전화',
+      width: _userColumnWidths[3],
+      valueBuilder: (data) => data.phoneNumber ?? '-',
+    ),
+    TableColumnConfig(
+      header: '자택전화',
+      width: _userColumnWidths[4],
+      valueBuilder: (data) => data.relationWithContractor ?? '-',
+    ),
+    TableColumnConfig(
+      header: '주민번호',
+      width: _userColumnWidths[5],
+      valueBuilder: (data) => data.residentNumber ?? '-',
+    ),
+    TableColumnConfig(
+      header: '사용자',
+      width: _userColumnWidths[5],
+      valueBuilder: (data) => data.ocUser ?? '-',
+    ),
+    TableColumnConfig(
+      header: '비고',
+      width: _userColumnWidths[5],
+      valueBuilder: (data) => data.note ?? '-',
+    ),
+    TableColumnConfig(
+      header: '무단허용',
+      width: _userColumnWidths[5],
+      valueBuilder: (data) =>
+          (data.unauthorizedReleaseAllowed ?? false) ? 'O' : '',
+    ),
+    TableColumnConfig(
+      header: 'SMS',
+      width: _userColumnWidths[5],
+      valueBuilder: (data) => (data.smsSent ?? false) ? 'O' : '',
+    ),
+    TableColumnConfig(
+      header: '요원',
+      width: _userColumnWidths[5],
+      valueBuilder: (data) => (data.agentCard ?? false) ? 'O' : '',
+    ),
+    TableColumnConfig(
+      header: 'APP',
+      width: _userColumnWidths[5],
+      valueBuilder: (data) => (data.unattendedSms ?? false) ? 'O' : '',
+    ),
+    TableColumnConfig(
+      header: '에비',
+      width: _userColumnWidths[5],
+      valueBuilder: (data) => (data.reserveCard ?? false) ? 'O' : '',
+    ),
+  ];
+  // 존정보 테이블 컬럼 설정
+  late List<TableColumnConfig> zoneColumns = [
+    TableColumnConfig(
+      header: '존번호',
+      width: _zoneColumnWidths[0],
+      valueBuilder: (data) => data.zoneNumber ?? '-',
+    ),
+    TableColumnConfig(
+      header: '감지기설치위치',
+      width: _zoneColumnWidths[1],
+      valueBuilder: (data) => data.detectorInstallLocation ?? '-',
+    ),
+    TableColumnConfig(
+      header: '감지기명',
+      width: _zoneColumnWidths[2],
+      valueBuilder: (data) => data.detectorName ?? '-',
+    ),
+    TableColumnConfig(
+      header: '비고',
+      width: _zoneColumnWidths[3],
+      valueBuilder: (data) => data.note ?? '-',
+    ),
+  ];
+  // 존정보 테이블 컬럼 너비 설정
   final Map<int, double> _zoneColumnWidths = {
     0: 100.0, // 존번호
     1: 250.0, // 감지기설치위치
     2: 150.0, // 감지기명
     3: 250.0, // 비고
   };
-  late final List<TableColumnConfig> _zoneColumns;
 
   // 검색 쿼리 업데이트 메서드
   void updateSearchQuery(String query) {
@@ -71,71 +163,6 @@ class UserZoneInfoState extends State<UserZoneInfoScreen>
     super.initState();
     // 공통 리스너 초기화
     initCustomerServiceListener();
-
-    // 사용자 테이블 컬럼 설정
-    _userColumns = [
-      TableColumnConfig(
-        header: '순번',
-        width: _userColumnWidths[0],
-        valueBuilder: (data) => data.registrationNumber ?? '-',
-      ),
-      TableColumnConfig(
-        header: '사용자명',
-        width: _userColumnWidths[1],
-        valueBuilder: (data) => data.userName ?? '-',
-      ),
-      TableColumnConfig(
-        header: '관계',
-        width: _userColumnWidths[2],
-        valueBuilder: (data) => data.position ?? '-',
-      ),
-      TableColumnConfig(
-        header: '휴대전화',
-        width: _userColumnWidths[3],
-        valueBuilder: (data) => data.phoneNumber ?? '-',
-      ),
-      TableColumnConfig(
-        header: '자택전화',
-        width: _userColumnWidths[4],
-        valueBuilder: (data) => data.homePhone ?? '-',
-      ),
-      TableColumnConfig(
-        header: '비밀번호',
-        width: _userColumnWidths[5],
-        valueBuilder: (data) => data.password ?? '-',
-      ),
-    ];
-
-    // 존정보 테이블 컬럼 설정
-    _zoneColumns = [
-      TableColumnConfig(
-        header: '존번호',
-        width: _zoneColumnWidths[0],
-        valueBuilder: (data) => data.zoneNumber ?? '-',
-      ),
-      TableColumnConfig(
-        header: '감지기설치위치',
-        width: _zoneColumnWidths[1],
-        valueBuilder: (data) => data.detectorInstallLocation ?? '-',
-      ),
-      TableColumnConfig(
-        header: '감지기명',
-        width: _zoneColumnWidths[2],
-        valueBuilder: (data) => data.detectorName ?? '-',
-      ),
-      TableColumnConfig(
-        header: '비고',
-        width: _zoneColumnWidths[3],
-        valueBuilder: (data) => data.note ?? '-',
-      ),
-    ];
-
-    // 스크롤 동기화
-    _userHeaderScrollController.addListener(_syncUserHeaderScroll);
-    _userBodyScrollController.addListener(_syncUserBodyScroll);
-    _zoneHeaderScrollController.addListener(_syncZoneHeaderScroll);
-    _zoneBodyScrollController.addListener(_syncZoneBodyScroll);
-
     // 초기 데이터 로드
     _initializeData();
   }
@@ -145,10 +172,6 @@ class UserZoneInfoState extends State<UserZoneInfoScreen>
     // 공통 리스너 해제
     disposeCustomerServiceListener();
     _searchController.dispose();
-    _userHeaderScrollController.dispose();
-    _userBodyScrollController.dispose();
-    _zoneHeaderScrollController.dispose();
-    _zoneBodyScrollController.dispose();
     super.dispose();
   }
 
@@ -211,7 +234,7 @@ class UserZoneInfoState extends State<UserZoneInfoScreen>
   }
 
   /// 사용자 정보 추가 모달 표시
-  void _showAddUserModal() {
+  void showAddUserModal() {
     final detail = customerService.customerDetail;
     if (detail == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -230,7 +253,7 @@ class UserZoneInfoState extends State<UserZoneInfoScreen>
   }
 
   /// 존정보 추가 모달 표시
-  void _showAddZoneModal() {
+  void showAddZoneModal() {
     final detail = customerService.customerDetail;
     if (detail == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -252,455 +275,61 @@ class UserZoneInfoState extends State<UserZoneInfoScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
-      body: Column(
-        children: [
-          // 상단바
-          // 메인 컨텐츠
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
+      body: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          children: [
+            // 상단바
+            // 메인 컨텐츠
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // 사용자 관리 테이블
-                  Expanded(flex: 1, child: _buildUserTableSection()),
-                  const SizedBox(height: 24),
+                  Expanded(
+                    flex: 1,
+                    child: buildTable(
+                      context: context,
+                      title: '사용자 관리',
+                      dataList: _userInfoList,
+                      columns: userColumns,
+                      columnWidths: _userColumnWidths,
+                      onColumnResize: (columnIndex, newWidth) {
+                        setState(() {
+                          _userColumnWidths[columnIndex] = newWidth;
+                        });
+                      },
+                      searchQuery: _pageSearchQuery,
+                      showTotalCount: true,
+                      onAdd: showAddUserModal,
+                    ),
+                  ),
+                  SizedBox(height: 24),
+
                   // 존정보 관리 테이블
-                  Expanded(flex: 1, child: _buildZoneTableSection()),
+                  Expanded(
+                    flex: 1,
+                    child: buildTable(
+                      context: context,
+                      title: '존정보 관리',
+                      dataList: _zoneInfoList,
+                      columns: zoneColumns,
+                      columnWidths: _zoneColumnWidths,
+                      onColumnResize: (columnIndex, newWidth) {
+                        setState(() {
+                          _zoneColumnWidths[columnIndex] = newWidth;
+                        });
+                      },
+                      searchQuery: _pageSearchQuery,
+                      showTotalCount: true,
+                      onAdd: showAddZoneModal,
+                    ),
+                  ),
                 ],
               ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// 사용자 관리 테이블 섹션
-  Widget _buildUserTableSection() {
-    return CommonDataTable(
-      title: '사용자 관리',
-      enableHorizontalScroll: true,
-      columns: [
-        TableColumnConfig(
-          header: '순번',
-          width: 80,
-          valueBuilder: (data) => data.registrationNumber ?? '-',
-          cellBuilder: (data, value) => Center(
-            child: HighlightedText(
-              text: value,
-              query: _pageSearchQuery,
-              style: const TextStyle(
-                color: Color(0xFF252525),
-                fontSize: 15,
-                fontFamily: 'Inter',
-                fontWeight: FontWeight.w400,
-              ),
-            ),
-          ),
+          ],
         ),
-        TableColumnConfig(
-          header: '사용자명',
-          width: 120,
-          valueBuilder: (data) => data.userName ?? '-',
-          cellBuilder: (data, value) => Center(
-            child: HighlightedText(
-              text: value,
-              query: _pageSearchQuery,
-              style: const TextStyle(
-                color: Color(0xFF252525),
-                fontSize: 15,
-                fontFamily: 'Inter',
-                fontWeight: FontWeight.w400,
-              ),
-            ),
-          ),
-        ),
-        TableColumnConfig(
-          header: '관계',
-          width: 100,
-          valueBuilder: (data) => data.position ?? '-',
-          cellBuilder: (data, value) => Center(
-            child: HighlightedText(
-              text: value,
-              query: _pageSearchQuery,
-              style: const TextStyle(
-                color: Color(0xFF252525),
-                fontSize: 15,
-                fontFamily: 'Inter',
-                fontWeight: FontWeight.w400,
-              ),
-            ),
-          ),
-        ),
-        TableColumnConfig(
-          header: '휴대전화',
-          width: 130,
-          valueBuilder: (data) => data.phoneNumber ?? '-',
-          cellBuilder: (data, value) => Center(
-            child: HighlightedText(
-              text: value,
-              query: _pageSearchQuery,
-              style: const TextStyle(
-                color: Color(0xFF252525),
-                fontSize: 15,
-                fontFamily: 'Inter',
-                fontWeight: FontWeight.w400,
-              ),
-            ),
-          ),
-        ),
-        TableColumnConfig(
-          header: '자택전화',
-          width: 130,
-          valueBuilder: (data) => data.relationWithContractor ?? '-',
-          cellBuilder: (data, value) => Center(
-            child: HighlightedText(
-              text: value,
-              query: _pageSearchQuery,
-              style: const TextStyle(
-                color: Color(0xFF252525),
-                fontSize: 15,
-                fontFamily: 'Inter',
-                fontWeight: FontWeight.w400,
-              ),
-            ),
-          ),
-        ),
-        TableColumnConfig(
-          header: '주민번호',
-          width: 140,
-          valueBuilder: (data) => data.residentNumber ?? '-',
-          cellBuilder: (data, value) => Center(
-            child: HighlightedText(
-              text: value,
-              query: _pageSearchQuery,
-              style: const TextStyle(
-                color: Color(0xFF252525),
-                fontSize: 15,
-                fontFamily: 'Inter',
-                fontWeight: FontWeight.w400,
-              ),
-            ),
-          ),
-        ),
-        TableColumnConfig(
-          header: '사용자',
-          width: 120,
-          valueBuilder: (data) => data.ocUser ?? '-',
-          cellBuilder: (data, value) => Center(
-            child: HighlightedText(
-              text: value,
-              query: _pageSearchQuery,
-              style: const TextStyle(
-                color: Color(0xFF252525),
-                fontSize: 15,
-                fontFamily: 'Inter',
-                fontWeight: FontWeight.w400,
-              ),
-            ),
-          ),
-        ),
-        TableColumnConfig(
-          header: '비고',
-          width: 150,
-          valueBuilder: (data) => data.note ?? '-',
-          cellBuilder: (data, value) => Center(
-            child: HighlightedText(
-              text: value,
-              query: _pageSearchQuery,
-              style: const TextStyle(
-                color: Color(0xFF252525),
-                fontSize: 15,
-                fontFamily: 'Inter',
-                fontWeight: FontWeight.w400,
-              ),
-            ),
-          ),
-        ),
-        TableColumnConfig(
-          header: '무단허용',
-          width: 100,
-          valueBuilder: (data) =>
-              (data.unauthorizedReleaseAllowed ?? false) ? 'O' : '',
-          cellBuilder: (data, value) => Center(
-            child: HighlightedText(
-              text: value,
-              query: _pageSearchQuery,
-              style: const TextStyle(
-                color: Color(0xFF252525),
-                fontSize: 15,
-                fontFamily: 'Inter',
-                fontWeight: FontWeight.w400,
-              ),
-            ),
-          ),
-        ),
-        TableColumnConfig(
-          header: 'SMS',
-          width: 80,
-          valueBuilder: (data) => (data.smsSent ?? false) ? 'O' : '',
-          cellBuilder: (data, value) => Center(
-            child: HighlightedText(
-              text: value,
-              query: _pageSearchQuery,
-              style: const TextStyle(
-                color: Color(0xFF252525),
-                fontSize: 15,
-                fontFamily: 'Inter',
-                fontWeight: FontWeight.w400,
-              ),
-            ),
-          ),
-        ),
-        TableColumnConfig(
-          header: '요원',
-          width: 80,
-          valueBuilder: (data) => (data.agentCard ?? false) ? 'O' : '',
-          cellBuilder: (data, value) => Center(
-            child: HighlightedText(
-              text: value,
-              query: _pageSearchQuery,
-              style: const TextStyle(
-                color: Color(0xFF252525),
-                fontSize: 15,
-                fontFamily: 'Inter',
-                fontWeight: FontWeight.w400,
-              ),
-            ),
-          ),
-        ),
-        TableColumnConfig(
-          header: 'APP',
-          width: 80,
-          valueBuilder: (data) => (data.unattendedSms ?? false) ? 'O' : '',
-          cellBuilder: (data, value) => Center(
-            child: HighlightedText(
-              text: value,
-              query: _pageSearchQuery,
-              style: const TextStyle(
-                color: Color(0xFF252525),
-                fontSize: 15,
-                fontFamily: 'Inter',
-                fontWeight: FontWeight.w400,
-              ),
-            ),
-          ),
-        ),
-        TableColumnConfig(
-          header: '예비',
-          width: 80,
-          valueBuilder: (data) => (data.reserveCard ?? false) ? 'O' : '',
-          cellBuilder: (data, value) => Center(
-            child: HighlightedText(
-              text: value,
-              query: _pageSearchQuery,
-              style: const TextStyle(
-                color: Color(0xFF252525),
-                fontSize: 15,
-                fontFamily: 'Inter',
-                fontWeight: FontWeight.w400,
-              ),
-            ),
-          ),
-        ),
-      ],
-      data: _userInfoList,
-      emptyMessage: '사용자 관리 데이터가 없습니다.',
-      headerAction: Row(
-        children: [
-          ElevatedButton(
-            onPressed: _showAddUserModal,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF007AFF),
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(6),
-              ),
-              elevation: 0,
-            ),
-            child: const Text(
-              '추가',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-            ),
-          ),
-          const SizedBox(width: 8),
-          ElevatedButton(
-            onPressed: () {
-              // TODO: 엑셀 다운로드 기능 구현
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF34C759),
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(6),
-              ),
-              elevation: 0,
-            ),
-            child: const Text(
-              '엑셀 다운로드',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-            ),
-          ),
-          const SizedBox(width: 8),
-          ElevatedButton(
-            onPressed: () {
-              // TODO: 엑셀 업로드 기능 구현
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF5856D6),
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(6),
-              ),
-              elevation: 0,
-            ),
-            child: const Text(
-              '엑셀 업로드',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// 존정보 관리 테이블 섹션
-  Widget _buildZoneTableSection() {
-    return CommonDataTable(
-      title: '존정보 관리',
-      columns: [
-        TableColumnConfig(
-          header: '존번호',
-          flex: 2,
-          valueBuilder: (data) => data.zoneNumber ?? '-',
-          cellBuilder: (data, value) => Center(
-            child: HighlightedText(
-              text: value,
-              query: _pageSearchQuery,
-              style: const TextStyle(
-                color: Color(0xFF252525),
-                fontSize: 15,
-                fontFamily: 'Inter',
-                fontWeight: FontWeight.w400,
-              ),
-            ),
-          ),
-        ),
-        TableColumnConfig(
-          header: '감지기설치위치',
-          flex: 3,
-          valueBuilder: (data) => data.detectorInstallLocation ?? '-',
-          cellBuilder: (data, value) => Center(
-            child: HighlightedText(
-              text: value,
-              query: _pageSearchQuery,
-              style: const TextStyle(
-                color: Color(0xFF252525),
-                fontSize: 15,
-                fontFamily: 'Inter',
-                fontWeight: FontWeight.w400,
-              ),
-            ),
-          ),
-        ),
-        TableColumnConfig(
-          header: '감지기명',
-          flex: 2,
-          valueBuilder: (data) => data.detectorName ?? '-',
-          cellBuilder: (data, value) => Center(
-            child: HighlightedText(
-              text: value,
-              query: _pageSearchQuery,
-              style: const TextStyle(
-                color: Color(0xFF252525),
-                fontSize: 15,
-                fontFamily: 'Inter',
-                fontWeight: FontWeight.w400,
-              ),
-            ),
-          ),
-        ),
-        TableColumnConfig(
-          header: '비고',
-          flex: 3,
-          valueBuilder: (data) => data.note ?? '-',
-          cellBuilder: (data, value) => Center(
-            child: HighlightedText(
-              text: value,
-              query: _pageSearchQuery,
-              style: const TextStyle(
-                color: Color(0xFF252525),
-                fontSize: 15,
-                fontFamily: 'Inter',
-                fontWeight: FontWeight.w400,
-              ),
-            ),
-          ),
-        ),
-      ],
-      data: _zoneInfoList,
-      emptyMessage: '존정보 관리 데이터가 없습니다.',
-      headerAction: Row(
-        children: [
-          ElevatedButton(
-            onPressed: _showAddZoneModal,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF007AFF),
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(6),
-              ),
-              elevation: 0,
-            ),
-            child: const Text(
-              '추가',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-            ),
-          ),
-          const SizedBox(width: 8),
-          ElevatedButton(
-            onPressed: () {
-              // TODO: 엑셀 다운로드 기능 구현
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF34C759),
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(6),
-              ),
-              elevation: 0,
-            ),
-            child: const Text(
-              '엑셀 다운로드',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-            ),
-          ),
-          const SizedBox(width: 8),
-          ElevatedButton(
-            onPressed: () {
-              // TODO: 엑셀 업로드 기능 구현
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF5856D6),
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(6),
-              ),
-              elevation: 0,
-            ),
-            child: const Text(
-              '엑셀 업로드',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-            ),
-          ),
-        ],
       ),
     );
   }
