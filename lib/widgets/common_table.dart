@@ -396,7 +396,7 @@ Widget buildTable<T>({
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  '총 ${dataList?.length ?? 0}건',
+                  '총 ${showTotalCount}건',
                   style: const TextStyle(
                     color: Color(0xFF4318FF),
                     fontSize: 14,
