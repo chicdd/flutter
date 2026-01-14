@@ -8,74 +8,85 @@ import '../theme.dart';
 import '../style.dart';
 import '../widgets/common_table.dart';
 import '../widgets/component.dart';
-import 'base_table_screen.dart';
+import 'package:flutter/gestures.dart';
+
+import '../widgets/custom_top_bar.dart';
 
 /// 검색로그 내역조회 화면
-class SearchLogInquiry extends BaseTableScreen<SearchLogData> {
-  const SearchLogInquiry({super.key, super.searchpanel});
+class SearchLogInquiry extends StatefulWidget {
+  final SearchPanel? searchpanel;
+  const SearchLogInquiry({super.key, this.searchpanel});
 
   @override
   State<SearchLogInquiry> createState() => SearchLogInquiryState();
 }
 
-class SearchLogInquiryState
-    extends BaseTableScreenState<SearchLogData, SearchLogInquiry> {
+class SearchLogInquiryState extends State<SearchLogInquiry>
+    with CustomerServiceHandler, AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
+  // 검색 컨트롤러
+  final TextEditingController _searchController = TextEditingController();
   // 날짜 입력 컨트롤러
   final TextEditingController _startDateController = TextEditingController();
   final TextEditingController _endDateController = TextEditingController();
+  // 페이지 내 검색
+  String _pageSearchQuery = '';
+
+  // 검색 쿼리 업데이트 메서드
+  void updateSearchQuery(String query) {
+    setState(() {
+      _pageSearchQuery = query;
+    });
+  }
+
+  // 검색로그 데이터 목록 (임시 데이터)
+  List<SearchLogData> _dataList = [];
+  int _totalCount = 0;
 
   // 필터 설정
   DateTime _startDate = DateTime.now().subtract(const Duration(days: 365));
   DateTime _endDate = DateTime.now();
 
-  int _totalCount = 0;
+  // 테이블 열 너비 (드래그로 조절 가능)
+  final Map<int, double> _columnWidths = {
+    0: 150.0, // 성명
+    1: 150.0, // 기록일자
+    2: 120.0, // 기록시간
+    3: 500.0, // 입력내용
+  };
 
-  @override
-  String get tableTitle => '검색로그 내역조회';
-
-  @override
-  Map<int, double> get initialColumnWidths => {
-        0: 150.0, // 성명
-        1: 150.0, // 기록일자
-        2: 120.0, // 기록시간
-        3: 500.0, // 입력내용
-      };
-
-  @override
-  Future<List<SearchLogData>> loadDataFromApi(String key) async {
-    // 기본 로드는 사용하지 않음 (날짜 필터가 필요하므로)
-    return [];
-  }
-
-  @override
-  List<TableColumnConfig> buildColumns() {
-    return [
-      TableColumnConfig(
-        header: '성명',
-        width: columnWidths[0],
-        valueBuilder: (data) => data.name,
-      ),
-      TableColumnConfig(
-        header: '기록일자',
-        width: columnWidths[1],
-        valueBuilder: (data) => data.recordDateFormatted,
-      ),
-      TableColumnConfig(
-        header: '기록시간',
-        width: columnWidths[2],
-        valueBuilder: (data) => data.recordTime,
-      ),
-      TableColumnConfig(
-        header: '입력내용',
-        width: columnWidths[3],
-        valueBuilder: (data) => data.inputContent,
-      ),
-    ];
-  }
+  // 테이블 컬럼 설정
+  late final List<TableColumnConfig> _columns = [
+    TableColumnConfig(
+      header: '성명',
+      width: _columnWidths[0],
+      valueBuilder: (data) => data.name,
+    ),
+    TableColumnConfig(
+      header: '기록일자',
+      width: _columnWidths[1],
+      valueBuilder: (data) => data.recordDateFormatted,
+    ),
+    TableColumnConfig(
+      header: '기록시간',
+      width: _columnWidths[2],
+      valueBuilder: (data) => data.recordTime,
+    ),
+    TableColumnConfig(
+      header: '입력내용',
+      width: _columnWidths[3],
+      valueBuilder: (data) => data.inputContent,
+    ),
+  ];
 
   @override
   void initState() {
     super.initState();
+    initCustomerServiceListener();
+    _initializeData();
+
     // 날짜 컨트롤러 초기화
     _startDateController.text = DateFormat('yyyy-MM-dd').format(_startDate);
     _endDateController.text = DateFormat('yyyy-MM-dd').format(_endDate);
@@ -83,18 +94,39 @@ class SearchLogInquiryState
 
   @override
   void dispose() {
+    disposeCustomerServiceListener();
+    _searchController.dispose();
     _startDateController.dispose();
     _endDateController.dispose();
     super.dispose();
   }
 
+  /// 초기 데이터 로드
+  Future<void> _initializeData() async {
+    await _loadCustomerDataFromService();
+  }
+
+  /// 전역 서비스에서 고객 데이터 로드
+  Future<void> _loadCustomerDataFromService() async {
+    final customer = customerService.selectedCustomer;
+
+    if (customer != null) {
+      await _loadSearchLogData(customer.controlManagementNumber);
+    } else {
+      setState(() {
+        _dataList = [];
+      });
+    }
+  }
+
+  /// CustomerServiceHandler 콜백 구현
   @override
   void onCustomerChanged(SearchPanel? customer, detail) {
     if (customer != null) {
       _loadSearchLogData(customer.controlManagementNumber);
     } else {
       setState(() {
-        dataList.clear();
+        _dataList = [];
       });
     }
   }
@@ -102,7 +134,7 @@ class SearchLogInquiryState
   /// 검색로그 데이터 로드
   Future<void> _loadSearchLogData(String managementNumber) async {
     setState(() {
-      dataList.clear();
+      _dataList.clear();
     });
 
     try {
@@ -119,8 +151,7 @@ class SearchLogInquiryState
 
       if (mounted) {
         setState(() {
-          dataList.clear();
-          dataList.addAll(logs);
+          _dataList = logs;
           _totalCount = totalCount;
         });
       }
@@ -130,7 +161,7 @@ class SearchLogInquiryState
       print('검색로그 데이터 로드 오류: $e');
       if (mounted) {
         setState(() {
-          dataList.clear();
+          _dataList = [];
           _totalCount = 0;
         });
       }
@@ -139,6 +170,37 @@ class SearchLogInquiryState
 
   /// 검색로그 새로고침 버튼 클릭
   Future<void> _refreshLogData() async {
+    // 조회 버튼을 눌렀을 때 날짜 값을 확정
+    DateParsingHelper.openDatePicker(
+      context: context,
+      isStartDate: true,
+      startDate: _startDate,
+      endDate: _endDate,
+      startController: _startDateController,
+      endController: _endDateController,
+      onConfirm: (newStart, newEnd) async {
+        setState(() {
+          _startDate = newStart;
+          _endDate = newEnd;
+        });
+      },
+    );
+
+    DateParsingHelper.openDatePicker(
+      context: context,
+      isStartDate: false,
+      startDate: _startDate,
+      endDate: _endDate,
+      startController: _startDateController,
+      endController: _endDateController,
+      onConfirm: (newStart, newEnd) async {
+        setState(() {
+          _startDate = newStart;
+          _endDate = newEnd;
+        });
+      },
+    );
+
     final customer = customerService.selectedCustomer;
     if (customer != null) {
       await _loadSearchLogData(customer.controlManagementNumber);
@@ -171,8 +233,46 @@ class SearchLogInquiryState
   }
 
   @override
-  List<Widget> buildHeaderWidgets() {
-    return [_buildFilterSection(), const SizedBox(height: 24)];
+  Widget build(BuildContext context) {
+    super.build(context); // AutomaticKeepAliveClientMixin 필수
+    return Scaffold(
+      backgroundColor: const Color(0xFFF5F7FA),
+      body: Column(
+        children: [
+          // 콘텐츠 영역
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                children: [
+                  // 필터 영역
+                  _buildFilterSection(),
+                  const SizedBox(height: 24),
+
+                  // 테이블 영역
+                  Expanded(
+                    child: buildTable(
+                      context: context,
+                      title: '검색로그 내역조회',
+                      dataList: _dataList,
+                      columns: _columns,
+                      columnWidths: _columnWidths,
+                      onColumnResize: (columnIndex, newWidth) {
+                        setState(() {
+                          _columnWidths[columnIndex] = newWidth;
+                        });
+                      },
+                      showTotalCount: true,
+                      searchQuery: _pageSearchQuery,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   /// 필터 영역 구성
