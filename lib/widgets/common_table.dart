@@ -343,6 +343,7 @@ Widget buildTable<T>({
   String addButtonLabel = '추가',
   int? pagingTotalcount,
   ScrollController? verticalScrollController,
+  bool isLoading = false,
 }) {
   return Container(
     padding: const EdgeInsets.all(20),
@@ -419,22 +420,26 @@ Widget buildTable<T>({
         ),
         const SizedBox(height: 16),
         Expanded(
-          child: dataList.isEmpty
+          child: isLoading
               ? const Center(
-                  child: Text(
-                    '조회된 데이터가 없습니다.',
-                    style: TextStyle(color: Colors.grey, fontSize: 16),
-                  ),
+                  child: CircularProgressIndicator(),
                 )
-              : buildResizableTable(
-                  context: context,
-                  dataList: dataList,
-                  columns: columns,
-                  columnWidths: columnWidths,
-                  onColumnResize: onColumnResize,
-                  searchQuery: searchQuery,
-                  verticalScrollController: verticalScrollController,
-                ),
+              : dataList.isEmpty
+                  ? const Center(
+                      child: Text(
+                        '조회된 데이터가 없습니다.',
+                        style: TextStyle(color: Colors.grey, fontSize: 16),
+                      ),
+                    )
+                  : buildResizableTable(
+                      context: context,
+                      dataList: dataList,
+                      columns: columns,
+                      columnWidths: columnWidths,
+                      onColumnResize: onColumnResize,
+                      searchQuery: searchQuery,
+                      verticalScrollController: verticalScrollController,
+                    ),
         ),
       ],
     ),

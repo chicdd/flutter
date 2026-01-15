@@ -30,18 +30,42 @@ namespace securityindexAPI.Controllers
         {
             try
             {
-                var 고객리스트 = await _context.관제고객마스터뷰
-                    .Select(c => new 고객검색
+                var query = @"
+                    SELECT TOP 100
+                        관제관리번호,
+                        관제상호,
+                        관제고객상태코드명,
+                        물건주소,
+                        대표자,
+                        관제연락처1
+                    FROM 관제고객마스터뷰
+                    ORDER BY 관제관리번호";
+
+                var connection = _context.Database.GetDbConnection();
+                await connection.OpenAsync();
+
+                using var command = connection.CreateCommand();
+                command.CommandText = query;
+
+                using var reader = await command.ExecuteReaderAsync();
+                var 고객리스트 = new List<고객검색>();
+
+                while (await reader.ReadAsync())
+                {
+                    var customerData = new 고객검색
                     {
-                        관제관리번호 = c.관제관리번호,
-                        관제상호 = c.관제상호,
-                        관제고객상태코드명 = c.관제고객상태코드명 ?? string.Empty,
-                        물건주소 = c.물건주소 ?? string.Empty,
-                        대표자 = c.대표자,
-                        관제연락처1 = c.관제연락처1
-                    })
-                    .Take(100)
-                    .ToListAsync();
+                        관제관리번호 = reader["관제관리번호"]?.ToString() ?? string.Empty,
+                        관제상호 = reader["관제상호"]?.ToString() ?? string.Empty,
+                        관제고객상태코드명 = reader["관제고객상태코드명"]?.ToString() ?? string.Empty,
+                        물건주소 = reader["물건주소"]?.ToString() ?? string.Empty,
+                        대표자 = reader["대표자"]?.ToString(),
+                        관제연락처1 = reader["관제연락처1"]?.ToString()
+                    };
+
+                    고객리스트.Add(customerData);
+                }
+
+                await connection.CloseAsync();
 
                 return Ok(고객리스트);
             }
@@ -67,18 +91,42 @@ namespace securityindexAPI.Controllers
                     return BadRequest(new { message = "count는 1에서 1000 사이의 값이어야 합니다." });
                 }
 
-                var 고객리스트 = await _context.관제고객마스터뷰
-                    .Select(c => new 고객검색
+                var query = $@"
+                    SELECT TOP {count}
+                        관제관리번호,
+                        관제상호,
+                        관제고객상태코드명,
+                        물건주소,
+                        대표자,
+                        관제연락처1
+                    FROM 관제고객마스터뷰
+                    ORDER BY 관제관리번호";
+
+                var connection = _context.Database.GetDbConnection();
+                await connection.OpenAsync();
+
+                using var command = connection.CreateCommand();
+                command.CommandText = query;
+
+                using var reader = await command.ExecuteReaderAsync();
+                var 고객리스트 = new List<고객검색>();
+
+                while (await reader.ReadAsync())
+                {
+                    var customerData = new 고객검색
                     {
-                        관제관리번호 = c.관제관리번호,
-                        관제상호 = c.관제상호,
-                        관제고객상태코드명 = c.관제고객상태코드명 ?? string.Empty,
-                        물건주소 = c.물건주소 ?? string.Empty,
-                        대표자 = c.대표자,
-                        관제연락처1 = c.관제연락처1
-                    })
-                    .Take(count)
-                    .ToListAsync();
+                        관제관리번호 = reader["관제관리번호"]?.ToString() ?? string.Empty,
+                        관제상호 = reader["관제상호"]?.ToString() ?? string.Empty,
+                        관제고객상태코드명 = reader["관제고객상태코드명"]?.ToString() ?? string.Empty,
+                        물건주소 = reader["물건주소"]?.ToString() ?? string.Empty,
+                        대표자 = reader["대표자"]?.ToString(),
+                        관제연락처1 = reader["관제연락처1"]?.ToString()
+                    };
+
+                    고객리스트.Add(customerData);
+                }
+
+                await connection.CloseAsync();
 
                 return Ok(고객리스트);
             }
@@ -104,9 +152,84 @@ namespace securityindexAPI.Controllers
                     return BadRequest(new { message = "관제관리번호는 필수입니다." });
                 }
 
-                var 고객상세 = await _context.관제고객마스터뷰
-                    .Where(c => c.관제관리번호 == 관제관리번호)
-                    .FirstOrDefaultAsync();
+                var query = @"
+                    SELECT *
+                    FROM 관제고객마스터뷰
+                    WHERE 관제관리번호 = @관제관리번호";
+
+                var connection = _context.Database.GetDbConnection();
+                await connection.OpenAsync();
+
+                using var command = connection.CreateCommand();
+                command.CommandText = query;
+
+                var param = command.CreateParameter();
+                param.ParameterName = "@관제관리번호";
+                param.Value = 관제관리번호;
+                command.Parameters.Add(param);
+
+                using var reader = await command.ExecuteReaderAsync();
+                관제고객마스터? 고객상세 = null;
+
+                if (await reader.ReadAsync())
+                {
+                    고객상세 = new 관제고객마스터
+                    {
+                        관제관리번호 = reader["관제관리번호"]?.ToString() ?? string.Empty,
+                        고객관리번호 = reader["고객관리번호"]?.ToString(),
+                        관제상호 = reader["관제상호"]?.ToString() ?? string.Empty,
+                        고객용상호 = reader["고객용상호"]?.ToString(),
+                        관제연락처1 = reader["관제연락처1"]?.ToString(),
+                        관제연락처2 = reader["관제연락처2"]?.ToString(),
+                        물건주소 = reader["물건주소"]?.ToString(),
+                        대처경로1 = reader["대처경로1"]?.ToString(),
+                        대표자 = reader["대표자"]?.ToString(),
+                        대표자HP = reader["대표자HP"]?.ToString(),
+                        개통일자 = reader["개통일자"] == DBNull.Value ? null : Convert.ToDateTime(reader["개통일자"]),
+                        공중회선 = reader["공중회선"]?.ToString(),
+                        전용회선 = reader["전용회선"]?.ToString(),
+                        인터넷회선 = reader["인터넷회선"]?.ToString(),
+                        원격포트 = reader["원격포트"]?.ToString(),
+                        관제고객상태코드 = reader["관제고객상태코드"]?.ToString(),
+                        관제고객상태코드명 = reader["관제고객상태코드명"]?.ToString(),
+                        관리구역코드 = reader["관리구역코드"]?.ToString(),
+                        관리구역코드명 = reader["관리구역코드명"]?.ToString(),
+                        출동권역코드 = reader["출동권역코드"]?.ToString(),
+                        출동권역코드명 = reader["출동권역코드명"]?.ToString(),
+                        업종대코드 = reader["업종대코드"]?.ToString(),
+                        업종대코드명 = reader["업종대코드명"]?.ToString(),
+                        차량코드 = reader["차량코드"]?.ToString(),
+                        차량코드명 = reader["차량코드명"]?.ToString(),
+                        경찰서코드 = reader["경찰서코드"]?.ToString(),
+                        경찰서코드명 = reader["경찰서코드명"]?.ToString(),
+                        지구대코드 = reader["지구대코드"]?.ToString(),
+                        지구대코드명 = reader["지구대코드명"]?.ToString(),
+                        소방서코드 = reader["소방서코드"]?.ToString(),
+                        사용회선종류 = reader["사용회선종류"]?.ToString(),
+                        사용회선종류명 = reader["사용회선종류명"]?.ToString(),
+                        서비스종류코드 = reader["서비스종류코드"]?.ToString(),
+                        서비스종류코드명 = reader["서비스종류코드명"]?.ToString(),
+                        기기종류코드 = reader["기기종류코드"]?.ToString(),
+                        기기종류명 = reader["기기종류명"]?.ToString(),
+                        미경계종류코드 = reader["미경계종류코드"]?.ToString(),
+                        미경계종류코드명 = reader["미경계종류코드명"]?.ToString(),
+                        미경계분류코드명 = reader["미경계분류코드명"]?.ToString(),
+                        원격전화번호 = reader["원격전화번호"]?.ToString(),
+                        원격암호 = reader["원격암호"]?.ToString(),
+                        ARS전화번호 = reader["ARS전화번호"]?.ToString(),
+                        TMP1 = reader["TMP1"]?.ToString(), //키인수수량
+                        키박스번호 = reader["키박스번호"]?.ToString(),
+                        월간집계 = reader["월간집계"] == DBNull.Value ? false : Convert.ToBoolean(reader["월간집계"]),
+                        키인수여부 = reader["키인수여부"] == DBNull.Value ? false : Convert.ToBoolean(reader["키인수여부"]),
+                        dvr여부 = reader["dvr여부"] == DBNull.Value ? false : Convert.ToBoolean(reader["dvr여부"]),
+                        TMP8 = reader["tmP8"]?.ToString(),
+                        관제액션 = reader["관제액션"]?.ToString(),
+                        메모 = reader["메모"]?.ToString(),
+                        메모2 = reader["메모2"]?.ToString()
+                    };
+                }
+
+                await connection.CloseAsync();
 
                 if (고객상세 == null)
                 {
@@ -146,81 +269,75 @@ namespace securityindexAPI.Controllers
                     return BadRequest(new { message = "count는 1에서 1000 사이의 값이어야 합니다." });
                 }
 
-                IQueryable<관제고객마스터> queryable;
+                string sqlQuery;
+                string whereClause = "";
+                string orderByClause = sortType == "상호정렬" ? "관제상호" : "관제관리번호";
 
-                // 휴대전화 필터는 사용자마스터 테이블과 JOIN 필요
-                if (filterType == "사용자HP" && !string.IsNullOrWhiteSpace(query))
+                // WHERE 절 생성
+                if (!string.IsNullOrWhiteSpace(query))
                 {
-                    var searchQuery = query.Trim().ToLower();
+                    var searchQuery = query.Trim();
 
-                    // JOIN을 사용하여 OPENJSON 문제 회피
-                    queryable = from 관 in _context.관제고객마스터뷰
-                                join 사용자 in _context.사용자마스터
-                                    on 관.관제관리번호 equals 사용자.관제관리번호
-                                where 사용자.휴대전화 != null && 사용자.휴대전화.ToLower().Contains(searchQuery)
-                                select 관;
-
-                    _logger.LogInformation($"휴대전화 검색: query={query}");
-                }
-                else
-                {
-                    // 다른 필터들은 관제고객마스터뷰에서 직접 검색
-                    queryable = _context.관제고객마스터뷰.AsQueryable();
-
-                    // 검색어가 있는 경우에만 필터링 적용
-                    if (!string.IsNullOrWhiteSpace(query))
+                    whereClause = filterType switch
                     {
-                        var searchQuery = query.Trim().ToLower();
+                        "고객번호" => $"WHERE 관제관리번호 LIKE '%{searchQuery}%'",
+                        "상호" => $"WHERE 관제상호 LIKE '%{searchQuery}%'",
+                        "대표자" => $"WHERE 대표자 LIKE '%{searchQuery}%'",
+                        "물건주소" => $"WHERE 물건주소 LIKE '%{searchQuery}%'",
+                        "전화번호" or "관제연락처1" => $"WHERE 관제연락처1 LIKE '%{searchQuery}%'",
+                        "사용자HP" => $@"WHERE 관제관리번호 IN (
+                                SELECT DISTINCT 관제관리번호
+                                FROM 사용자마스터
+                                WHERE 휴대전화 LIKE '%{searchQuery}%')",
+                        _ => $@"WHERE 관제관리번호 LIKE '%{searchQuery}%'
+                                OR 관제상호 LIKE '%{searchQuery}%'
+                                OR 대표자 LIKE '%{searchQuery}%'
+                                OR 물건주소 LIKE '%{searchQuery}%'"
+                    };
 
-                        queryable = filterType switch
-                        {
-                            "고객번호" => queryable.Where(c => c.관제관리번호.ToLower().Contains(searchQuery)),
-                            "상호" => queryable.Where(c => c.관제상호.ToLower().Contains(searchQuery)),
-                            "대표자" => queryable.Where(c => c.대표자 != null && c.대표자.ToLower().Contains(searchQuery)),
-                            "물건주소" => queryable.Where(c => c.물건주소 != null && c.물건주소.ToLower().Contains(searchQuery)),
-                            // 전화번호는 관제연락처1 열에서 검색
-                            "전화번호" => queryable.Where(c => c.관제연락처1 != null && c.관제연락처1.ToLower().Contains(searchQuery)),
-                            "관제연락처1" => queryable.Where(c => c.관제연락처1 != null && c.관제연락처1.ToLower().Contains(searchQuery)),
-                            _ => queryable.Where(c =>
-                                c.관제관리번호.ToLower().Contains(searchQuery) ||
-                                c.관제상호.ToLower().Contains(searchQuery) ||
-                                (c.대표자 != null && c.대표자.ToLower().Contains(searchQuery)) ||
-                                (c.물건주소 != null && c.물건주소.ToLower().Contains(searchQuery)))
-                        };
-                    }
+                    _logger.LogInformation($"검색 조건: filterType={filterType}, query={query}");
                 }
 
-
-                // 정렬 적용
-                queryable = sortType switch
-                {
-                    "상호정렬" => queryable.OrderBy(c => c.관제상호),
-                    "번호정렬" or _ => queryable.OrderBy(c => c.관제관리번호)
-                };
-
-                // 필요한 필드만 선택하여 고객검색 객체로 변환
-                var finalQuery = queryable
-                    .Select(c => new 고객검색
-                    {
-                        관제관리번호 = c.관제관리번호,
-                        관제상호 = c.관제상호,
-                        관제고객상태코드명 = c.관제고객상태코드명 ?? string.Empty,
-                        물건주소 = c.물건주소 ?? string.Empty,
-                        대표자 = c.대표자,
-                        관제연락처1 = c.관제연락처1
-                    })
-                    .Take(count);
-
-                // 최종 SQL 쿼리 디버그 출력
-                var sqlQuery = finalQuery.ToQueryString();
-                Debug.WriteLine("=== 관제고객 검색 SQL 쿼리 ===");
-                Debug.WriteLine($"FilterType: {filterType}, Query: {query}, SortType: {sortType}, Count: {count}");
-                Debug.WriteLine(sqlQuery);
-                Debug.WriteLine("================================");
+                // 최종 쿼리 생성
+                sqlQuery = $@"
+                    SELECT TOP {count}
+                        관제관리번호,
+                        관제상호,
+                        관제고객상태코드명,
+                        물건주소,
+                        대표자,
+                        관제연락처1
+                    FROM 관제고객마스터뷰
+                    {whereClause}
+                    ORDER BY {orderByClause}";
 
                 _logger.LogDebug($"실행 SQL: {sqlQuery}");
 
-                var 고객리스트 = await finalQuery.ToListAsync();
+                var connection = _context.Database.GetDbConnection();
+                await connection.OpenAsync();
+
+                using var command = connection.CreateCommand();
+                command.CommandText = sqlQuery;
+
+                using var reader = await command.ExecuteReaderAsync();
+                var 고객리스트 = new List<고객검색>();
+
+                while (await reader.ReadAsync())
+                {
+                    var customerData = new 고객검색
+                    {
+                        관제관리번호 = reader["관제관리번호"]?.ToString() ?? string.Empty,
+                        관제상호 = reader["관제상호"]?.ToString() ?? string.Empty,
+                        관제고객상태코드명 = reader["관제고객상태코드명"]?.ToString() ?? string.Empty,
+                        물건주소 = reader["물건주소"]?.ToString() ?? string.Empty,
+                        대표자 = reader["대표자"]?.ToString(),
+                        관제연락처1 = reader["관제연락처1"]?.ToString()
+                    };
+
+                    고객리스트.Add(customerData);
+                }
+
+                await connection.CloseAsync();
 
                 _logger.LogInformation($"검색 완료: filterType={filterType}, query={query}, sortType={sortType}, 결과수={고객리스트.Count}");
 
@@ -248,15 +365,41 @@ namespace securityindexAPI.Controllers
                     return BadRequest(new { message = "관제관리번호는 필수입니다." });
                 }
 
-                var 휴일주간리스트 = await _context.관제고객휴일주간
-                    .Where(h => h.관제관리번호 == 관제관리번호)
-                    .Select(h => new 휴일주간
+                var query = @"
+                    SELECT
+                        관리id,
+                        관제관리번호,
+                        휴일주간코드
+                    FROM 관제고객휴일주간
+                    WHERE 관제관리번호 = @관제관리번호";
+
+                var connection = _context.Database.GetDbConnection();
+                await connection.OpenAsync();
+
+                using var command = connection.CreateCommand();
+                command.CommandText = query;
+
+                var param = command.CreateParameter();
+                param.ParameterName = "@관제관리번호";
+                param.Value = 관제관리번호;
+                command.Parameters.Add(param);
+
+                using var reader = await command.ExecuteReaderAsync();
+                var 휴일주간리스트 = new List<휴일주간>();
+
+                while (await reader.ReadAsync())
+                {
+                    var holidayData = new 휴일주간
                     {
-                        관리id = h.관리id,
-                        관제관리번호 = h.관제관리번호,
-                        휴일주간코드 = h.휴일주간코드
-                    })
-                    .ToListAsync();
+                        관리id = reader["관리id"] == DBNull.Value ? 0 : Convert.ToInt32(reader["관리id"]),
+                        관제관리번호 = reader["관제관리번호"]?.ToString(),
+                        휴일주간코드 = reader["휴일주간코드"]?.ToString()
+                    };
+
+                    휴일주간리스트.Add(holidayData);
+                }
+
+                await connection.CloseAsync();
 
                 _logger.LogInformation($"휴일주간 조회 완료: 관제관리번호={관제관리번호}, 결과수={휴일주간리스트.Count}");
                 return Ok(휴일주간리스트);
@@ -284,22 +427,47 @@ namespace securityindexAPI.Controllers
                     return BadRequest(new { message = "관제관리번호는 필수입니다." });
                 }
 
-                var 부가서비스리스트 = await (from a in _context.부가서비스마스터
-                                      join b in _context.부가서비스코드마스터 on a.부가서비스코드 equals b.부가서비스코드 into bGroup
-                                      from b in bGroup.DefaultIfEmpty()
-                                      join c in _context.부가서비스제공마스터 on a.부가서비스제공코드 equals c.부가서비스제공코드 into cGroup
-                                      from c in cGroup.DefaultIfEmpty()
-                                      where a.관제관리번호 == 관제관리번호
-                                      select new 부가서비스마스터
-                                      {
-                                          관제관리번호 = a.관제관리번호,
-                                          부가서비스코드명 = b.부가서비스코드명,
-                                          부가서비스제공코드명 = c.부가서비스제공코드명,
-                                          부가서비스일자 = a.부가서비스일자,
-                                          추가메모 = a.추가메모
-                                      })
-                    .Take(1000)
-                    .ToListAsync();
+                var query = @"
+                    SELECT TOP 1000
+                        a.관제관리번호,
+                        b.부가서비스코드명,
+                        c.부가서비스제공코드명,
+                        a.부가서비스일자,
+                        a.추가메모
+                    FROM 부가서비스마스터 a
+                    LEFT JOIN 부가서비스코드마스터 b ON a.부가서비스코드 = b.부가서비스코드
+                    LEFT JOIN 부가서비스제공마스터 c ON a.부가서비스제공코드 = c.부가서비스제공코드
+                    WHERE a.관제관리번호 = @관제관리번호";
+
+                var connection = _context.Database.GetDbConnection();
+                await connection.OpenAsync();
+
+                using var command = connection.CreateCommand();
+                command.CommandText = query;
+
+                var param = command.CreateParameter();
+                param.ParameterName = "@관제관리번호";
+                param.Value = 관제관리번호;
+                command.Parameters.Add(param);
+
+                using var reader = await command.ExecuteReaderAsync();
+                var 부가서비스리스트 = new List<부가서비스마스터>();
+
+                while (await reader.ReadAsync())
+                {
+                    var serviceData = new 부가서비스마스터
+                    {
+                        관제관리번호 = reader["관제관리번호"]?.ToString(),
+                        부가서비스코드명 = reader["부가서비스코드명"]?.ToString(),
+                        부가서비스제공코드명 = reader["부가서비스제공코드명"]?.ToString(),
+                        부가서비스일자 = reader["부가서비스일자"] == DBNull.Value ? null : Convert.ToDateTime(reader["부가서비스일자"]),
+                        추가메모 = reader["추가메모"]?.ToString()
+                    };
+
+                    부가서비스리스트.Add(serviceData);
+                }
+
+                await connection.CloseAsync();
 
                 _logger.LogInformation($"부가서비스 조회 완료: 관제관리번호={관제관리번호}, 결과수={부가서비스리스트.Count}");
                 return Ok(부가서비스리스트);
@@ -326,24 +494,54 @@ namespace securityindexAPI.Controllers
                     return BadRequest(new { message = "관제관리번호는 필수입니다." });
                 }
 
-                var dvr리스트 = await (from a in _context.DVR연동마스터
-                                    join b in _context.DVR종류코드마스터 on a.DVR종류코드 equals b.DVR종류코드 into bGroup
-                                    from b in bGroup.DefaultIfEmpty()
-                                    where a.관제관리번호 == 관제관리번호
-                                    select new DVR연동마스터
-                                    {
-                                        관제관리번호 = a.관제관리번호,
-                                        접속방식 = a.접속방식,
-                                        DVR종류코드 = a.DVR종류코드,
-                                        DVR종류코드명 = b.DVR종류코드명,
-                                        접속주소 = a.접속주소,
-                                        접속포트 = a.접속포트,
-                                        접속ID = a.접속ID,
-                                        접속암호 = a.접속암호,
-                                        추가일자 = a.추가일자
-                                    })
-                    .Take(1000)
-                    .ToListAsync();
+                var query = @"
+                    SELECT TOP 1000
+                        a.관제관리번호,
+                        a.접속방식,
+                        a.DVR종류코드,
+                        b.DVR종류코드명,
+                        a.접속주소,
+                        a.접속포트,
+                        a.접속ID,
+                        a.접속암호,
+                        a.추가일자
+                    FROM DVR연동마스터 a
+                    LEFT JOIN DVR종류코드마스터 b ON a.DVR종류코드 = b.DVR종류코드
+                    WHERE a.관제관리번호 = @관제관리번호";
+
+                var connection = _context.Database.GetDbConnection();
+                await connection.OpenAsync();
+
+                using var command = connection.CreateCommand();
+                command.CommandText = query;
+
+                var param = command.CreateParameter();
+                param.ParameterName = "@관제관리번호";
+                param.Value = 관제관리번호;
+                command.Parameters.Add(param);
+
+                using var reader = await command.ExecuteReaderAsync();
+                var dvr리스트 = new List<DVR연동마스터>();
+
+                while (await reader.ReadAsync())
+                {
+                    var dvrData = new DVR연동마스터
+                    {
+                        관제관리번호 = reader["관제관리번호"]?.ToString(),
+                        접속방식 = reader["접속방식"] == DBNull.Value ? false : Convert.ToBoolean(reader["접속방식"]),
+                        DVR종류코드 = reader["DVR종류코드"]?.ToString(),
+                        DVR종류코드명 = reader["DVR종류코드명"]?.ToString(),
+                        접속주소 = reader["접속주소"]?.ToString(),
+                        접속포트 = reader["접속포트"]?.ToString(),
+                        접속ID = reader["접속ID"]?.ToString(),
+                        접속암호 = reader["접속암호"]?.ToString(),
+                        추가일자 = reader["추가일자"] == DBNull.Value ? null : Convert.ToDateTime(reader["추가일자"])
+                    };
+
+                    dvr리스트.Add(dvrData);
+                }
+
+                await connection.CloseAsync();
 
                 _logger.LogInformation($"DVR 정보 조회 완료: 관제관리번호={관제관리번호}, 결과수={dvr리스트.Count}");
                 return Ok(dvr리스트);
@@ -370,9 +568,51 @@ namespace securityindexAPI.Controllers
                     return BadRequest(new { message = "관제관리번호는 필수입니다." });
                 }
 
-                var 스마트폰인증리스트 = await _context.스마트정보조회마스터
-                    .Where(s => s.관제관리번호 == 관제관리번호)
-                    .ToListAsync();
+                var query = @"
+                    SELECT
+                        휴대폰번호,
+                        관제관리번호,
+                        영업관리번호,
+                        상호명,
+                        사용자이름,
+                        원격경계여부,
+                        원격해제여부,
+                        등록일자
+                    FROM 스마트정보조회마스터
+                    WHERE 관제관리번호 = @관제관리번호";
+
+                var connection = _context.Database.GetDbConnection();
+                await connection.OpenAsync();
+
+                using var command = connection.CreateCommand();
+                command.CommandText = query;
+
+                var param = command.CreateParameter();
+                param.ParameterName = "@관제관리번호";
+                param.Value = 관제관리번호;
+                command.Parameters.Add(param);
+
+                using var reader = await command.ExecuteReaderAsync();
+                var 스마트폰인증리스트 = new List<스마트정보조회마스터>();
+
+                while (await reader.ReadAsync())
+                {
+                    var authData = new 스마트정보조회마스터
+                    {
+                        휴대폰번호 = reader["휴대폰번호"]?.ToString(),
+                        관제관리번호 = reader["관제관리번호"]?.ToString(),
+                        영업관리번호 = reader["영업관리번호"]?.ToString(),
+                        상호명 = reader["상호명"]?.ToString(),
+                        사용자이름 = reader["사용자이름"]?.ToString(),
+                        원격경계여부 = reader["원격경계여부"] == DBNull.Value ? false : Convert.ToBoolean(reader["원격경계여부"]),
+                        원격해제여부 = reader["원격해제여부"] == DBNull.Value ? false : Convert.ToBoolean(reader["원격해제여부"]),
+                        등록일자 = reader["등록일자"] == DBNull.Value ? null : Convert.ToDateTime(reader["등록일자"])
+                    };
+
+                    스마트폰인증리스트.Add(authData);
+                }
+
+                await connection.CloseAsync();
 
                 _logger.LogInformation($"스마트폰 인증 정보 조회 완료: 관제관리번호={관제관리번호}, 결과수={스마트폰인증리스트.Count}");
                 return Ok(스마트폰인증리스트);

@@ -11,7 +11,7 @@ namespace securityindexAPI.Models
     {
         [Key]
         public string? 관제관리번호 { get; set; }
-        public int? 접속방식 { get; set; }
+        public bool? 접속방식 { get; set; }
         public string? DVR종류코드 { get; set; }
         public string? DVR종류코드명 { get; set; }
         public string? 접속주소 { get; set; }

@@ -4,7 +4,7 @@ import '../style.dart';
 class DVRInfo {
   final int serialNumber; // 일련번호
   final String? controlManagementNumber; // 관제관리번호
-  final int? connectionMethod; // 접속방식
+  final bool? connectionMethod; // 접속방식
   final String? dvrTypeCode; // DVR종류코드
   final String? dvrTypeName; // DVR종류코드명
   final String? connectionAddress; // 접속주소
@@ -46,9 +46,9 @@ class DVRInfo {
   String get connectionMethodText {
     if (connectionMethod == null) return '-';
     switch (connectionMethod) {
-      case 0:
+      case false:
         return 'CS';
-      case 1:
+      case true:
         return 'WEB';
       default:
         return connectionMethod.toString();

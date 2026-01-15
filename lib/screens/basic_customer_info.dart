@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../functions.dart';
 import '../theme.dart';
 import '../models/search_panel.dart';
 import '../models/customer_detail.dart';
@@ -6,7 +7,6 @@ import '../services/api_service.dart';
 import '../services/selected_customer_service.dart';
 import '../style.dart';
 import '../widgets/custom_top_bar.dart';
-import '../widgets/component.dart';
 
 class BasicCustomerInfo extends StatefulWidget {
   final SearchPanel? searchpanel;
@@ -19,10 +19,16 @@ class BasicCustomerInfo extends StatefulWidget {
 
 class BasicCustomerInfoState extends State<BasicCustomerInfo> {
   final _customerService = SelectedCustomerService();
-
+  final
   // 상세 정보 로딩 상태
-  bool _isLoading = false;
+  bool
+  _isLoading = false;
   CustomerDetail? _customerDetail;
+
+  // 편집 모드 상태
+  bool isEditMode = false;
+  bool _hasChanges = false;
+  Map<String, dynamic> _originalData = {};
 
   // 페이지 내 검색
   String _pageSearchQuery = '';
@@ -326,6 +332,227 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
     await _updateUIFromService();
   }
 
+  /// 편집 모드 진입
+  void enterEditMode() {
+    setState(() {
+      isEditMode = true;
+      _hasChanges = false;
+      _saveOriginalData();
+    });
+  }
+
+  /// 편집 모드 종료 (취소)
+  void exitEditMode() {
+    if (_hasChanges) {
+      _showCancelConfirmDialog();
+    } else {
+      setState(() {
+        isEditMode = false;
+      });
+    }
+  }
+
+  /// 원본 데이터 저장
+  void _saveOriginalData() {
+    _originalData = {
+      '관제상호': _controlTypeController.text,
+      'SMS용상호': _smsNameController.text,
+      '관제연락처1': _contact1Controller.text,
+      '관제연락처2': _contact2Controller.text,
+      '물건주소': _addressController.text,
+      '대지경로': _referenceController.text,
+      '대표자이름': _representativeNameController.text,
+      '대표자HP': _representativePhoneController.text,
+      '공중회선': _publicNumberController.text,
+      '전용회선': _transmissionNumberController.text,
+      '인터넷회선': _publicTransmissionController.text,
+      '원격포트': _remoteCodeController.text,
+      '기관연락처': _emergencyContactController.text,
+      '경비개시일자': _securityStartDateController.text,
+      '관제고객상태': _selectedCustomerStatus,
+      '관리구역': _selectedManagementArea,
+      '출동권역': _selectedOperationArea,
+      '업종코드': _selectedBusinessType,
+      '차량코드': _selectVehicleCode,
+      '관할경찰서': _selectedCallLocation,
+      '관할지구대': _selectedCallArea,
+      '주사용회선': _selectedUsageType,
+      '서비스종류': _selectedServiceType,
+      '주장치종류': _selectedMainSystem,
+      '주장치분류': _selectedSubSystem,
+      '주장치위치': _mainLocationController.text,
+      '원격전화': _remotePhoneController.text,
+      '원격암호': _remotePasswordController.text,
+      'ARS전화': _arsPhoneController.text,
+      '키패드수량': _cardKeyController.text,
+      '미경계설정': _selectedMiSettings,
+      '인수수량': _acquisitionController.text,
+      '키BOX': _keyBoxesController.text,
+      '키인수여부': _hasKeyHolder,
+      '월간집계': _monthlyAggregation,
+      'DVR여부': _isDvrInspection,
+      '무선센서': _isWirelessSensorInspection,
+      '관제액션비고': _controlActionController.text,
+      '메모1': _memo1Controller.text,
+      '메모2': _memo2Controller.text,
+    };
+  }
+
+  /// 변경사항 확인
+  void _trackChanges() {
+    setState(() {
+      _hasChanges = true;
+    });
+  }
+
+  /// 저장 확인 및 실행
+  Future<void> saveChanges() async {
+    try {
+      final success = await DatabaseService.updateBasicCustomerInfo(
+        managementNumber: _managementNumberController.text,
+        data: {
+          '관제상호': _controlTypeController.text,
+          '고객용상호': _smsNameController.text,
+          '관제연락처1': _contact1Controller.text,
+          '관제연락처2': _contact2Controller.text,
+          '물건주소': _addressController.text,
+          '대지경로1': _referenceController.text,
+          '대표자': _representativeNameController.text,
+          '대표자휴대폰': _representativePhoneController.text,
+          '공중회선': _publicNumberController.text,
+          '전용회선': _transmissionNumberController.text,
+          '인터넷회선': _publicTransmissionController.text,
+          '원격포트': _remoteCodeController.text,
+          '기관연락처': _emergencyContactController.text,
+          '경비개시일자': _securityStartDateController.text,
+          '관제고객상태코드': _selectedCustomerStatus,
+          '관리구역코드': _selectedManagementArea,
+          '출동권역코드': _selectedOperationArea,
+          '업종대코드': _selectedBusinessType,
+          '차량코드': _selectVehicleCode,
+          '경찰서코드': _selectedCallLocation,
+          '지구대코드': _selectedCallArea,
+          '사용회선종류': _selectedUsageType,
+          '서비스종류코드': _selectedServiceType,
+          '기기종류코드': _selectedMainSystem,
+          '미경계분류코드': _selectedSubSystem,
+          '원격전화': _remotePhoneController.text,
+          '원격암호': _remotePasswordController.text,
+          'ARS전화번호': _arsPhoneController.text,
+          '미경계종류코드': _selectedMiSettings,
+          '인수수량': _acquisitionController.text,
+          '키BOX': _keyBoxesController.text,
+          '키인수여부': _hasKeyHolder,
+          '월간집계': _monthlyAggregation,
+          'DVR여부': _isDvrInspection,
+          '무선여부': _isWirelessSensorInspection.toString(),
+          '관제액션': _controlActionController.text,
+          '메모1': _memo1Controller.text,
+          '메모2': _memo2Controller.text,
+        },
+      );
+
+      if (success && mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('저장되었습니다.')));
+        setState(() {
+          isEditMode = false;
+          _hasChanges = false;
+        });
+        // 데이터 새로고침
+        await _customerService.loadCustomerDetail();
+      } else if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('저장에 실패했습니다.')));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('오류가 발생했습니다: $e')));
+      }
+    }
+  }
+
+  /// 취소 확인 다이얼로그
+  void _showCancelConfirmDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('편집 취소'),
+          content: const Text('변경사항이 저장되지 않습니다. 그래도 나가시겠습니까?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('아니오'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                setState(() {
+                  isEditMode = false;
+                  _hasChanges = false;
+                  // 원본 데이터로 복원
+                  _restoreOriginalData();
+                });
+              },
+              child: const Text('예'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  /// 원본 데이터 복원
+  void _restoreOriginalData() {
+    _controlTypeController.text = _originalData['관제상호'] ?? '';
+    _smsNameController.text = _originalData['SMS용상호'] ?? '';
+    _contact1Controller.text = _originalData['관제연락처1'] ?? '';
+    _contact2Controller.text = _originalData['관제연락처2'] ?? '';
+    _addressController.text = _originalData['물건주소'] ?? '';
+    _referenceController.text = _originalData['대지경로'] ?? '';
+    _representativeNameController.text = _originalData['대표자이름'] ?? '';
+    _representativePhoneController.text = _originalData['대표자HP'] ?? '';
+    _publicNumberController.text = _originalData['공중회선'] ?? '';
+    _transmissionNumberController.text = _originalData['전용회선'] ?? '';
+    _publicTransmissionController.text = _originalData['인터넷회선'] ?? '';
+    _remoteCodeController.text = _originalData['원격포트'] ?? '';
+    _emergencyContactController.text = _originalData['기관연락처'] ?? '';
+    _securityStartDateController.text = _originalData['경비개시일자'] ?? '';
+    _selectedCustomerStatus = _originalData['관제고객상태'];
+    _selectedManagementArea = _originalData['관리구역'];
+    _selectedOperationArea = _originalData['출동권역'];
+    _selectedBusinessType = _originalData['업종코드'];
+    _selectVehicleCode = _originalData['차량코드'];
+    _selectedCallLocation = _originalData['관할경찰서'];
+    _selectedCallArea = _originalData['관할지구대'];
+    _selectedUsageType = _originalData['주사용회선'];
+    _selectedServiceType = _originalData['서비스종류'];
+    _selectedMainSystem = _originalData['주장치종류'];
+    _selectedSubSystem = _originalData['주장치분류'];
+    _mainLocationController.text = _originalData['주장치위치'] ?? '';
+    _remotePhoneController.text = _originalData['원격전화'] ?? '';
+    _remotePasswordController.text = _originalData['원격암호'] ?? '';
+    _arsPhoneController.text = _originalData['ARS전화'] ?? '';
+    _cardKeyController.text = _originalData['키패드수량'] ?? '';
+    _selectedMiSettings = _originalData['미경계설정'];
+    _acquisitionController.text = _originalData['인수수량'] ?? '';
+    _keyBoxesController.text = _originalData['키BOX'] ?? '';
+    _hasKeyHolder = _originalData['키인수여부'] ?? false;
+    _monthlyAggregation = _originalData['월간집계'] ?? false;
+    _isDvrInspection = _originalData['DVR여부'] ?? false;
+    _isWirelessSensorInspection = _originalData['무선센서'] ?? false;
+    _controlActionController.text = _originalData['관제액션비고'] ?? '';
+    _memo1Controller.text = _originalData['메모1'] ?? '';
+    _memo2Controller.text = _originalData['메모2'] ?? '';
+  }
+
   // /// 드롭다운 데이터 로드
   // Future<void> _loadDropdownData() async {
   //   try {
@@ -482,6 +709,8 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
                   label: '관제 상호명',
                   controller: _controlTypeController,
                   searchQuery: _pageSearchQuery,
+                  readOnly: !isEditMode,
+                  onChanged: (_) => _trackChanges(),
                 ),
               ),
               const SizedBox(width: 12),
@@ -490,6 +719,8 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
                   label: 'SMS용 상호',
                   controller: _smsNameController,
                   searchQuery: _pageSearchQuery,
+                  readOnly: !isEditMode,
+                  onChanged: (_) => _trackChanges(),
                 ),
               ),
             ],
@@ -498,53 +729,65 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
           Row(
             children: [
               Expanded(
-                child: buildSearchableTextField(
+                child: CommonTextField(
                   label: '관제 연락처1',
                   controller: _contact1Controller,
                   suffixIcon: Icons.phone,
                   searchQuery: _pageSearchQuery,
+                  readOnly: !isEditMode,
+                  onChanged: (_) => _trackChanges(),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: buildSearchableTextField(
+                child: CommonTextField(
                   label: '관제 연락처2',
                   controller: _contact2Controller,
                   suffixIcon: Icons.phone,
                   searchQuery: _pageSearchQuery,
+                  readOnly: !isEditMode,
+                  onChanged: (_) => _trackChanges(),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 16),
-          buildSearchableTextField(
+          CommonTextField(
             searchQuery: _pageSearchQuery,
             label: '물건지 주소',
             controller: _addressController,
+            readOnly: !isEditMode,
+            onChanged: (_) => _trackChanges(),
           ),
           const SizedBox(height: 16),
-          buildSearchableTextField(
+          CommonTextField(
             searchQuery: _pageSearchQuery,
             label: '대지경로',
             controller: _referenceController,
+            readOnly: !isEditMode,
+            onChanged: (_) => _trackChanges(),
           ),
           const SizedBox(height: 16),
           Row(
             children: [
               Expanded(
-                child: buildSearchableTextField(
+                child: CommonTextField(
                   searchQuery: _pageSearchQuery,
                   label: '대표자 이름',
                   controller: _representativeNameController,
+                  readOnly: !isEditMode,
+                  onChanged: (_) => _trackChanges(),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: buildSearchableTextField(
+                child: CommonTextField(
                   searchQuery: _pageSearchQuery,
                   label: '대표자 H.P',
                   controller: _representativePhoneController,
                   suffixIcon: Icons.phone_android,
+                  readOnly: !isEditMode,
+                  onChanged: (_) => _trackChanges(),
                 ),
               ),
             ],
@@ -571,18 +814,22 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
           Row(
             children: [
               Expanded(
-                child: buildSearchableTextField(
+                child: CommonTextField(
                   searchQuery: _pageSearchQuery,
                   label: '관제관리번호',
                   controller: _managementNumberController,
+                  readOnly: !isEditMode,
+                  onChanged: (_) => _trackChanges(),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: buildSearchableTextField(
+                child: CommonTextField(
                   searchQuery: _pageSearchQuery,
                   label: '영업관리번호',
                   controller: _erpCusNumberController,
+                  readOnly: !isEditMode,
+                  onChanged: (_) => _trackChanges(),
                 ),
               ),
             ],
@@ -591,18 +838,22 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
           Row(
             children: [
               Expanded(
-                child: buildSearchableTextField(
+                child: CommonTextField(
                   searchQuery: _pageSearchQuery,
                   label: '공중회선',
                   controller: _publicNumberController,
+                  readOnly: !isEditMode,
+                  onChanged: (_) => _trackChanges(),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: buildSearchableTextField(
+                child: CommonTextField(
                   searchQuery: _pageSearchQuery,
                   label: '전용회선',
                   controller: _transmissionNumberController,
+                  readOnly: !isEditMode,
+                  onChanged: (_) => _trackChanges(),
                 ),
               ),
             ],
@@ -611,18 +862,22 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
           Row(
             children: [
               Expanded(
-                child: buildSearchableTextField(
+                child: CommonTextField(
                   searchQuery: _pageSearchQuery,
                   label: '인터넷회선',
                   controller: _publicTransmissionController,
+                  readOnly: !isEditMode,
+                  onChanged: (_) => _trackChanges(),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: buildSearchableTextField(
+                child: CommonTextField(
                   searchQuery: _pageSearchQuery,
                   label: '원격포트 구분',
                   controller: _remoteCodeController,
+                  readOnly: !isEditMode,
+                  onChanged: (_) => _trackChanges(),
                 ),
               ),
             ],
@@ -641,6 +896,7 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
                       _selectedManagementArea = newValue!;
                     });
                   },
+                  readOnly: !isEditMode,
                 ),
               ),
               const SizedBox(width: 12),
@@ -655,6 +911,7 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
                       _selectedOperationArea = newValue!;
                     });
                   },
+                  readOnly: !isEditMode,
                 ),
               ),
             ],
@@ -673,6 +930,7 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
                       _selectedBusinessType = newValue!;
                     });
                   },
+                  readOnly: !isEditMode,
                 ),
               ),
               const SizedBox(width: 12),
@@ -687,6 +945,7 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
                       _selectVehicleCode = newValue!;
                     });
                   },
+                  readOnly: !isEditMode,
                 ),
               ),
             ],
@@ -705,6 +964,7 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
                       _selectedCallLocation = newValue!;
                     });
                   },
+                  readOnly: !isEditMode,
                 ),
               ),
               const SizedBox(width: 12),
@@ -719,6 +979,7 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
                       _selectedCallArea = newValue!;
                     });
                   },
+                  readOnly: !isEditMode,
                 ),
               ),
             ],
@@ -727,18 +988,22 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
           Row(
             children: [
               Expanded(
-                child: buildSearchableTextField(
+                child: CommonTextField(
                   searchQuery: _pageSearchQuery,
                   label: '기관연락처',
                   controller: _emergencyContactController,
+                  readOnly: !isEditMode,
+                  onChanged: (_) => _trackChanges(),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: buildSearchableTextField(
+                child: CommonTextField(
                   searchQuery: _pageSearchQuery,
                   label: '경비개시일자',
                   controller: _securityStartDateController,
+                  readOnly: !isEditMode,
+                  onChanged: (_) => _trackChanges(),
                 ),
               ),
             ],
@@ -781,6 +1046,7 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
                       _selectedUsageType = newValue!;
                     });
                   },
+                  readOnly: !isEditMode,
                 ),
               ),
               const SizedBox(width: 12),
@@ -795,6 +1061,7 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
                       _selectedServiceType = newValue!;
                     });
                   },
+                  readOnly: !isEditMode,
                 ),
               ),
             ],
@@ -813,6 +1080,7 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
                       _selectedMainSystem = newValue!;
                     });
                   },
+                  readOnly: !isEditMode,
                 ),
               ),
               const SizedBox(width: 12),
@@ -827,32 +1095,39 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
                       _selectedSubSystem = newValue!;
                     });
                   },
+                  readOnly: !isEditMode,
                 ),
               ),
             ],
           ),
           const SizedBox(height: 16),
-          buildSearchableTextField(
+          CommonTextField(
             searchQuery: _pageSearchQuery,
             label: '주장치위치',
             controller: _mainLocationController,
+            readOnly: !isEditMode,
+            onChanged: (_) => _trackChanges(),
           ),
           const SizedBox(height: 16),
           Row(
             children: [
               Expanded(
-                child: buildSearchableTextField(
+                child: CommonTextField(
                   searchQuery: _pageSearchQuery,
                   label: '원격전화',
                   controller: _remotePhoneController,
+                  readOnly: !isEditMode,
+                  onChanged: (_) => _trackChanges(),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: buildSearchableTextField(
+                child: CommonTextField(
                   searchQuery: _pageSearchQuery,
                   label: '원격암호',
                   controller: _remotePasswordController,
+                  readOnly: !isEditMode,
+                  onChanged: (_) => _trackChanges(),
                 ),
               ),
             ],
@@ -861,18 +1136,22 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
           Row(
             children: [
               Expanded(
-                child: buildSearchableTextField(
+                child: CommonTextField(
                   searchQuery: _pageSearchQuery,
                   label: 'ARS전화',
                   controller: _arsPhoneController,
+                  readOnly: !isEditMode,
+                  onChanged: (_) => _trackChanges(),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: buildSearchableTextField(
+                child: CommonTextField(
                   searchQuery: _pageSearchQuery,
                   label: '키패드/수량',
                   controller: _cardKeyController,
+                  readOnly: !isEditMode,
+                  onChanged: (_) => _trackChanges(),
                 ),
               ),
             ],
@@ -891,6 +1170,7 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
                       _selectedMiSettings = newValue!;
                     });
                   },
+                  readOnly: !isEditMode,
                 ),
               ),
               const SizedBox(width: 12),
@@ -898,18 +1178,22 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
                 child: Row(
                   children: [
                     Expanded(
-                      child: buildSearchableTextField(
+                      child: CommonTextField(
                         searchQuery: _pageSearchQuery,
                         label: '인수수량',
                         controller: _acquisitionController,
+                        readOnly: !isEditMode,
+                        onChanged: (_) => _trackChanges(),
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: buildSearchableTextField(
+                      child: CommonTextField(
                         searchQuery: _pageSearchQuery,
                         label: '키BOX',
                         controller: _keyBoxesController,
+                        readOnly: !isEditMode,
+                        onChanged: (_) => _trackChanges(),
                       ),
                     ),
                   ],
@@ -981,10 +1265,12 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
           Row(
             children: [
               Expanded(
-                child: buildSearchableTextField(
+                child: CommonTextField(
                   searchQuery: _pageSearchQuery,
                   label: '연동전화번호',
                   controller: _emergencyPhoneController,
+                  readOnly: !isEditMode,
+                  onChanged: (_) => _trackChanges(),
                 ),
               ),
               const SizedBox(width: 12),
@@ -1113,7 +1399,7 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
             maxLines: 5,
             style: const TextStyle(fontSize: 13, color: Color(0xFF1D1D1F)),
             decoration: InputDecoration(
-              hintText: '여기에 비고사항을 입력하세요...',
+              //hintText:  '여기에 비고사항을 입력하세요...',
               hintStyle: TextStyle(color: Colors.grey.shade400),
               contentPadding: const EdgeInsets.all(12),
               filled: true,
@@ -1134,6 +1420,8 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
                 ),
               ),
             ),
+            readOnly: !isEditMode,
+            onChanged: (_) => _trackChanges(),
           ),
           const SizedBox(height: 16),
           // 메모 탭
@@ -1146,7 +1434,7 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
             maxLines: 8,
             style: const TextStyle(fontSize: 13, color: Color(0xFF1D1D1F)),
             decoration: InputDecoration(
-              hintText: '메모${_selectedMemoTab + 1} 내용을 입력하세요...',
+              //hintText: '메모${_selectedMemoTab + 1} 내용을 입력하세요...',
               hintStyle: TextStyle(color: Colors.grey.shade400),
               contentPadding: const EdgeInsets.all(12),
               filled: true,
@@ -1173,6 +1461,8 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
                 borderSide: BorderSide(color: Color(0xFF007AFF), width: 2),
               ),
             ),
+            readOnly: !isEditMode,
+            onChanged: (_) => _trackChanges(),
           ),
         ],
       ),

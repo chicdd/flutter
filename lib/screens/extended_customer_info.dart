@@ -6,10 +6,10 @@ import '../models/additional_service.dart';
 import '../models/dvr_info.dart';
 import '../services/api_service.dart';
 import '../services/selected_customer_service.dart';
-import '../widgets/component.dart';
 import '../widgets/time_picker_modal.dart';
 import '../style.dart';
 import '../widgets/common_table.dart';
+import '../functions.dart';
 
 class ExtendedCustomerInfo extends StatefulWidget {
   final SearchPanel? searchpanel;
@@ -63,6 +63,8 @@ class ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
 
   // 내보내기 드롭다운
   bool _isExportDropdownOpen = false;
+
+  bool _isloading = true;
 
   // 검색 관련
   final _searchController = TextEditingController();
@@ -422,16 +424,18 @@ class ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
       final services = await DatabaseService.getAdditionalServices(
         managementNumber,
       );
-
+      _isloading = true;
       if (mounted) {
         setState(() {
           _additionalServicesList = services;
+          _isloading = false;
         });
       }
 
       print('부가서비스 데이터 로드 완료: ${services.length}개');
     } catch (e) {
       print('부가서비스 데이터 로드 오류: $e');
+      _isloading = false;
     }
   }
 
@@ -439,16 +443,18 @@ class ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
   Future<void> _loadDVRInfo(String managementNumber) async {
     try {
       final dvrList = await DatabaseService.getDVRInfo(managementNumber);
-
+      _isloading = true;
       if (mounted) {
         setState(() {
           _dvrInfoList = dvrList;
+          _isloading = false;
         });
       }
 
       print('DVR 정보 로드 완료: ${dvrList.length}개');
     } catch (e) {
       print('DVR 정보 로드 오류: $e');
+      _isloading = false;
     }
   }
 
@@ -722,6 +728,7 @@ class ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
         });
       },
       searchQuery: _pageSearchQuery,
+      isLoading: _isloading,
     );
   }
 
@@ -738,6 +745,7 @@ class ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
         });
       },
       searchQuery: _pageSearchQuery,
+      isLoading: _isloading,
     );
   }
 

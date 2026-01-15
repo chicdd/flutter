@@ -55,6 +55,39 @@ class DatabaseService {
     }
   }
 
+  /// 기본 고객 정보 수정
+  static Future<bool> updateBasicCustomerInfo({
+    required String managementNumber,
+    required Map<String, dynamic> data,
+  }) async {
+    try {
+      final httpClient = DatabaseService._createHttpClient();
+      final encodedNumber = Uri.encodeComponent(managementNumber);
+      final uri = Uri.parse('');
+
+      print('기본 고객 정보 수정 API 호출: $uri');
+      print('관제관리번호: $managementNumber');
+
+      final request = await httpClient.putUrl(uri);
+      request.headers.set('Content-Type', 'application/json; charset=utf-8');
+      request.write(json.encode(data));
+      print(json.encode(data));
+      final response = await request.close();
+      final String responseBody = await response.transform(utf8.decoder).join();
+
+      if (response.statusCode == 200) {
+        print('기본 고객 정보 수정 성공');
+        return true;
+      } else {
+        print('기본 고객 정보 수정 실패: ${response.statusCode}, $responseBody');
+        return false;
+      }
+    } catch (e) {
+      print('기본 고객 정보 수정 API 호출 오류: $e');
+      return false;
+    }
+  }
+
   // 검색어로 고객 검색 (서버 API 사용)
   static Future<List<SearchPanel>> searchCustomers({
     required String filterType,
@@ -801,9 +834,7 @@ class DatabaseService {
 
   /// AS접수 정보 조회
   /// 관제관리번호로 AS접수 정보를 조회합니다.
-  static Future<List<AsLog>> getASLog(
-    String managementNumber,
-  ) async {
+  static Future<List<AsLog>> getASLog(String managementNumber) async {
     try {
       final httpClient = _createHttpClient();
       final encodedNumber = Uri.encodeComponent(managementNumber);
@@ -908,7 +939,9 @@ class DatabaseService {
 
   /// 최근수금이력 조회
   /// 고객번호로 최근수금이력을 조회합니다.
-  static Future<List<PaymentHistory>> getPaymentHistory(String customerNumber) async {
+  static Future<List<PaymentHistory>> getPaymentHistory(
+    String customerNumber,
+  ) async {
     try {
       // 고객번호 유효성 검사
       if (customerNumber.isEmpty) {
@@ -955,7 +988,9 @@ class DatabaseService {
 
   /// 최근 방문 및 A/S이력 조회
   /// 고객번호로 최근 방문 및 A/S이력을 조회합니다.
-  static Future<List<VisitAsHistory>> getVisitAsHistory(String customerNumber) async {
+  static Future<List<VisitAsHistory>> getVisitAsHistory(
+    String customerNumber,
+  ) async {
     try {
       // 고객번호 유효성 검사
       if (customerNumber.isEmpty) {

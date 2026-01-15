@@ -15,7 +15,7 @@ class CustomTopBar extends StatefulWidget {
   final VoidCallback? onSearchClosed; // 검색바 닫힐 때 콜백
 
   const CustomTopBar({
-    Key? key,
+    super.key,
     required this.title,
     this.buttons = const [],
     this.showSearch = true,
@@ -23,7 +23,7 @@ class CustomTopBar extends StatefulWidget {
     this.onSearchChanged,
     this.onPageSearch,
     this.onSearchClosed,
-  }) : super(key: key);
+  });
 
   @override
   State<CustomTopBar> createState() => CustomTopBarState();

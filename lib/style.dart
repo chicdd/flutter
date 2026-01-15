@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:securityindex/services/api_service.dart';
+import 'package:securityindex/widgets/custom_top_bar.dart';
 import 'theme.dart';
 
 /// ========================================
@@ -18,6 +19,7 @@ class CommonTextField extends StatelessWidget {
   final TextInputType? keyboardType;
   final int? maxLines;
   final String? searchQuery;
+  final Function(String)? onChanged;
 
   const CommonTextField({
     super.key,
@@ -30,6 +32,7 @@ class CommonTextField extends StatelessWidget {
     this.keyboardType,
     this.maxLines = 1,
     this.searchQuery,
+    this.onChanged,
   });
 
   bool _containsQuery() {
@@ -67,6 +70,7 @@ class CommonTextField extends StatelessWidget {
             controller: controller,
             readOnly: readOnly,
             onTap: onTap,
+            onChanged: onChanged,
             keyboardType: keyboardType,
             maxLines: maxLines,
             decoration: InputDecoration(
@@ -134,6 +138,244 @@ class CommonTextField extends StatelessWidget {
   }
 }
 
+/// ========================================
+/// 공통 드롭다운 필드 빌더
+/// ========================================
+
+/// 드롭다운 필드 빌더 함수 (onChanged 콜백 포함)
+Widget buildDropdownField({
+  required String label,
+  required String? value,
+  required List<CodeData> items,
+  required Function(String?) onChanged,
+  String searchQuery = '',
+  bool readOnly = false,
+}) {
+  // 검색 쿼리 매칭 확인 함수
+  bool containsQuery() {
+    if (searchQuery.isEmpty) return false;
+    final query = searchQuery.toLowerCase();
+    // 라벨이 검색어를 포함하는지 확인
+    if (label.toLowerCase().contains(query)) return true;
+    // 선택된 값이 검색어를 포함하는지 확인
+    if (value != null) {
+      final selectedItem = items.firstWhere(
+        (item) => item.code == value,
+        orElse: () => CodeData(code: '', name: ''),
+      );
+      final selectedText = '[${selectedItem.code}] ${selectedItem.name}';
+      if (selectedText.toLowerCase().contains(query)) return true;
+    }
+    return false;
+  }
+
+  final hasMatch = containsQuery();
+
+  // 데이터가 로드되지 않았으면 빈 드롭다운 표시
+  if (items.isEmpty) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            color: AppTheme.textSecondary,
+            fontWeight: FontWeight.w500,
+            backgroundColor:
+                hasMatch &&
+                    label.toLowerCase().contains(searchQuery.toLowerCase())
+                ? Colors.yellow.shade300
+                : Colors.transparent,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: AppTheme.backgroundColor,
+            border: Border.all(color: AppTheme.dividerColor),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: const Text(
+            '로딩 중...',
+            style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // value가 items에 없으면 null로 설정 (에러 방지)
+  String? selectedValue = value;
+  if (value != null && !items.any((item) => item.code == value)) {
+    print('$label - 선택된 값($value)이 items에 없음, null로 설정');
+    selectedValue = null;
+  }
+
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        label,
+        style: TextStyle(
+          fontSize: 12,
+          color: AppTheme.textSecondary,
+          fontWeight: FontWeight.w500,
+          backgroundColor:
+              hasMatch &&
+                  label.toLowerCase().contains(searchQuery.toLowerCase())
+              ? Colors.yellow.shade300
+              : Colors.transparent,
+        ),
+      ),
+      const SizedBox(height: 6),
+      DropdownButtonFormField<String>(
+        value: selectedValue,
+        style: const TextStyle(fontSize: 14, color: AppTheme.textPrimary),
+        decoration: InputDecoration(
+          isDense: true,
+          contentPadding: const EdgeInsets.only(
+            left: 12,
+            top: 9,
+            right: 6,
+            bottom: 9,
+          ),
+          filled: true,
+          fillColor: hasMatch
+              ? Colors.yellow.shade100
+              : AppTheme.backgroundColor,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: BorderSide(
+              color: hasMatch ? Colors.yellow.shade700 : AppTheme.dividerColor,
+              width: hasMatch ? 2 : 1,
+            ),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: BorderSide(
+              color: hasMatch ? Colors.yellow.shade700 : AppTheme.dividerColor,
+              width: hasMatch ? 2 : 1,
+            ),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: BorderSide(
+              color: hasMatch ? Colors.yellow.shade700 : AppTheme.selectedColor,
+              width: 2,
+            ),
+          ),
+        ),
+        icon: const Icon(Icons.arrow_drop_down, size: 24),
+        isExpanded: true,
+        selectedItemBuilder: (BuildContext context) {
+          return items.map((CodeData item) {
+            // 선택된 항목일 때만 강조 표시
+            final isSelected = item.code == selectedValue;
+            return Container(
+              alignment: Alignment.centerLeft,
+              child: HighlightedText(
+                text: '[${item.code}] ${item.name}',
+                query: searchQuery,
+                style: TextStyle(
+                  color: isSelected
+                      ? AppTheme.textPrimary
+                      : AppTheme.textSecondary,
+                  fontSize: 14,
+                ),
+              ),
+            );
+          }).toList();
+        },
+        items: items.map((CodeData item) {
+          return DropdownMenuItem<String>(
+            value: item.code,
+            child: HighlightedText(
+              text: '[${item.code}] ${item.name}',
+              query: searchQuery,
+              style: const TextStyle(fontSize: 14),
+            ),
+          );
+        }).toList(),
+        onChanged: readOnly ? null : onChanged,
+      ),
+    ],
+  );
+}
+
+/// 체크박스 빌더 (텍스트 클릭 가능)
+Widget buildCheckbox(String label, bool value, Function(bool?) onChanged) {
+  return InkWell(
+    onTap: () => onChanged(!value),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          width: 20,
+          height: 20,
+          child: Checkbox(
+            value: value,
+            onChanged: onChanged,
+            activeColor: const Color(0xFF007AFF),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(4),
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          label,
+          style: const TextStyle(
+            color: Color(0xFF252525),
+            fontSize: 14,
+            fontWeight: FontWeight.w400,
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+/// 체크박스 셀 생성
+Widget buildCheckboxCell(bool isChecked, double width) {
+  return Container(
+    width: width,
+    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+    alignment: Alignment.center,
+    child: Icon(
+      isChecked ? Icons.check_box : Icons.check_box_outline_blank,
+      size: 18,
+      color: isChecked ? AppTheme.selectedColor : AppTheme.textSecondary,
+    ),
+  );
+}
+
+/// ========================================
+/// 공통 라디오버튼 위젯 (텍스트 클릭 가능)
+/// ========================================
+Widget buildRadioOption(
+  String label,
+  bool isSelected,
+  Function(bool?) onChanged,
+) {
+  return InkWell(
+    onTap: () => onChanged(true),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Radio<bool>(
+          value: true,
+          groupValue: isSelected,
+          onChanged: onChanged,
+          activeColor: AppTheme.selectedColor,
+        ),
+        Text(label, style: const TextStyle(fontSize: 14)),
+      ],
+    ),
+  );
+}
+
 /// 라벨이 왼쪽에 있는 인라인 텍스트 필드 (확장 고객정보용)
 class InlineTextField extends StatelessWidget {
   final String label;
@@ -143,6 +385,7 @@ class InlineTextField extends StatelessWidget {
   final bool readOnly;
   final VoidCallback? onTap;
   final double? maxWidth;
+  final Function(String)? onChanged;
 
   const InlineTextField({
     super.key,
@@ -153,6 +396,7 @@ class InlineTextField extends StatelessWidget {
     this.readOnly = false,
     this.onTap,
     this.maxWidth = 350,
+    this.onChanged,
   });
 
   @override
@@ -179,6 +423,7 @@ class InlineTextField extends StatelessWidget {
               controller: controller,
               readOnly: readOnly,
               onTap: onTap,
+              onChanged: onChanged,
               decoration: InputDecoration(
                 hintText: hintText,
                 isDense: true,
@@ -280,89 +525,6 @@ class ReadOnlyTextField extends StatelessWidget {
 /// 드롭다운 필드
 /// ========================================
 
-class CommonDropdownField extends StatelessWidget {
-  final String label;
-  final String? value;
-  final List<CodeData> items;
-  final Function(String?) onChanged;
-
-  const CommonDropdownField({
-    super.key,
-    required this.label,
-    required this.value,
-    required this.items,
-    required this.onChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    // value가 items에 없으면 null로 설정 (에러 방지)
-    String? selectedValue = value;
-    if (value != null && !items.any((item) => item.code == value)) {
-      selectedValue = null;
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 12,
-            color: AppTheme.textSecondary,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        const SizedBox(height: 6),
-        DropdownButtonFormField<String>(
-          value: selectedValue,
-          style: const TextStyle(fontSize: 14, color: AppTheme.textPrimary),
-          decoration: InputDecoration(
-            isDense: true,
-            contentPadding: const EdgeInsets.only(
-              left: 12,
-              top: 10,
-              right: 6,
-              bottom: 10,
-            ),
-            filled: true,
-            fillColor: AppTheme.backgroundColor,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: AppTheme.dividerColor),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: AppTheme.dividerColor),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(
-                color: AppTheme.selectedColor,
-                width: 1,
-              ),
-            ),
-          ),
-          icon: const Icon(Icons.arrow_drop_down, size: 24),
-          isExpanded: true,
-          selectedItemBuilder: (BuildContext context) {
-            return items.map((CodeData item) {
-              return Text('[${item.code}] ${item.name}');
-            }).toList();
-          },
-          items: items.map((CodeData item) {
-            return DropdownMenuItem<String>(
-              value: item.code,
-              child: Text('[${item.code}] ${item.name}'),
-            );
-          }).toList(),
-          onChanged: onChanged,
-        ),
-      ],
-    );
-  }
-}
-
 /// ========================================
 /// 버튼 및 상태 위젯
 /// ========================================
@@ -413,20 +575,24 @@ Widget buildSectionTitle(String title) {
 }
 
 Widget buildStatusChip(String label, Color color, {VoidCallback? onTap}) {
-  return Container(
-    width: 90, // 모든 버튼 동일한 길이
-    height: 30,
-    decoration: BoxDecoration(
-      color: color,
-      borderRadius: BorderRadius.circular(6),
-    ),
-    child: Center(
-      child: Text(
-        label,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
+  return InkWell(
+    onTap: onTap,
+    borderRadius: BorderRadius.circular(6),
+    child: Container(
+      width: 90, // 모든 버튼 동일한 길이
+      height: 30,
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Center(
+        child: Text(
+          label,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+          ),
         ),
       ),
     ),

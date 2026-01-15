@@ -35,10 +35,10 @@ class ContentArea extends StatefulWidget {
   });
 
   @override
-  State<ContentArea> createState() => _ContentAreaState();
+  State<ContentArea> createState() => ContentAreaState();
 }
 
-class _ContentAreaState extends State<ContentArea> {
+class ContentAreaState extends State<ContentArea> {
   String _pageSearchQuery = '';
   final GlobalKey<BasicCustomerInfoState> _basicCustomerInfoKey = GlobalKey();
   final GlobalKey<ExtendedCustomerInfoState> _extendedCustomerInfoKey =
@@ -172,7 +172,12 @@ class _ContentAreaState extends State<ContentArea> {
   List<TopBarButton> _getButtonsForScreen(BuildContext context) {
     // 기본고객정보 화면
     if (widget.selectedSubMenu == '기본고객정보') {
-      return TopBarConfig.basicCustomerInfoButtons(context);
+      final currentState = _basicCustomerInfoKey.currentState;
+      print(currentState);
+      return TopBarConfig.basicCustomerInfoButtons(
+        context,
+        state: currentState,
+      );
     }
     // 확장고객정보 화면
     else if (widget.selectedSubMenu == '확장고객정보') {

@@ -1,33 +1,24 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import '../models/search_panel.dart';
 import '../models/customer_detail.dart';
-import '../functions.dart';
-import '../theme.dart';
 import '../widgets/common_table.dart';
+import 'base_table_screen.dart';
 
 /// 설치자재현황 화면
-class MaterialStatus extends StatefulWidget {
-  final SearchPanel? searchpanel;
-  const MaterialStatus({super.key, this.searchpanel});
+class MaterialStatus extends BaseTableScreen<Map<String, dynamic>> {
+  const MaterialStatus({super.key, super.searchpanel});
 
   @override
   State<MaterialStatus> createState() => MaterialStatusState();
 }
 
-class MaterialStatusState extends State<MaterialStatus>
-    with CustomerServiceHandler {
-  // 검색 컨트롤러
-  final TextEditingController _searchController = TextEditingController();
+class MaterialStatusState
+    extends BaseTableScreenState<Map<String, dynamic>, MaterialStatus> {
+  @override
+  String get tableTitle => '설치자재현황';
 
-  // 자재 데이터 목록 (추후 모델 추가 필요)
-  List<Map<String, dynamic>> _dataList = [];
-
-  // 페이지 내 검색
-  String _pageSearchQuery = '';
-
-  final Map<int, double> _columnWidths = {
+  @override
+  Map<int, double> get initialColumnWidths => {
     0: 200.0, // 자재명칭
     1: 120.0, // 설치수량
     2: 120.0, // 자재코드
@@ -35,154 +26,47 @@ class MaterialStatusState extends State<MaterialStatus>
     4: 200.0, // 대분류
     5: 200.0, // 중분류
   };
-  late final List<TableColumnConfig> _columns = [
-    TableColumnConfig(
-      header: '자재명칭',
-      width: _columnWidths[0],
-      valueBuilder: (data) => data['자재명칭']?.toString() ?? '-',
-    ),
-    TableColumnConfig(
-      header: '설치수량',
-      width: _columnWidths[1],
-      valueBuilder: (data) => data['설치수량']?.toString() ?? '-',
-    ),
-    TableColumnConfig(
-      header: '자재코드',
-      width: _columnWidths[2],
-      valueBuilder: (data) => data['자재코드']?.toString() ?? '-',
-    ),
-    TableColumnConfig(
-      header: '자재년식',
-      width: _columnWidths[3],
-      valueBuilder: (data) => data['자재년식']?.toString() ?? '-',
-    ),
-    TableColumnConfig(
-      header: '대분류',
-      width: _columnWidths[4],
-      valueBuilder: (data) => data['대분류']?.toString() ?? '-',
-    ),
-    TableColumnConfig(
-      header: '중분류',
-      width: _columnWidths[5],
-      valueBuilder: (data) => data['중분류']?.toString() ?? '-',
-    ),
-  ];
 
-  // 검색 쿼리 업데이트 메서드
-  void updateSearchQuery(String query) {
-    setState(() {
-      _pageSearchQuery = query;
-    });
+  @override
+  Future<List<Map<String, dynamic>>> loadDataFromApi(String key) async {
+    // TODO: API 연동 필요
+    // return await DatabaseService.getMaterialStatus(key);
+    return []; // 임시 빈 데이터
   }
 
   @override
-  void initState() {
-    super.initState();
-    // 공통 리스너 초기화
-    initCustomerServiceListener();
-
-    // 초기 데이터 로드
-    _initializeData();
-  }
-
-  @override
-  void dispose() {
-    // 공통 리스너 해제
-    disposeCustomerServiceListener();
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  /// 초기 데이터 로드
-  Future<void> _initializeData() async {
-    // 서비스에서 고객 데이터 로드
-    await _loadCustomerDataFromService();
-  }
-
-  /// 전역 서비스에서 고객 데이터 로드
-  Future<void> _loadCustomerDataFromService() async {
-    final customer = customerService.selectedCustomer;
-
-    if (customer != null) {
-      await _loadMaterialData(customer.controlManagementNumber);
-    } else {
-      setState(() {
-        _dataList = [];
-      });
-    }
-  }
-
-  /// CustomerServiceHandler 콜백 구현
-  @override
-  void onCustomerChanged(SearchPanel? customer, CustomerDetail? detail) {
-    if (customer != null) {
-      _loadMaterialData(customer.controlManagementNumber);
-    } else {
-      setState(() {
-        _dataList = [];
-      });
-    }
-  }
-
-  /// 자재 데이터 로드 (추후 API 연동 필요)
-  Future<void> _loadMaterialData(String managementNumber) async {
-    try {
-      // TODO: API 연동 필요
-      // final materialList = await DatabaseService.getMaterialStatus(managementNumber);
-
-      if (mounted) {
-        setState(() {
-          // 임시 데이터
-          _dataList = [];
-        });
-      }
-
-      print('설치자재현황 데이터 로드 완료: ${_dataList.length}개');
-    } catch (e) {
-      print('설치자재현황 데이터 로드 오류: $e');
-      if (mounted) {
-        setState(() {
-          _dataList = [];
-        });
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
-      body: Column(
-        children: [
-          // 상단바
-          // 메인 컨텐츠
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: buildTable(
-                      context: context,
-                      title: '설치자재현황',
-                      dataList: _dataList,
-                      columns: _columns,
-                      columnWidths: _columnWidths,
-                      onColumnResize: (columnIndex, newWidth) {
-                        setState(() {
-                          _columnWidths[columnIndex] = newWidth;
-                        });
-                      },
-                      searchQuery: _pageSearchQuery,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
+  List<TableColumnConfig> buildColumns() {
+    return [
+      TableColumnConfig(
+        header: '자재명칭',
+        width: columnWidths[0],
+        valueBuilder: (data) => data['자재명칭']?.toString() ?? '-',
       ),
-    );
+      TableColumnConfig(
+        header: '설치수량',
+        width: columnWidths[1],
+        valueBuilder: (data) => data['설치수량']?.toString() ?? '-',
+      ),
+      TableColumnConfig(
+        header: '자재코드',
+        width: columnWidths[2],
+        valueBuilder: (data) => data['자재코드']?.toString() ?? '-',
+      ),
+      TableColumnConfig(
+        header: '자재년식',
+        width: columnWidths[3],
+        valueBuilder: (data) => data['자재년식']?.toString() ?? '-',
+      ),
+      TableColumnConfig(
+        header: '대분류',
+        width: columnWidths[4],
+        valueBuilder: (data) => data['대분류']?.toString() ?? '-',
+      ),
+      TableColumnConfig(
+        header: '중분류',
+        width: columnWidths[5],
+        valueBuilder: (data) => data['중분류']?.toString() ?? '-',
+      ),
+    ];
   }
 }

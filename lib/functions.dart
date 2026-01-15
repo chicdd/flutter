@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:securityindex/services/api_service.dart';
 import 'services/selected_customer_service.dart';
 import 'models/customer_detail.dart';
 import 'models/search_panel.dart';
@@ -227,5 +228,17 @@ class DateParsingHelper {
       // 화면측에 변경된 날짜들을 전달 (여기서 setState와 데이터 로드 수행)
       await onConfirm(updatedStartDate, updatedEndDate);
     }
+  }
+}
+
+/// 드롭다운 데이터 로드
+Future<List<CodeData>> loadDropdownData(String dropdownName) async {
+  try {
+    // 캐시를 통해 드롭다운 데이터 로드
+    List<CodeData> data = await CodeDataCache.getCodeData(dropdownName);
+    return data;
+  } catch (e) {
+    print('드롭다운 데이터 로드 오류: $e');
+    return [];
   }
 }

@@ -224,43 +224,6 @@ namespace securityindexAPI.Controllers
                 return StatusCode(500, new { message = "서버 오류가 발생했습니다.", error = ex.Message });
             }
         }
-
-        /// <summary>
-        /// 모든 드롭다운 데이터를 한 번에 반환
-        /// </summary>
-        /// <returns>모든 코드 데이터</returns>
-        //[HttpGet("all")]
-        //public async Task<ActionResult<Dictionary<string, List<CodeData>>>> GetAllDropdownData()
-        //{
-        //    try
-        //    {
-        //        var result = new Dictionary<string, List<CodeData>>();
-
-        //        // 모든 코드 유형을 순회하며 데이터 수집
-        //        var codeTypes = new[]
-        //        {
-        //            "managementarea", "operationarea", "businesstype", "vehiclecode",
-        //            "policestation", "policedistrict", "usageline", "servicetype",
-        //            "customerstatus", "mainsystem", "subsystem", "misettings"
-        //        };
-
-        //        foreach (var codeType in codeTypes)
-        //        {
-        //            var response = await GetDropdownData(codeType);
-        //            if (response.Result is OkObjectResult okResult)
-        //            {
-        //                result[codeType] = (List<CodeData>)okResult.Value!;
-        //            }
-        //        }
-
-        //        return Ok(result);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        _logger.LogError(ex, "전체 드롭다운 데이터 조회 중 오류 발생");
-        //        return StatusCode(500, new { message = "서버 오류가 발생했습니다.", error = ex.Message });
-        //    }
-        //}
     }
 
     /// <summary>

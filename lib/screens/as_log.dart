@@ -8,7 +8,7 @@ import '../functions.dart';
 import '../theme.dart';
 import '../style.dart';
 import '../widgets/common_table.dart';
-import '../widgets/component.dart';
+
 import '../models/aslog.dart';
 
 /// AS 접수 리스트 화면
@@ -467,7 +467,7 @@ class _AddModalState extends State<_AddModal> {
               if (_isLoadingManager)
                 const CircularProgressIndicator()
               else
-                CommonDropdownField(
+                buildDropdownField(
                   label: '담당자',
                   value: _selectedManager,
                   items: _managerList,

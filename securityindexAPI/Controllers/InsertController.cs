@@ -45,8 +45,9 @@ namespace securityindexAPI.Controllers
                     return BadRequest(new { message = "코드명은 필수입니다." });
                 }
 
-                object? entityToAdd = null;
-                object? existingEntity = null;
+                string tableName = "";
+                string codeColumn = "";
+                string nameColumn = "";
 
                 switch (codeType.ToLower())
                 {
@@ -56,34 +57,54 @@ namespace securityindexAPI.Controllers
                         {
                             return BadRequest(new { message = "문서종류코드는 3자리여야 합니다." });
                         }
-
-                        // 중복 체크
-                        existingEntity = await _context.문서종류코드마스터
-                            .FirstOrDefaultAsync(d => d.문서종류코드 == request.code);
-
-                        if (existingEntity != null)
-                        {
-                            return Conflict(new { message = $"코드 '{request.code}'는 이미 존재합니다." });
-                        }
-
-                        entityToAdd = new 문서종류코드모델
-                        {
-                            문서종류코드 = request.code,
-                            문서종류코드명 = request.codeName
-                        };
+                        tableName = "문서종류코드마스터";
+                        codeColumn = "문서종류코드";
+                        nameColumn = "문서종류코드명";
                         break;
 
                     default:
                         return BadRequest(new { message = $"지원하지 않는 코드타입입니다: {codeType}" });
                 }
 
-                if (entityToAdd == null)
+                var connection = _context.Database.GetDbConnection();
+                await connection.OpenAsync();
+
+                // 중복 체크
+                var checkQuery = $"SELECT COUNT(*) FROM {tableName} WHERE {codeColumn} = @code";
+                using (var checkCommand = connection.CreateCommand())
                 {
-                    return BadRequest(new { message = "추가할 데이터를 생성할 수 없습니다." });
+                    checkCommand.CommandText = checkQuery;
+
+                    var checkParam = checkCommand.CreateParameter();
+                    checkParam.ParameterName = "@code";
+                    checkParam.Value = request.code;
+                    checkCommand.Parameters.Add(checkParam);
+
+                    var count = Convert.ToInt32(await checkCommand.ExecuteScalarAsync());
+                    if (count > 0)
+                    {
+                        await connection.CloseAsync();
+                        return Conflict(new { message = $"코드 '{request.code}'는 이미 존재합니다." });
+                    }
                 }
 
-                _context.Add(entityToAdd);
-                await _context.SaveChangesAsync();
+                // INSERT 실행
+                var insertQuery = $"INSERT INTO {tableName} ({codeColumn}, {nameColumn}) VALUES (@code, @codeName)";
+                using var insertCommand = connection.CreateCommand();
+                insertCommand.CommandText = insertQuery;
+
+                var codeParam = insertCommand.CreateParameter();
+                codeParam.ParameterName = "@code";
+                codeParam.Value = request.code;
+                insertCommand.Parameters.Add(codeParam);
+
+                var nameParam = insertCommand.CreateParameter();
+                nameParam.ParameterName = "@codeName";
+                nameParam.Value = request.codeName;
+                insertCommand.Parameters.Add(nameParam);
+
+                await insertCommand.ExecuteNonQueryAsync();
+                await connection.CloseAsync();
 
                 _logger.LogInformation($"코드 추가 완료: 코드타입={codeType}, 코드값={request.code}, 코드명={request.codeName}");
                 return StatusCode(201, new { message = "코드가 추가되었습니다.", 코드타입 = codeType, 코드값 = request.code, 코드명 = request.codeName });
@@ -105,21 +126,60 @@ namespace securityindexAPI.Controllers
             {
                 _logger.LogInformation($"인증 정보 추가 요청: 휴대폰번호={request.관제관리번호}");
 
-                // 새 인증 정보 생성
-                var authInfo = new 스마트정보조회마스터
-                {
-                    휴대폰번호 = request.휴대폰번호,
-                    관제관리번호 = request.관제관리번호,
-                    영업관리번호 = request.영업관리번호,
-                    상호명 = request.상호명,
-                    사용자이름 = request.사용자이름,
-                    원격경계여부 = request.원격경계여부,
-                    원격해제여부 = request.원격해제여부,
-                    등록일자 = DateTime.Now
-                };
+                var query = @"
+                    INSERT INTO 스마트정보조회마스터
+                        (휴대폰번호, 관제관리번호, 영업관리번호, 상호명, 사용자이름, 원격경계여부, 원격해제여부, 등록일자)
+                    VALUES
+                        (@휴대폰번호, @관제관리번호, @영업관리번호, @상호명, @사용자이름, @원격경계여부, @원격해제여부, @등록일자)";
 
-                _context.스마트정보조회마스터.Add(authInfo);
-                await _context.SaveChangesAsync();
+                var connection = _context.Database.GetDbConnection();
+                await connection.OpenAsync();
+
+                using var command = connection.CreateCommand();
+                command.CommandText = query;
+
+                var param1 = command.CreateParameter();
+                param1.ParameterName = "@휴대폰번호";
+                param1.Value = request.휴대폰번호 ?? (object)DBNull.Value;
+                command.Parameters.Add(param1);
+
+                var param2 = command.CreateParameter();
+                param2.ParameterName = "@관제관리번호";
+                param2.Value = request.관제관리번호 ?? (object)DBNull.Value;
+                command.Parameters.Add(param2);
+
+                var param3 = command.CreateParameter();
+                param3.ParameterName = "@영업관리번호";
+                param3.Value = request.영업관리번호 ?? (object)DBNull.Value;
+                command.Parameters.Add(param3);
+
+                var param4 = command.CreateParameter();
+                param4.ParameterName = "@상호명";
+                param4.Value = request.상호명 ?? (object)DBNull.Value;
+                command.Parameters.Add(param4);
+
+                var param5 = command.CreateParameter();
+                param5.ParameterName = "@사용자이름";
+                param5.Value = request.사용자이름 ?? (object)DBNull.Value;
+                command.Parameters.Add(param5);
+
+                var param6 = command.CreateParameter();
+                param6.ParameterName = "@원격경계여부";
+                param6.Value = request.원격경계여부;
+                command.Parameters.Add(param6);
+
+                var param7 = command.CreateParameter();
+                param7.ParameterName = "@원격해제여부";
+                param7.Value = request.원격해제여부;
+                command.Parameters.Add(param7);
+
+                var param8 = command.CreateParameter();
+                param8.ParameterName = "@등록일자";
+                param8.Value = DateTime.Now;
+                command.Parameters.Add(param8);
+
+                await command.ExecuteNonQueryAsync();
+                await connection.CloseAsync();
 
                 _logger.LogInformation($"인증 정보 추가 완료: 휴대폰번호={request.휴대폰번호}");
                 return StatusCode(201, new { message = "인증 정보가 추가되었습니다." });
@@ -141,25 +201,80 @@ namespace securityindexAPI.Controllers
             {
                 _logger.LogInformation($"AS접수 정보 추가 요청: 관제관리번호={request.관제관리번호}");
 
-                // 새 AS접수 정보 생성
-                var asData = new AS접수마스터
-                {
-                    관제관리번호 = request.관제관리번호,
-                    고객이름 = request.고객이름,
-                    고객연락처 = request.고객연락처,
-                    요청일자 = request.요청일자,
-                    요청시간 = request.요청시간,
-                    요청제목 = request.요청제목,
-                    접수일자 = request.접수일자,
-                    접수시간 = request.접수시간,
-                    담당구역 = request.담당구역,
-                    처리여부 = "미처리",
-                    입력자 = request.입력자,
-                    세부내용 = request.세부내용
-                };
+                var query = @"
+                    INSERT INTO AS접수마스터
+                        (관제관리번호, 고객이름, 고객연락처, 요청일자, 요청시간, 요청제목, 접수일자, 접수시간, 담당구역, 처리여부, 입력자, 세부내용)
+                    VALUES
+                        (@관제관리번호, @고객이름, @고객연락처, @요청일자, @요청시간, @요청제목, @접수일자, @접수시간, @담당구역, @처리여부, @입력자, @세부내용)";
 
-                _context.AS접수마스터.Add(asData);
-                await _context.SaveChangesAsync();
+                var connection = _context.Database.GetDbConnection();
+                await connection.OpenAsync();
+
+                using var command = connection.CreateCommand();
+                command.CommandText = query;
+
+                var param1 = command.CreateParameter();
+                param1.ParameterName = "@관제관리번호";
+                param1.Value = request.관제관리번호 ?? (object)DBNull.Value;
+                command.Parameters.Add(param1);
+
+                var param2 = command.CreateParameter();
+                param2.ParameterName = "@고객이름";
+                param2.Value = request.고객이름 ?? (object)DBNull.Value;
+                command.Parameters.Add(param2);
+
+                var param3 = command.CreateParameter();
+                param3.ParameterName = "@고객연락처";
+                param3.Value = request.고객연락처 ?? (object)DBNull.Value;
+                command.Parameters.Add(param3);
+
+                var param4 = command.CreateParameter();
+                param4.ParameterName = "@요청일자";
+                param4.Value = request.요청일자 ?? (object)DBNull.Value;
+                command.Parameters.Add(param4);
+
+                var param5 = command.CreateParameter();
+                param5.ParameterName = "@요청시간";
+                param5.Value = request.요청시간 ?? (object)DBNull.Value;
+                command.Parameters.Add(param5);
+
+                var param6 = command.CreateParameter();
+                param6.ParameterName = "@요청제목";
+                param6.Value = request.요청제목 ?? (object)DBNull.Value;
+                command.Parameters.Add(param6);
+
+                var param7 = command.CreateParameter();
+                param7.ParameterName = "@접수일자";
+                param7.Value = request.접수일자 ?? (object)DBNull.Value;
+                command.Parameters.Add(param7);
+
+                var param8 = command.CreateParameter();
+                param8.ParameterName = "@접수시간";
+                param8.Value = request.접수시간 ?? (object)DBNull.Value;
+                command.Parameters.Add(param8);
+
+                var param9 = command.CreateParameter();
+                param9.ParameterName = "@담당구역";
+                param9.Value = request.담당구역 ?? (object)DBNull.Value;
+                command.Parameters.Add(param9);
+
+                var param10 = command.CreateParameter();
+                param10.ParameterName = "@처리여부";
+                param10.Value = "미처리";
+                command.Parameters.Add(param10);
+
+                var param11 = command.CreateParameter();
+                param11.ParameterName = "@입력자";
+                param11.Value = request.입력자 ?? (object)DBNull.Value;
+                command.Parameters.Add(param11);
+
+                var param12 = command.CreateParameter();
+                param12.ParameterName = "@세부내용";
+                param12.Value = request.세부내용 ?? (object)DBNull.Value;
+                command.Parameters.Add(param12);
+
+                await command.ExecuteNonQueryAsync();
+                await connection.CloseAsync();
 
                 _logger.LogInformation($"AS접수 정보 추가 완료: 관제관리번호={request.관제관리번호}");
                 return StatusCode(201, new { message = "AS접수 정보가 추가되었습니다." });

@@ -8,7 +8,7 @@ import '../services/api_service.dart';
 import '../functions.dart';
 import '../style.dart';
 import '../theme.dart';
-import '../widgets/component.dart';
+
 import '../widgets/custom_top_bar.dart';
 import '../widgets/common_table.dart';
 

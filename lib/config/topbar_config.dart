@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../screens/basic_customer_info.dart';
 
 /// 상단바 버튼 정의 클래스
 class TopBarButton {
@@ -20,7 +21,10 @@ class TopBarButton {
 /// 각 화면별 상단바 버튼 구성 정의
 class TopBarConfig {
   /// 기본고객정보 화면 버튼
-  static List<TopBarButton> basicCustomerInfoButtons(BuildContext context) {
+  static List<TopBarButton> basicCustomerInfoButtons(
+    BuildContext context, {
+    BasicCustomerInfoState? state,
+  }) {
     return [
       TopBarButton(
         label: '원격',
@@ -36,11 +40,11 @@ class TopBarConfig {
       ),
       TopBarButton(
         label: '편집',
-        onPressed: () => TopBarActions.onEditPressed(context),
+        onPressed: () => TopBarActions.onEditPressed(context, state: state),
       ),
       TopBarButton(
         label: '저장',
-        onPressed: () => TopBarActions.onSavePressed(context),
+        onPressed: () => TopBarActions.onSavePressed(context, state: state),
       ),
     ];
   }
@@ -165,18 +169,49 @@ class TopBarActions {
   }
 
   /// 편집 버튼 클릭
-  static void onEditPressed(BuildContext context) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('편집 모드가 활성화되었습니다.')));
-    // TODO: 편집 모드 구현
+  static void onEditPressed(
+    BuildContext context, {
+    BasicCustomerInfoState? state,
+  }) {
+    // BasicCustomerInfo 화면의 State를 찾아서 enterEditMode 호출
+    print(context);
+    if (state != null) {
+      print(state);
+      if (state.isEditMode) {
+        // 이미 편집 모드인 경우 취소
+        state.exitEditMode();
+      } else {
+        // 편집 모드 진입
+        state.enterEditMode();
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('편집 모드가 활성화되었습니다.')));
+      }
+    } else {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('State를 찾을 수 없습니다.')));
+    }
   }
 
   /// 저장 버튼 클릭
-  static void onSavePressed(BuildContext context) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('저장되었습니다.')));
-    // TODO: 저장 기능 구현
+  static void onSavePressed(
+    BuildContext context, {
+    BasicCustomerInfoState? state,
+  }) {
+    // BasicCustomerInfo 화면의 State를 찾아서 saveChanges 호출
+    final targetState =
+        state ?? context.findAncestorStateOfType<BasicCustomerInfoState>();
+    if (targetState != null && targetState.isEditMode) {
+      targetState.saveChanges();
+    } else if (targetState != null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('편집 모드가 아닙니다.')));
+    } else {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('State를 찾을 수 없습니다.')));
+    }
   }
 }
