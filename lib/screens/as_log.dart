@@ -239,6 +239,7 @@ class AsLogState extends State<AsLogScreen>
                     _columnWidths[columnIndex] = newWidth;
                   });
                 },
+                showTotalCount: true,
                 searchQuery: _pageSearchQuery,
                 onAdd: _showAddModal,
               ),

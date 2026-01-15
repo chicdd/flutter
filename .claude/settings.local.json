@@ -23,10 +23,17 @@
       "Bash(dotnet build:*)",
       "Bash(flutter:*)",
       "WebSearch",
-      "Bash(git pull:*)"
+      "Bash(git pull:*)",
+      "WebFetch(domain:pub.dev)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:dev.to)",
+      "Bash(findstr:*)",
+      "Bash(xargs cat:*)",
+      "Bash(vcpkg version:*)"
     ],
     "deny": [
-      "Read(./securityindexAPI/appsettings.json)"
+      "Read(./securityindexAPI/appsettings.json)",
+      "Read(./lib/models/DBInfo.dart)"
     ],
     "ask": []
   }

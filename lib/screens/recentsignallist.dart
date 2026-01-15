@@ -376,7 +376,7 @@ class RecentSignalListState extends State<RecentSignalList>
                       },
                       showTotalCount: true,
                       searchQuery: _pageSearchQuery,
-                      pagingTotalcount: _totalCount.toString(),
+                      pagingTotalcount: _totalCount,
                       verticalScrollController: _scrollController,
                     ),
                   ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:securityindex/screens/main_layout.dart';
 import 'package:window_manager/window_manager.dart';
 import 'theme.dart';
 import 'screens/login_screen.dart';
@@ -24,6 +25,10 @@ void main() async {
     await windowManager.show();
     await windowManager.focus();
   });
+
+  // // 데이터베이스 연결 테스트
+  // print('🔄 데이터베이스 연결을 시도합니다...');
+  // await DBConnection.connect();
 
   runApp(const SecurityIndexApp());
 }

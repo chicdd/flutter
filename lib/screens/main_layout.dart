@@ -5,7 +5,7 @@ import '../widgets/navigation_sidebar.dart';
 import '../widgets/content_area.dart';
 
 class MainLayout extends StatefulWidget {
-  const MainLayout({Key? key}) : super(key: key);
+  const MainLayout({super.key});
 
   @override
   State<MainLayout> createState() => _MainLayoutState();

@@ -341,7 +341,7 @@ Widget buildTable<T>({
   bool showTotalCount = false,
   VoidCallback? onAdd,
   String addButtonLabel = '추가',
-  String? pagingTotalcount,
+  int? pagingTotalcount,
   ScrollController? verticalScrollController,
 }) {
   return Container(
@@ -364,7 +364,7 @@ Widget buildTable<T>({
                 fontWeight: FontWeight.w600,
               ),
             ),
-            if (showTotalCount && pagingTotalcount == null) ...[
+            if (showTotalCount) ...[
               const SizedBox(width: 8),
               Container(
                 padding: const EdgeInsets.symmetric(
@@ -376,27 +376,7 @@ Widget buildTable<T>({
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  '총 ${dataList.length}건',
-                  style: const TextStyle(
-                    color: Color(0xFF4318FF),
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ] else ...[
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF4318FF).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  '총 $pagingTotalcount건',
+                  '총 ${(pagingTotalcount != null && pagingTotalcount != 0) ? pagingTotalcount : dataList.length}건',
                   style: const TextStyle(
                     color: Color(0xFF4318FF),
                     fontSize: 14,

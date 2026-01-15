@@ -55,6 +55,7 @@ dependencies:
 
   # 창 관리
   window_manager: ^0.4.3
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
