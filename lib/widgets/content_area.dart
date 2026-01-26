@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:securityindex/screens/maintenance_inspection_history.dart';
 import 'package:securityindex/screens/materialstatus.dart';
 import 'package:securityindex/screens/payment_history_table.dart';
+import 'package:securityindex/screens/settings.dart';
 import 'package:securityindex/screens/visit_as_history_table.dart';
 import '../screens/as_log.dart';
 import '../screens/control_signal_activation.dart';
@@ -172,11 +173,14 @@ class ContentAreaState extends State<ContentArea> {
   List<TopBarButton> _getButtonsForScreen(BuildContext context) {
     // 기본고객정보 화면
     if (widget.selectedSubMenu == '기본고객정보') {
-      final currentState = _basicCustomerInfoKey.currentState;
-      print(currentState);
+      // 버튼 클릭 시점에 GlobalKey에서 currentState를 가져오는 함수 전달
       return TopBarConfig.basicCustomerInfoButtons(
         context,
-        state: currentState,
+        getState: () => _basicCustomerInfoKey.currentState,
+        onStateChanged: () {
+          // 편집 모드 변경 시 UI 업데이트
+          setState(() {});
+        },
       );
     }
     // 확장고객정보 화면
@@ -224,6 +228,9 @@ class ContentAreaState extends State<ContentArea> {
   }
 
   Widget _buildContent(BuildContext context) {
+    if (widget.selectedMenu == '설정') {
+      return Settings();
+    }
     if (widget.selectedCustomer == null) {
       return Center(
         child: Column(
@@ -355,7 +362,7 @@ class ContentAreaState extends State<ContentArea> {
       child: Container(
         padding: const EdgeInsets.all(40),
         decoration: BoxDecoration(
-          color: AppTheme.cardBackground,
+          color: context.colors.background,
           borderRadius: BorderRadius.circular(12),
           boxShadow: AppTheme.cardShadow,
         ),
@@ -453,7 +460,6 @@ class ContentAreaState extends State<ContentArea> {
         searchpanel: widget.selectedCustomer!,
       );
     }
-
     return SingleChildScrollView();
   }
 
@@ -461,9 +467,6 @@ class ContentAreaState extends State<ContentArea> {
     if (widget.selectedMenu == null) {
       return const SizedBox.shrink();
     }
-    print(widget.selectedCustomer);
-    print(widget.selectedMenu);
-    print(widget.selectedSubMenu);
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import '../services/selected_customer_service.dart';
 import '../theme.dart';
 import '../services/api_service.dart';
+import '../services/theme_service.dart';
 
 class NavigationItem {
   final String title;
@@ -30,6 +32,8 @@ class _NavigationSidebarState extends State<NavigationSidebar> {
   String? selectedMainItem;
   String? selectedSubItem;
   String? expandedItem;
+  final _customerService = SelectedCustomerService(); // 서비스 추가
+  final _themeService = ThemeService(); // 테마 서비스 추가
 
   @override
   void initState() {
@@ -42,6 +46,18 @@ class _NavigationSidebarState extends State<NavigationSidebar> {
         widget.initialSelectedMenu != null) {
       expandedItem = widget.initialSelectedMenu;
     }
+    // 테마 변경 리스너 등록
+    _themeService.addListener(_onThemeChanged);
+  }
+
+  @override
+  void dispose() {
+    _themeService.removeListener(_onThemeChanged);
+    super.dispose();
+  }
+
+  void _onThemeChanged() {
+    setState(() {});
   }
 
   @override
@@ -89,6 +105,7 @@ class _NavigationSidebarState extends State<NavigationSidebar> {
       icon: Icons.business_center_outlined,
       subItems: ['영업정보', '최근 수금 이력', '최근 방문 및 A/S 이력'],
     ),
+    NavigationItem(title: '설정', icon: Icons.settings),
   ];
 
   @override
@@ -96,9 +113,9 @@ class _NavigationSidebarState extends State<NavigationSidebar> {
     return Container(
       width: 260,
       decoration: BoxDecoration(
-        color: AppTheme.sidebarBackground,
+        color: context.colors.gray10,
         border: Border(
-          right: BorderSide(color: AppTheme.dividerColor, width: 1),
+          right: BorderSide(color: context.colors.dividerColor, width: 1),
         ),
       ),
       child: Column(
@@ -121,22 +138,23 @@ class _NavigationSidebarState extends State<NavigationSidebar> {
 
   Widget _buildHeader() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
       decoration: BoxDecoration(
-        color: AppTheme.sidebarBackground,
+        color: context.colors.gray10,
         border: Border(
-          bottom: BorderSide(color: AppTheme.dividerColor, width: 1),
+          bottom: BorderSide(color: context.colors.dividerColor, width: 1),
         ),
       ),
       child: Row(
         children: [
-          Icon(Icons.menu, size: 20, color: AppTheme.textSecondary),
+          Icon(Icons.menu, size: 20, color: context.colors.textSecondary),
           const SizedBox(width: 8),
           Text(
             '메뉴',
-            style: Theme.of(
-              context,
-            ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: context.colors.textPrimary,
+            ),
           ),
         ],
       ),
@@ -152,23 +170,39 @@ class _NavigationSidebarState extends State<NavigationSidebar> {
       children: [
         InkWell(
           onTap: () {
-            setState(() {
-              if (hasSubItems) {
+            // 서브 메뉴가 있으면 그냥 펼치기/접기만 수행
+            if (hasSubItems) {
+              setState(() {
                 expandedItem = isExpanded ? null : item.title;
-              } else {
+              });
+              return;
+            }
+
+            // 서브 메뉴가 없는 메뉴 선택 시 편집 상태 확인
+            if (!_customerService.canLeave(() {
+              // 확인 후 실행할 로직
+              setState(() {
                 selectedMainItem = item.title;
                 selectedSubItem = null;
-                widget.onNavigate(item.title, null);
-              }
+              });
+              widget.onNavigate(item.title, null);
+            })) {
+              // 편집 중이므로 여기서는 아무것도 하지 않음
+              return;
+            }
+
+            // 편집 중이 아니면 바로 실행
+            setState(() {
+              selectedMainItem = item.title;
+              selectedSubItem = null;
             });
+            widget.onNavigate(item.title, null);
           },
           child: Container(
             margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
-              color: isSelected
-                  ? AppTheme.selectedColor.withOpacity(0.1)
-                  : null,
+              color: isSelected ? context.colors.selectedColor : null,
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
@@ -177,8 +211,8 @@ class _NavigationSidebarState extends State<NavigationSidebar> {
                   item.icon,
                   size: 20,
                   color: isSelected
-                      ? AppTheme.selectedColor
-                      : AppTheme.textSecondary,
+                      ? context.colors.white
+                      : context.colors.textSecondary,
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -189,8 +223,8 @@ class _NavigationSidebarState extends State<NavigationSidebar> {
                           ? FontWeight.w600
                           : FontWeight.normal,
                       color: isSelected
-                          ? AppTheme.selectedColor
-                          : AppTheme.textPrimary,
+                          ? context.colors.white
+                          : context.colors.textPrimary,
                     ),
                   ),
                 ),
@@ -198,7 +232,7 @@ class _NavigationSidebarState extends State<NavigationSidebar> {
                   Icon(
                     isExpanded ? Icons.expand_less : Icons.expand_more,
                     size: 20,
-                    color: AppTheme.textSecondary,
+                    color: context.colors.textSecondary,
                   ),
               ],
             ),
@@ -210,6 +244,20 @@ class _NavigationSidebarState extends State<NavigationSidebar> {
                 selectedMainItem == item.title && selectedSubItem == subItem;
             return InkWell(
               onTap: () {
+                // 편집 중인지 확인
+                if (!_customerService.canLeave(() {
+                  // 확인 후 실행할 로직
+                  setState(() {
+                    selectedMainItem = item.title;
+                    selectedSubItem = subItem;
+                  });
+                  widget.onNavigate(item.title, subItem);
+                })) {
+                  // 편집 중이므로 여기서는 아무것도 하지 않음
+                  return;
+                }
+
+                // 편집 중이 아니면 바로 실행
                 setState(() {
                   selectedMainItem = item.title;
                   selectedSubItem = subItem;
@@ -228,9 +276,7 @@ class _NavigationSidebarState extends State<NavigationSidebar> {
                   vertical: 8,
                 ),
                 decoration: BoxDecoration(
-                  color: isSubSelected
-                      ? AppTheme.selectedColor.withOpacity(0.1)
-                      : null,
+                  color: isSubSelected ? context.colors.selectedColor : null,
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Row(
@@ -240,12 +286,12 @@ class _NavigationSidebarState extends State<NavigationSidebar> {
                       child: Text(
                         subItem,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: isSubSelected
-                              ? AppTheme.selectedColor
-                              : AppTheme.textPrimary,
                           fontWeight: isSubSelected
                               ? FontWeight.w600
                               : FontWeight.normal,
+                          color: isSubSelected
+                              ? context.colors.white
+                              : context.colors.textPrimary,
                         ),
                       ),
                     ),
@@ -263,7 +309,9 @@ class _NavigationSidebarState extends State<NavigationSidebar> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        border: Border(top: BorderSide(color: AppTheme.dividerColor, width: 1)),
+        border: Border(
+          top: BorderSide(color: context.colors.dividerColor, width: 1),
+        ),
       ),
       child: InkWell(
         onTap: () {
@@ -273,29 +321,29 @@ class _NavigationSidebarState extends State<NavigationSidebar> {
 
           // 사용자에게 피드백 제공
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('캐시가 초기화되었습니다.'),
-              duration: Duration(seconds: 2),
-              backgroundColor: Colors.green,
+            SnackBar(
+              content: const Text('캐시가 초기화되었습니다.'),
+              duration: const Duration(seconds: 2),
+              backgroundColor: context.colors.green,
             ),
           );
         },
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
-            color: Colors.orange.withOpacity(0.1),
+            color: context.colors.orange,
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.orange.withOpacity(0.3), width: 1),
+            border: Border.all(color: context.colors.orange, width: 1),
           ),
           child: Row(
             children: [
-              Icon(Icons.refresh, size: 20, color: Colors.orange),
+              Icon(Icons.refresh, size: 20, color: context.colors.white),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   '캐시 초기화',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.orange,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: context.colors.white,
                     fontWeight: FontWeight.w600,
                   ),
                 ),

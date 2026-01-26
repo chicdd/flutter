@@ -223,17 +223,33 @@ class _AddAuthModalState extends BaseAddModalState<_AddAuthModal> {
         const SizedBox(height: 16),
         Row(
           children: [
-            buildCheckbox('원격경계허용', _remoteGuardAllowed, (value) {
-              setState(() {
-                _remoteGuardAllowed = value ?? false;
-              });
-            }),
+            // buildCheckbox('원격경계허용', _remoteGuardAllowed, (value) {
+            //   setState(() {
+            //     _remoteGuardAllowed = value ?? false;
+            //   });
+            // }),
+            buildCheckbox(
+              label: '원격경계허용',
+              value: _remoteGuardAllowed,
+              readOnly: true,
+              onChanged: (val) {
+                setState(() => _remoteGuardAllowed = val ?? false);
+              },
+            ),
             const SizedBox(width: 20),
-            buildCheckbox('원격해제허용', _remoteReleaseAllowed, (value) {
-              setState(() {
-                _remoteReleaseAllowed = value ?? false;
-              });
-            }),
+            // buildCheckbox('원격해제허용', _remoteReleaseAllowed, (value) {
+            //   setState(() {
+            //     _remoteReleaseAllowed = value ?? false;
+            //   });
+            // }),
+            buildCheckbox(
+              label: '원격해제허용',
+              value: _remoteReleaseAllowed,
+              readOnly: true,
+              onChanged: (val) {
+                setState(() => _remoteReleaseAllowed = val ?? false);
+              },
+            ),
           ],
         ),
       ],

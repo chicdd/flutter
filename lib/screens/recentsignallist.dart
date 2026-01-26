@@ -474,11 +474,20 @@ class RecentSignalListState
                     ),
                   ),
                   const SizedBox(height: 8),
-                  buildCheckbox('오름차순 정렬', _isAscending, (value) {
-                    setState(() {
-                      _isAscending = value ?? false;
-                    });
-                  }),
+                  buildCheckbox(
+                    label: '무선센서 설치고객',
+                    value: _isAscending,
+                    readOnly: true,
+                    onChanged: (val) {
+                      setState(() => _isAscending = val ?? false);
+                    },
+                  ),
+
+                  // buildCheckbox('오름차순 정렬', _isAscending, (value) {
+                  //   setState(() {
+                  //     _isAscending = value ?? false;
+                  //   });
+                  // }),
                 ],
               ),
               const SizedBox(width: 16),

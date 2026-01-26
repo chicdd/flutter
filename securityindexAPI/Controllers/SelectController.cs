@@ -218,11 +218,22 @@ namespace securityindexAPI.Controllers
                         원격암호 = reader["원격암호"]?.ToString(),
                         ARS전화번호 = reader["ARS전화번호"]?.ToString(),
                         TMP1 = reader["TMP1"]?.ToString(), //키인수수량
+                        TMP2 = reader["TMP2"]?.ToString(), //키패드
+                        TMP3 = reader["TMP3"]?.ToString(), //키패드수량
+                        TMP4 = reader["TMP4"]?.ToString(), //X좌표1
+                        TMP5 = reader["TMP5"]?.ToString(), //Y좌표1
+                        TMP6 = reader["TMP6"]?.ToString(), //X좌표2
+                        TMP7 = reader["TMP7"]?.ToString(), //Y좌표2
+                        TMP8 = reader["tmP8"]?.ToString(),
+                        cu1 = reader["cu1"]?.ToString(), //개통전화번호
+                        cu2 = reader["cu2"]?.ToString(), //모뎀일련번호
+                        cu3 = reader["cu3"]?.ToString(), //확장고객정보의 개통일자
+                        cu4 = reader["cu4"]?.ToString(), //추가메모
                         키박스번호 = reader["키박스번호"]?.ToString(),
                         월간집계 = reader["월간집계"] == DBNull.Value ? false : Convert.ToBoolean(reader["월간집계"]),
                         키인수여부 = reader["키인수여부"] == DBNull.Value ? false : Convert.ToBoolean(reader["키인수여부"]),
                         dvr여부 = reader["dvr여부"] == DBNull.Value ? false : Convert.ToBoolean(reader["dvr여부"]),
-                        TMP8 = reader["tmP8"]?.ToString(),
+                        
                         관제액션 = reader["관제액션"]?.ToString(),
                         메모 = reader["메모"]?.ToString(),
                         메모2 = reader["메모2"]?.ToString()

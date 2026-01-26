@@ -26,6 +26,9 @@ class UserZoneInfoState extends State<UserZoneInfoScreen>
   // 검색 컨트롤러
   final TextEditingController _searchController = TextEditingController();
 
+  // 현재 로드된 고객의 관제관리번호 (중복 API 호출 방지)
+  String? _loadedCustomerManagementNumber;
+
   // 사용자 관리 데이터 목록
   List<UserZoneInfo> _userInfoList = [];
 
@@ -186,6 +189,7 @@ class UserZoneInfoState extends State<UserZoneInfoScreen>
     final customer = customerService.selectedCustomer;
 
     if (customer != null) {
+      _loadedCustomerManagementNumber = customer.controlManagementNumber;
       await _loadUserZoneData(customer.controlManagementNumber);
     } else {
       setState(() {
@@ -198,13 +202,20 @@ class UserZoneInfoState extends State<UserZoneInfoScreen>
   /// CustomerServiceHandler 콜백 구현
   @override
   void onCustomerChanged(SearchPanel? customer, CustomerDetail? detail) {
-    if (customer != null) {
-      _loadUserZoneData(customer.controlManagementNumber);
-    } else {
-      setState(() {
-        _userInfoList = [];
-        _zoneInfoList = [];
-      });
+    final currentCustomerNumber = customer?.controlManagementNumber;
+
+    // 고객이 변경된 경우에만 API 호출
+    if (currentCustomerNumber != _loadedCustomerManagementNumber) {
+      _loadedCustomerManagementNumber = currentCustomerNumber;
+
+      if (customer != null) {
+        _loadUserZoneData(customer.controlManagementNumber);
+      } else {
+        setState(() {
+          _userInfoList = [];
+          _zoneInfoList = [];
+        });
+      }
     }
   }
 
@@ -513,31 +524,71 @@ class _AddUserModalState extends State<_AddUserModal> {
                 spacing: 20,
                 runSpacing: 12,
                 children: [
-                  buildCheckbox('무단허용', _unauthorized, (value) {
-                    setState(() {
-                      _unauthorized = value ?? false;
-                    });
-                  }),
-                  buildCheckbox('SMS', _sms, (value) {
-                    setState(() {
-                      _sms = value ?? false;
-                    });
-                  }),
-                  buildCheckbox('요원', _agent, (value) {
-                    setState(() {
-                      _agent = value ?? false;
-                    });
-                  }),
-                  buildCheckbox('APP', _app, (value) {
-                    setState(() {
-                      _app = value ?? false;
-                    });
-                  }),
-                  buildCheckbox('예비', _preparation, (value) {
-                    setState(() {
-                      _preparation = value ?? false;
-                    });
-                  }),
+                  buildCheckbox(
+                    label: '무단허용',
+                    value: _unauthorized,
+                    readOnly: true,
+                    onChanged: (val) {
+                      setState(() => _unauthorized = val ?? false);
+                    },
+                  ),
+                  buildCheckbox(
+                    label: 'SMS',
+                    value: _sms,
+                    readOnly: true,
+                    onChanged: (val) {
+                      setState(() => _sms = val ?? false);
+                    },
+                  ),
+                  buildCheckbox(
+                    label: '요원',
+                    value: _agent,
+                    readOnly: true,
+                    onChanged: (val) {
+                      setState(() => _agent = val ?? false);
+                    },
+                  ),
+                  buildCheckbox(
+                    label: 'APP',
+                    value: _app,
+                    readOnly: true,
+                    onChanged: (val) {
+                      setState(() => _app = val ?? false);
+                    },
+                  ),
+                  buildCheckbox(
+                    label: '예비',
+                    value: _preparation,
+                    readOnly: true,
+                    onChanged: (val) {
+                      setState(() => _preparation = val ?? false);
+                    },
+                  ),
+                  // buildCheckbox('무단허용', _unauthorized, (value) {
+                  //   setState(() {
+                  //     _unauthorized = value ?? false;
+                  //   });
+                  // }),
+                  // buildCheckbox('SMS', _sms, (value) {
+                  //   setState(() {
+                  //     _sms = value ?? false;
+                  //   });
+                  // }),
+                  // buildCheckbox('요원', _agent, (value) {
+                  //   setState(() {
+                  //     _agent = value ?? false;
+                  //   });
+                  // }),
+                  // buildCheckbox('APP', _app, (value) {
+                  //   setState(() {
+                  //     _app = value ?? false;
+                  //   });
+                  // }),
+                  // buildCheckbox('예비', _preparation, (value) {
+                  //   setState(() {
+                  //     _preparation = value ?? false;
+                  //   });
+                  // }),
                 ],
               ),
               const SizedBox(height: 24),

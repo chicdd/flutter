@@ -9,7 +9,7 @@ import 'theme.dart';
 /// ========================================
 
 /// 기본 텍스트 필드 (라벨이 위에 있음)
-class CommonTextField extends StatelessWidget {
+class CommonTextField extends StatefulWidget {
   final String label;
   final TextEditingController? controller;
   final String? hintText;
@@ -20,6 +20,7 @@ class CommonTextField extends StatelessWidget {
   final int? maxLines;
   final String? searchQuery;
   final Function(String)? onChanged;
+  final VoidCallback? onFocusLost;
 
   const CommonTextField({
     super.key,
@@ -33,14 +34,42 @@ class CommonTextField extends StatelessWidget {
     this.maxLines = 1,
     this.searchQuery,
     this.onChanged,
+    this.onFocusLost,
   });
 
+  @override
+  State<CommonTextField> createState() => _CommonTextFieldState();
+}
+
+class _CommonTextFieldState extends State<CommonTextField> {
+  late FocusNode _focusNode;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode = FocusNode();
+    _focusNode.addListener(_onFocusChange);
+  }
+
+  @override
+  void dispose() {
+    _focusNode.removeListener(_onFocusChange);
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  void _onFocusChange() {
+    if (!_focusNode.hasFocus && widget.onFocusLost != null) {
+      widget.onFocusLost!();
+    }
+  }
+
   bool _containsQuery() {
-    if (searchQuery == null || searchQuery!.isEmpty) return false;
-    if (controller == null) return false;
-    final text = controller!.text.toLowerCase();
-    final query = searchQuery!.toLowerCase();
-    return text.contains(query) || label.toLowerCase().contains(query);
+    if (widget.searchQuery == null || widget.searchQuery!.isEmpty) return false;
+    if (widget.controller == null) return false;
+    final text = widget.controller!.text.toLowerCase();
+    final query = widget.searchQuery!.toLowerCase();
+    return text.contains(query) || widget.label.toLowerCase().contains(query);
   }
 
   @override
@@ -51,30 +80,33 @@ class CommonTextField extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          label,
+          widget.label,
           style: TextStyle(
             fontSize: 12,
-            color: AppTheme.textSecondary,
+            color: context.colors.textPrimary,
             fontWeight: FontWeight.w500,
             backgroundColor:
                 hasMatch &&
-                    searchQuery != null &&
-                    label.toLowerCase().contains(searchQuery!.toLowerCase())
-                ? Colors.yellow.shade300
+                    widget.searchQuery != null &&
+                    widget.label.toLowerCase().contains(
+                      widget.searchQuery!.toLowerCase(),
+                    )
+                ? context.colors.orange
                 : Colors.transparent,
           ),
         ),
         const SizedBox(height: 6),
         SizedBox(
           child: TextField(
-            controller: controller,
-            readOnly: readOnly,
-            onTap: onTap,
-            onChanged: onChanged,
-            keyboardType: keyboardType,
-            maxLines: maxLines,
+            controller: widget.controller,
+            focusNode: _focusNode,
+            readOnly: widget.readOnly,
+            onTap: widget.onTap,
+            onChanged: widget.onChanged,
+            keyboardType: widget.keyboardType,
+            maxLines: widget.maxLines,
             decoration: InputDecoration(
-              hintText: hintText,
+              hintText: widget.hintText,
               hintStyle: const TextStyle(
                 color: Color(0xFF999999),
                 fontSize: 14,
@@ -86,14 +118,18 @@ class CommonTextField extends StatelessWidget {
               ),
               filled: true,
               fillColor: hasMatch
-                  ? Colors.yellow.shade100
-                  : AppTheme.backgroundColor,
+                  ? null
+                  : widget.readOnly
+                  ? context.colors.textReadOnly
+                  : context.colors.textEnable,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
                 borderSide: BorderSide(
                   color: hasMatch
-                      ? Colors.yellow.shade700
-                      : AppTheme.dividerColor,
+                      ? context.colors.orange
+                      : widget.readOnly
+                      ? context.colors.cardBackground
+                      : context.colors.dividerColor,
                   width: hasMatch ? 2 : 1,
                 ),
               ),
@@ -101,8 +137,8 @@ class CommonTextField extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8),
                 borderSide: BorderSide(
                   color: hasMatch
-                      ? Colors.yellow.shade700
-                      : AppTheme.dividerColor,
+                      ? context.colors.orange
+                      : context.colors.dividerColor,
                   width: hasMatch ? 2 : 1,
                 ),
               ),
@@ -110,16 +146,18 @@ class CommonTextField extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8),
                 borderSide: BorderSide(
                   color: hasMatch
-                      ? Colors.yellow.shade700
-                      : AppTheme.selectedColor,
-                  width: 2,
+                      ? context.colors.orange
+                      : widget.readOnly
+                      ? context.colors.dividerColor
+                      : context.colors.selectedColor.withOpacity(0.8),
+                  width: widget.readOnly ? 1 : 2,
                 ),
               ),
-              suffixIcon: suffixIcon != null
+              suffixIcon: widget.suffixIcon != null
                   ? Padding(
                       padding: const EdgeInsets.only(right: 8),
                       child: Icon(
-                        suffixIcon,
+                        widget.suffixIcon,
                         size: 20,
                         color: const Color(0xFF9DC579),
                       ),
@@ -141,173 +179,260 @@ class CommonTextField extends StatelessWidget {
 /// ========================================
 /// 공통 드롭다운 필드 빌더
 /// ========================================
+class BuildDropdownField extends StatefulWidget {
+  final String label;
+  final String? value;
+  final List<CodeData> items;
+  final Function(String?) onChanged;
+  final String searchQuery;
+  final bool readOnly;
 
-/// 드롭다운 필드 빌더 함수 (onChanged 콜백 포함)
-Widget buildDropdownField({
-  required String label,
-  required String? value,
-  required List<CodeData> items,
-  required Function(String?) onChanged,
-  String searchQuery = '',
-  bool readOnly = false,
-}) {
-  // 검색 쿼리 매칭 확인 함수
-  bool containsQuery() {
-    if (searchQuery.isEmpty) return false;
-    final query = searchQuery.toLowerCase();
-    // 라벨이 검색어를 포함하는지 확인
-    if (label.toLowerCase().contains(query)) return true;
-    // 선택된 값이 검색어를 포함하는지 확인
-    if (value != null) {
-      final selectedItem = items.firstWhere(
-        (item) => item.code == value,
-        orElse: () => CodeData(code: '', name: ''),
-      );
-      final selectedText = '[${selectedItem.code}] ${selectedItem.name}';
-      if (selectedText.toLowerCase().contains(query)) return true;
-    }
-    return false;
+  const BuildDropdownField({
+    super.key,
+    required this.label,
+    this.value,
+    required this.items,
+    required this.onChanged,
+    required this.searchQuery,
+    this.readOnly = false,
+  });
+  @override
+  State<BuildDropdownField> createState() => _BuildDropdownFieldState();
+}
+
+class _BuildDropdownFieldState extends State<BuildDropdownField> {
+  late FocusNode _focusNode;
+
+  @override
+  void initState() {
+    super.initState();
   }
 
-  final hasMatch = containsQuery();
+  /// 드롭다운 필드 빌더 함수 (onChanged 콜백 포함)
+  @override
+  Widget build(BuildContext context) {
+    // 검색 쿼리 매칭 확인 함수
+    bool containsQuery() {
+      if (widget.searchQuery.isEmpty) return false;
+      final query = widget.searchQuery.toLowerCase();
+      // 라벨이 검색어를 포함하는지 확인
+      if (widget.label.toLowerCase().contains(query)) return true;
+      // 선택된 값이 검색어를 포함하는지 확인
+      if (widget.value != null) {
+        final selectedItem = widget.items.firstWhere(
+          (item) => item.code == widget.value,
+          orElse: () => CodeData(code: '', name: ''),
+        );
+        final selectedText = '[${selectedItem.code}] ${selectedItem.name}';
+        if (selectedText.toLowerCase().contains(query)) return true;
+      }
+      return false;
+    }
 
-  // 데이터가 로드되지 않았으면 빈 드롭다운 표시
-  if (items.isEmpty) {
+    final hasMatch = containsQuery();
+
+    // 데이터가 로드되지 않았으면 빈 드롭다운 표시
+    if (widget.items.isEmpty) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            widget.label,
+            style: TextStyle(
+              fontSize: 12,
+              color: context.colors.textSecondary,
+              fontWeight: FontWeight.w500,
+              backgroundColor:
+                  hasMatch &&
+                      widget.label.toLowerCase().contains(
+                        widget.searchQuery.toLowerCase(),
+                      )
+                  ? context.colors.orange
+                  : Colors.transparent,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: context.colors.textReadOnly,
+              border: Border.all(color: context.colors.dividerColor),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Text(
+              '로딩 중...',
+              style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
+            ),
+          ),
+        ],
+      );
+    }
+
+    // value가 items에 없으면 null로 설정 (에러 방지)
+    String? selectedValue = widget.value;
+    if (widget.value != null &&
+        !widget.items.any((item) => item.code == widget.value)) {
+      print('$widget.label - 선택된 값($widget.value)이 items에 없음, null로 설정');
+      selectedValue = null;
+    }
+
+    // 선택된 코드에 해당하는 이름을 찾아서 색상 결정
+    String selectedName = '';
+    if (selectedValue != null) {
+      final selectedItem = widget.items.firstWhere(
+        (item) => item.code == selectedValue,
+        orElse: () => CodeData(code: '', name: '정상'),
+      );
+      selectedName = selectedItem.name;
+    }
+    // 현재 선택된 상태의 색상
+    Color currentColor = _getStatusColor(context, selectedName);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          label,
+          widget.label,
           style: TextStyle(
             fontSize: 12,
             color: AppTheme.textSecondary,
             fontWeight: FontWeight.w500,
             backgroundColor:
                 hasMatch &&
-                    label.toLowerCase().contains(searchQuery.toLowerCase())
-                ? Colors.yellow.shade300
+                    widget.label.toLowerCase().contains(
+                      widget.searchQuery.toLowerCase(),
+                    )
+                ? context.colors.orange
                 : Colors.transparent,
           ),
         ),
         const SizedBox(height: 6),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          decoration: BoxDecoration(
-            color: AppTheme.backgroundColor,
-            border: Border.all(color: AppTheme.dividerColor),
-            borderRadius: BorderRadius.circular(8),
+        DropdownButtonFormField<String>(
+          value: selectedValue,
+          style: TextStyle(
+            fontSize: 14,
+            color: widget.readOnly
+                ? context.colors.textPrimary
+                : context.colors.textEnable,
           ),
-          child: const Text(
-            '로딩 중...',
-            style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
-          ),
-        ),
-      ],
-    );
-  }
-
-  // value가 items에 없으면 null로 설정 (에러 방지)
-  String? selectedValue = value;
-  if (value != null && !items.any((item) => item.code == value)) {
-    print('$label - 선택된 값($value)이 items에 없음, null로 설정');
-    selectedValue = null;
-  }
-
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(
-        label,
-        style: TextStyle(
-          fontSize: 12,
-          color: AppTheme.textSecondary,
-          fontWeight: FontWeight.w500,
-          backgroundColor:
-              hasMatch &&
-                  label.toLowerCase().contains(searchQuery.toLowerCase())
-              ? Colors.yellow.shade300
-              : Colors.transparent,
-        ),
-      ),
-      const SizedBox(height: 6),
-      DropdownButtonFormField<String>(
-        value: selectedValue,
-        style: const TextStyle(fontSize: 14, color: AppTheme.textPrimary),
-        decoration: InputDecoration(
-          isDense: true,
-          contentPadding: const EdgeInsets.only(
-            left: 12,
-            top: 9,
-            right: 6,
-            bottom: 9,
-          ),
-          filled: true,
-          fillColor: hasMatch
-              ? Colors.yellow.shade100
-              : AppTheme.backgroundColor,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide(
-              color: hasMatch ? Colors.yellow.shade700 : AppTheme.dividerColor,
-              width: hasMatch ? 2 : 1,
+          decoration: InputDecoration(
+            isDense: true,
+            contentPadding: const EdgeInsets.only(
+              left: 12,
+              top: 9,
+              right: 6,
+              bottom: 9,
+            ),
+            filled: true,
+            fillColor: widget.readOnly
+                ? currentColor == context.colors.textReadOnly
+                      ? context.colors.textReadOnly
+                      : currentColor //
+                : context.colors.textEnable,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(
+                color: hasMatch
+                    ? context.colors.orange
+                    : widget.readOnly
+                    ? context.colors.dividerColor
+                    : currentColor,
+                width: hasMatch ? 2 : 1,
+              ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(
+                color: hasMatch
+                    ? context.colors.orange
+                    : context.colors.dividerColor,
+                width: hasMatch ? 2 : 1,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(
+                color: hasMatch
+                    ? context.colors.orange
+                    : context.colors.selectedColor.withOpacity(0.8),
+                width: 2,
+              ),
             ),
           ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide(
-              color: hasMatch ? Colors.yellow.shade700 : AppTheme.dividerColor,
-              width: hasMatch ? 2 : 1,
-            ),
+          icon: Icon(
+            Icons.arrow_drop_down,
+            size: 24,
+            color: widget.readOnly
+                ? Colors.transparent
+                : AppTheme.textSecondary,
           ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide(
-              color: hasMatch ? Colors.yellow.shade700 : AppTheme.selectedColor,
-              width: 2,
-            ),
-          ),
-        ),
-        icon: const Icon(Icons.arrow_drop_down, size: 24),
-        isExpanded: true,
-        selectedItemBuilder: (BuildContext context) {
-          return items.map((CodeData item) {
-            // 선택된 항목일 때만 강조 표시
-            final isSelected = item.code == selectedValue;
-            return Container(
-              alignment: Alignment.centerLeft,
+          isExpanded: true,
+          selectedItemBuilder: (BuildContext context) {
+            return widget.items.map((CodeData item) {
+              // 선택된 항목일 때만 강조 표시
+              final isSelected = item.code == selectedValue;
+              return Container(
+                alignment: Alignment.centerLeft,
+                child: HighlightedText(
+                  text: '[${item.code}] ${item.name}',
+                  query: widget.searchQuery,
+                  style: TextStyle(
+                    color: widget.readOnly
+                        ? currentColor == context.colors.textReadOnly
+                              ? context.colors.textPrimary
+                              : context.colors.white
+                        : context.colors.textPrimary,
+                    fontSize: 14,
+                  ),
+                ),
+              );
+            }).toList();
+          },
+          items: widget.items.map((CodeData item) {
+            return DropdownMenuItem<String>(
+              value: item.code,
               child: HighlightedText(
                 text: '[${item.code}] ${item.name}',
-                query: searchQuery,
+                query: widget.searchQuery,
                 style: TextStyle(
-                  color: isSelected
-                      ? AppTheme.textPrimary
-                      : AppTheme.textSecondary,
+                  color: context.colors.textPrimary,
                   fontSize: 14,
                 ),
               ),
             );
-          }).toList();
-        },
-        items: items.map((CodeData item) {
-          return DropdownMenuItem<String>(
-            value: item.code,
-            child: HighlightedText(
-              text: '[${item.code}] ${item.name}',
-              query: searchQuery,
-              style: const TextStyle(fontSize: 14),
-            ),
-          );
-        }).toList(),
-        onChanged: readOnly ? null : onChanged,
-      ),
-    ],
-  );
+          }).toList(),
+          onChanged: widget.readOnly ? null : widget.onChanged,
+        ),
+      ],
+    );
+  }
+}
+
+// 관제고객상태에 따른 색상 반환
+Color _getStatusColor(BuildContext context, String status) {
+  if (status.contains('정상') || status.contains('관제중')) {
+    return Colors.green;
+  } else if (status.contains('보류') ||
+      status.contains('대기') ||
+      status.contains('미개시')) {
+    return Colors.orange;
+  } else if (status.contains('해지') || status.contains('중지')) {
+    return Colors.red;
+  }
+  return context.colors.textReadOnly;
 }
 
 /// 체크박스 빌더 (텍스트 클릭 가능)
-Widget buildCheckbox(String label, bool value, Function(bool?) onChanged) {
+Widget buildCheckbox({
+  required String label,
+  required bool value,
+  final bool? readOnly,
+  Function(bool)? onChanged,
+}) {
+  final isReadOnly = readOnly ?? false;
+
   return InkWell(
-    onTap: () => onChanged(!value),
+    onTap: isReadOnly ? null : () => onChanged?.call(!value),
     child: Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -316,7 +441,9 @@ Widget buildCheckbox(String label, bool value, Function(bool?) onChanged) {
           height: 20,
           child: Checkbox(
             value: value,
-            onChanged: onChanged,
+            onChanged: isReadOnly
+                ? null
+                : (bool? newValue) => onChanged?.call(newValue ?? false),
             activeColor: const Color(0xFF007AFF),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(4),
@@ -337,43 +464,80 @@ Widget buildCheckbox(String label, bool value, Function(bool?) onChanged) {
   );
 }
 
-/// 체크박스 셀 생성
-Widget buildCheckboxCell(bool isChecked, double width) {
-  return Container(
-    width: width,
-    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-    alignment: Alignment.center,
-    child: Icon(
-      isChecked ? Icons.check_box : Icons.check_box_outline_blank,
-      size: 18,
-      color: isChecked ? AppTheme.selectedColor : AppTheme.textSecondary,
-    ),
-  );
+class BuildCheckboxCell extends StatefulWidget {
+  final bool isChecked;
+  final double width;
+
+  const BuildCheckboxCell({
+    super.key,
+    required this.isChecked,
+    required this.width,
+  });
+  @override
+  State<BuildCheckboxCell> createState() => _BuildCheckboxCellState();
+}
+
+class _BuildCheckboxCellState extends State<BuildCheckboxCell> {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: widget.width,
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+      alignment: Alignment.center,
+      child: Icon(
+        widget.isChecked ? Icons.check_box : Icons.check_box_outline_blank,
+        size: 18,
+        color: widget.isChecked
+            ? context.colors.selectedColor
+            : AppTheme.textSecondary,
+      ),
+    );
+  }
 }
 
 /// ========================================
 /// 공통 라디오버튼 위젯 (텍스트 클릭 가능)
 /// ========================================
-Widget buildRadioOption(
-  String label,
-  bool isSelected,
-  Function(bool?) onChanged,
-) {
-  return InkWell(
-    onTap: () => onChanged(true),
-    child: Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Radio<bool>(
-          value: true,
-          groupValue: isSelected,
-          onChanged: onChanged,
-          activeColor: AppTheme.selectedColor,
-        ),
-        Text(label, style: const TextStyle(fontSize: 14)),
-      ],
-    ),
-  );
+class BuildRadioOption extends StatefulWidget {
+  final String label;
+  final bool value;
+  final Function(bool?) onChanged;
+  final bool readOnly;
+
+  const BuildRadioOption({
+    super.key,
+    required this.label,
+    required this.value,
+    required this.onChanged,
+    this.readOnly = false,
+  });
+
+  @override
+  State<BuildRadioOption> createState() => _BuildRadioOptionState();
+}
+
+class _BuildRadioOptionState extends State<BuildRadioOption> {
+  Widget build(BuildContext context) {
+    final isReadOnly = widget.readOnly ?? false;
+
+    return InkWell(
+      onTap: isReadOnly ? null : () => widget.onChanged?.call(!widget.value),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Radio<bool>(
+            value: true,
+            groupValue: widget.value,
+            onChanged: isReadOnly
+                ? null
+                : (bool? newValue) => widget.onChanged?.call(newValue ?? false),
+            activeColor: context.colors.selectedColor,
+          ),
+          Text(widget.label, style: const TextStyle(fontSize: 14)),
+        ],
+      ),
+    );
+  }
 }
 
 /// 라벨이 왼쪽에 있는 인라인 텍스트 필드 (확장 고객정보용)
@@ -435,16 +599,16 @@ class InlineTextField extends StatelessWidget {
                 fillColor: AppTheme.backgroundColor,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: AppTheme.dividerColor),
+                  borderSide: BorderSide(color: context.colors.dividerColor),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: AppTheme.dividerColor),
+                  borderSide: BorderSide(color: context.colors.dividerColor),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(
-                    color: AppTheme.selectedColor,
+                  borderSide: BorderSide(
+                    color: context.colors.selectedColor,
                     width: 1,
                   ),
                 ),
@@ -499,16 +663,16 @@ class ReadOnlyTextField extends StatelessWidget {
               fillColor: AppTheme.backgroundColor,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: AppTheme.dividerColor),
+                borderSide: BorderSide(color: context.colors.dividerColor),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: AppTheme.dividerColor),
+                borderSide: BorderSide(color: context.colors.dividerColor),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(
-                  color: AppTheme.selectedColor,
+                borderSide: BorderSide(
+                  color: context.colors.selectedColor,
                   width: 1,
                 ),
               ),
@@ -553,7 +717,9 @@ class StatusButton extends StatelessWidget {
         decoration: BoxDecoration(
           color: isSelected ? color : Colors.transparent,
           borderRadius: BorderRadius.circular(6),
-          border: Border.all(color: isSelected ? color : AppTheme.dividerColor),
+          border: Border.all(
+            color: isSelected ? color : context.colors.dividerColor,
+          ),
         ),
         child: Text(
           label,
@@ -639,7 +805,7 @@ class RadioOption extends StatelessWidget {
           value: true,
           groupValue: isSelected,
           onChanged: onChanged,
-          activeColor: AppTheme.selectedColor,
+          activeColor: context.colors.selectedColor,
         ),
         Text(label, style: const TextStyle(fontSize: 14)),
       ],
@@ -681,7 +847,7 @@ class NumberDisplayField extends StatelessWidget {
           decoration: BoxDecoration(
             color: AppTheme.backgroundColor,
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: AppTheme.dividerColor),
+            border: Border.all(color: context.colors.dividerColor),
           ),
           alignment: Alignment.centerLeft,
           child: Text(value.toString(), style: const TextStyle(fontSize: 14)),
@@ -719,7 +885,7 @@ class MemoTab extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
             color: isSelected ? Colors.white : AppTheme.backgroundColor,
-            border: Border.all(color: AppTheme.dividerColor, width: 1),
+            border: Border.all(color: context.colors.dividerColor, width: 1),
             borderRadius: BorderRadius.only(
               topLeft: index == 0 ? const Radius.circular(8) : Radius.zero,
               topRight: index == 1 ? const Radius.circular(8) : Radius.zero,
@@ -761,6 +927,21 @@ bool stringToBool(String text) {
     result = false;
   }
   return result;
+}
+
+//datetime 형식을 String으로 가져 와
+String datePParsing(DateTime dateTime) {
+  // null 또는 빈 문자열 체크
+  //if (date == null || date.isEmpty) return '';
+
+  try {
+    // ISO 8601 형식 (2015-03-21T00:00:00) 처리
+
+    return '${dateTime.year}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')}';
+  } catch (e) {
+    print('날짜 파싱 오류: $e');
+    return dateTime.toString();
+  }
 }
 
 //datetime 형식을 String으로 가져 와

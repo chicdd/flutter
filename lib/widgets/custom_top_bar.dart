@@ -178,18 +178,22 @@ class CustomTopBarState extends State<CustomTopBar>
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-      decoration: const BoxDecoration(
-        color: Colors.white,
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      decoration: BoxDecoration(
+        color: context.colors.gray10,
         border: Border(
-          bottom: BorderSide(color: AppTheme.dividerColor, width: 1),
+          bottom: BorderSide(color: context.colors.dividerColor, width: 1),
         ),
       ),
       child: Row(
         children: [
           Text(
             widget.title,
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: context.colors.textPrimary,
+            ),
             overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(width: 16),
@@ -199,7 +203,7 @@ class CustomTopBarState extends State<CustomTopBar>
               padding: const EdgeInsets.only(right: 8),
               child: buildStatusChip(
                 button.label,
-                button.backgroundColor ?? AppTheme.selectedColor,
+                button.backgroundColor ?? context.colors.selectedColor,
                 onTap: button.onPressed,
               ),
             ),
@@ -213,94 +217,111 @@ class CustomTopBarState extends State<CustomTopBar>
   }
 
   Widget _buildSearchArea() {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-          width: _isSearchExpanded ? 300 : 0,
-          height: 40,
-          margin: EdgeInsets.only(right: _isSearchExpanded ? 8 : 0),
-          child: _isSearchExpanded
-              ? TextFormField(
-                  controller: _internalSearchController,
-                  focusNode: _searchFocusNode,
-                  style: const TextStyle(fontSize: 13),
-                  onChanged: (value) {
-                    setState(() {}); // suffixIcon 업데이트를 위해
-                    if (widget.onSearchChanged != null) {
-                      widget.onSearchChanged!(value);
-                    }
-                    if (widget.onPageSearch != null) {
-                      widget.onPageSearch!(value);
-                    }
-                  },
-                  decoration: InputDecoration(
-                    hintText: '페이지 내 검색 (Ctrl+F)',
-                    hintStyle: TextStyle(color: Colors.grey.shade400),
-                    isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 10,
-                    ),
-                    filled: true,
-                    fillColor: Colors.white,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: Colors.grey.shade300),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: Colors.grey.shade300),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(
-                        color: Color(0xFF007AFF),
-                        width: 2,
+    return Builder(
+      builder: (context) {
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+              width: _isSearchExpanded ? 300 : 0,
+              height: 40,
+              margin: EdgeInsets.only(right: _isSearchExpanded ? 8 : 0),
+              child: _isSearchExpanded
+                  ? TextFormField(
+                      controller: _internalSearchController,
+                      focusNode: _searchFocusNode,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: context.colors.textPrimary,
                       ),
-                    ),
-                    prefixIcon: const Icon(
-                      Icons.search,
-                      size: 18,
-                      color: Color(0xFF86868B),
-                    ),
-                    suffixIcon: _internalSearchController.text.isNotEmpty
-                        ? IconButton(
-                            icon: const Icon(Icons.clear, size: 18),
-                            onPressed: () {
-                              setState(() {
-                                _internalSearchController.clear();
-                              });
-                              if (widget.onPageSearch != null) {
-                                widget.onPageSearch!('');
-                              }
-                            },
-                          )
-                        : null,
-                  ),
-                )
-              : const SizedBox.shrink(),
-        ),
-        InkWell(
-          onTap: _toggleSearch,
-          borderRadius: BorderRadius.circular(20),
-          child: Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: AppTheme.selectedColor.withOpacity(0.1),
+                      onChanged: (value) {
+                        setState(() {}); // suffixIcon 업데이트를 위해
+                        if (widget.onSearchChanged != null) {
+                          widget.onSearchChanged!(value);
+                        }
+                        if (widget.onPageSearch != null) {
+                          widget.onPageSearch!(value);
+                        }
+                      },
+                      decoration: InputDecoration(
+                        hintText: '페이지 내 검색 (Ctrl+F)',
+                        hintStyle: TextStyle(
+                          color: context.colors.textSecondary,
+                        ),
+                        isDense: true,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
+                        filled: true,
+                        fillColor: context.colors.cardBackground,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(
+                            color: context.colors.dividerColor,
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(
+                            color: context.colors.dividerColor,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(
+                            color: context.colors.selectedColor,
+                            width: 2,
+                          ),
+                        ),
+                        prefixIcon: Icon(
+                          Icons.search,
+                          size: 18,
+                          color: context.colors.textSecondary,
+                        ),
+                        suffixIcon: _internalSearchController.text.isNotEmpty
+                            ? IconButton(
+                                icon: Icon(
+                                  Icons.clear,
+                                  size: 18,
+                                  color: context.colors.textSecondary,
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    _internalSearchController.clear();
+                                  });
+                                  if (widget.onPageSearch != null) {
+                                    widget.onPageSearch!('');
+                                  }
+                                },
+                              )
+                            : null,
+                      ),
+                    )
+                  : const SizedBox.shrink(),
+            ),
+            InkWell(
+              onTap: _toggleSearch,
               borderRadius: BorderRadius.circular(20),
+              child: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: context.colors.selectedColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Icon(
+                  Icons.search,
+                  color: context.colors.selectedColor,
+                  size: 20,
+                ),
+              ),
             ),
-            child: const Icon(
-              Icons.search,
-              color: AppTheme.selectedColor,
-              size: 20,
-            ),
-          ),
-        ),
-      ],
+          ],
+        );
+      },
     );
   }
 }
@@ -378,10 +399,10 @@ class HighlightedText extends StatelessWidget {
           text: text.substring(index, index + query.length),
           style:
               highlightStyle ??
-              TextStyle(
-                backgroundColor: Colors.yellow.shade300,
+              const TextStyle(
+                backgroundColor: Color(0xFFFFEB3B),
                 fontWeight: FontWeight.bold,
-                color: Colors.black,
+                color: Color(0xFF000000),
               ),
         ),
       );

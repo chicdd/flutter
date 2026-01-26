@@ -514,7 +514,7 @@ class _AddDocumentModalState extends State<_AddDocumentModal> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      buildDropdownField(
+                      BuildDropdownField(
                         label: '문서종류',
                         value: documentType,
                         items: _documentTypeList,
@@ -523,6 +523,7 @@ class _AddDocumentModalState extends State<_AddDocumentModal> {
                             documentType = newValue!;
                           });
                         },
+                        searchQuery: '',
                       ),
                     ],
                   ),
@@ -605,11 +606,7 @@ class _AddDocumentModalState extends State<_AddDocumentModal> {
             ),
             const SizedBox(height: 16),
             // 저장 폴더 열기
-            buildCheckbox('저장 폴더 열기', _saveFilter, (value) {
-              setState(() {
-                _saveFilter = value ?? false;
-              });
-            }),
+            buildCheckbox(label: '저장 폴더 열기', value: _saveFilter),
             const SizedBox(height: 24),
             // 문서첨부저장 버튼
             SizedBox(

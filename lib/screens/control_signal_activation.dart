@@ -61,14 +61,18 @@ class ControlSignalActivationState
       TableColumnConfig(
         header: 'ZONECK',
         width: columnWidths[1],
-        cellBuilder: (data, value) =>
-            buildCheckboxCell(data['ZONECK'] == true, columnWidths[1]!),
+        cellBuilder: (data, value) => BuildCheckboxCell(
+          isChecked: data['ZONECK'] == true,
+          width: columnWidths[1]!,
+        ),
       ),
       TableColumnConfig(
         header: 'KEYCK',
         width: columnWidths[2],
-        cellBuilder: (data, value) =>
-            buildCheckboxCell(data['KEYCK'] == true, columnWidths[2]!),
+        cellBuilder: (data, value) => BuildCheckboxCell(
+          isChecked: data['KEYCK'] == true,
+          width: columnWidths[2]!,
+        ),
       ),
       TableColumnConfig(
         header: 'KEYS',
@@ -78,14 +82,18 @@ class ControlSignalActivationState
       TableColumnConfig(
         header: '도면',
         width: columnWidths[4],
-        cellBuilder: (data, value) =>
-            buildCheckboxCell(data['도면'] == true, columnWidths[4]!),
+        cellBuilder: (data, value) => BuildCheckboxCell(
+          isChecked: data['도면'] == true,
+          width: columnWidths[4]!,
+        ),
       ),
       TableColumnConfig(
         header: '고객카드',
         width: columnWidths[5],
-        cellBuilder: (data, value) =>
-            buildCheckboxCell(data['customerCard'] == true, columnWidths[5]!),
+        cellBuilder: (data, value) => BuildCheckboxCell(
+          isChecked: data['customerCard'] == true,
+          width: columnWidths[5]!,
+        ),
       ),
       TableColumnConfig(
         header: '개시처리자',
@@ -163,7 +171,7 @@ class _AddModalState extends BaseAddModalState<_AddModal> {
     text: '0',
   );
 
-  bool _zoneCheckResult = false;
+  bool _zoneCheck = false;
   bool _mapCheck = false;
   bool _customerCard = false;
   bool _depositKeyTest = false;
@@ -213,7 +221,7 @@ class _AddModalState extends BaseAddModalState<_AddModal> {
     final data = {
       '관제관리번호': widget.controlManagementNumber,
       '경비개시일자': _openDateController.text,
-      '존점검결과': _zoneCheckResult,
+      '존점검결과': _zoneCheck,
       '키테스트': _depositKeyTest,
       '키수량': int.tryParse(_keyQuantityController.text) ?? 0,
       '도면점검': _mapCheck,
@@ -260,26 +268,10 @@ class _AddModalState extends BaseAddModalState<_AddModal> {
           spacing: 16,
           runSpacing: 8,
           children: [
-            buildCheckbox('존점검결과', _zoneCheckResult, (value) {
-              setState(() {
-                _zoneCheckResult = value ?? false;
-              });
-            }),
-            buildCheckbox('도면점검', _mapCheck, (value) {
-              setState(() {
-                _mapCheck = value ?? false;
-              });
-            }),
-            buildCheckbox('고객카드', _customerCard, (value) {
-              setState(() {
-                _customerCard = value ?? false;
-              });
-            }),
-            buildCheckbox('예탁키테스트', _depositKeyTest, (value) {
-              setState(() {
-                _depositKeyTest = value ?? false;
-              });
-            }),
+            buildCheckbox(label: '존점검결과', value: _zoneCheck),
+            buildCheckbox(label: '도면점검', value: _mapCheck),
+            buildCheckbox(label: '고객카드', value: _customerCard),
+            buildCheckbox(label: '예탁키테스트', value: _depositKeyTest),
           ],
         ),
         const SizedBox(height: 16),

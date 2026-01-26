@@ -58,6 +58,9 @@ abstract class BaseTableScreenState<T, W extends BaseTableScreen<T>>
   bool get wantKeepAlive => true;
   bool _isloading = true;
 
+  /// 현재 로드된 고객 키 (중복 API 호출 방지)
+  String? _loadedCustomerKey;
+
   /// 데이터 목록
   List<T> _dataList = [];
   List<T> get dataList => _dataList;
@@ -180,10 +183,15 @@ abstract class BaseTableScreenState<T, W extends BaseTableScreen<T>>
   void onCustomerChanged(SearchPanel? customer, CustomerDetail? detail) {
     final key = getDataKeyFromCustomer(customer, detail);
 
-    if (key != null && key.isNotEmpty) {
-      _loadData(key);
-    } else {
-      _clearData();
+    // 고객 키가 변경된 경우에만 데이터 로드
+    if (key != _loadedCustomerKey) {
+      _loadedCustomerKey = key;
+
+      if (key != null && key.isNotEmpty) {
+        _loadData(key);
+      } else {
+        _clearData();
+      }
     }
   }
 

@@ -63,10 +63,11 @@ class DatabaseService {
     try {
       final httpClient = DatabaseService._createHttpClient();
       final encodedNumber = Uri.encodeComponent(managementNumber);
-      final uri = Uri.parse('');
-
+      final uri = Uri.parse(
+        'https://localhost:7088/api/Update/$managementNumber',
+      );
+      print(data);
       print('기본 고객 정보 수정 API 호출: $uri');
-      print('관제관리번호: $managementNumber');
 
       final request = await httpClient.putUrl(uri);
       request.headers.set('Content-Type', 'application/json; charset=utf-8');

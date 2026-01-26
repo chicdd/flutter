@@ -8,8 +8,7 @@ import '../services/selected_customer_service.dart';
 class CustomerSearchPanel extends StatefulWidget {
   final Function(SearchPanel?) onCustomerSelected;
 
-  const CustomerSearchPanel({Key? key, required this.onCustomerSelected})
-    : super(key: key);
+  const CustomerSearchPanel({super.key, required this.onCustomerSelected});
 
   @override
   State<CustomerSearchPanel> createState() => _CustomerSearchPanelState();
@@ -24,6 +23,7 @@ class _CustomerSearchPanelState extends State<CustomerSearchPanel> {
   bool isLoading = false;
   Timer? _debounceTimer;
   final TextEditingController _searchController = TextEditingController();
+  final _customerService = SelectedCustomerService(); // 서비스 추가
 
   final List<String> filters = ['상호', '고객번호', '대표자', '주소', '전화번호', '사용자HP'];
 
@@ -72,14 +72,13 @@ class _CustomerSearchPanelState extends State<CustomerSearchPanel> {
         setState(() {
           searchQuery = query;
         });
-
         // 검색어가 비어있으면 초기 고객 목록 로드
         if (query.isEmpty) {
           _loadCustomers();
         }
         // 사용자HP는 서버에서만 검색 가능하므로 1글자 이상이면 즉시 검색
         // 다른 필터는 2글자 이상일 때만 서버 API 호출
-        else if (selectedFilter == '사용자HP' && query.length >= 1) {
+        else if (selectedFilter == '사용자HP' && query.isNotEmpty) {
           _searchCustomers(query);
         } else if (query.length >= 2) {
           _searchCustomers(query);
@@ -156,9 +155,9 @@ class _CustomerSearchPanelState extends State<CustomerSearchPanel> {
     return Container(
       width: 320,
       decoration: BoxDecoration(
-        color: AppTheme.cardBackground,
+        color: Theme.of(context).colorScheme.surface,
         border: Border(
-          right: BorderSide(color: AppTheme.dividerColor, width: 1),
+          right: BorderSide(color: context.colors.dividerColor, width: 1),
         ),
       ),
       child: Column(
@@ -175,16 +174,16 @@ class _CustomerSearchPanelState extends State<CustomerSearchPanel> {
 
   Widget _buildHeader() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
       decoration: BoxDecoration(
-        color: AppTheme.sidebarBackground,
+        color: context.colors.gray10,
         border: Border(
-          bottom: BorderSide(color: AppTheme.dividerColor, width: 1),
+          bottom: BorderSide(color: context.colors.dividerColor, width: 1),
         ),
       ),
       child: Row(
         children: [
-          Icon(Icons.people, size: 20, color: AppTheme.textSecondary),
+          Icon(Icons.people, size: 20, color: context.colors.textSecondary),
           const SizedBox(width: 8),
           Text(
             '고객 검색',
@@ -194,7 +193,11 @@ class _CustomerSearchPanelState extends State<CustomerSearchPanel> {
           ),
           const Spacer(),
           IconButton(
-            icon: Icon(Icons.refresh, size: 20, color: AppTheme.textSecondary),
+            icon: Icon(
+              Icons.refresh,
+              size: 20,
+              color: context.colors.textSecondary,
+            ),
             onPressed: _loadCustomers,
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),
@@ -212,11 +215,11 @@ class _CustomerSearchPanelState extends State<CustomerSearchPanel> {
         onChanged: _onSearchChanged,
         decoration: InputDecoration(
           hintText: '2글자 이상 검색',
-          hintStyle: TextStyle(color: AppTheme.textSecondary),
+          hintStyle: TextStyle(color: context.colors.textSecondary),
           prefixIcon: Icon(
             Icons.search,
             size: 20,
-            color: AppTheme.textSecondary,
+            color: context.colors.textSecondary,
           ),
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 12,
@@ -224,18 +227,21 @@ class _CustomerSearchPanelState extends State<CustomerSearchPanel> {
           ),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide(color: AppTheme.dividerColor),
+            borderSide: BorderSide(color: context.colors.dividerColor),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide(color: AppTheme.dividerColor),
+            borderSide: BorderSide(color: context.colors.dividerColor),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide(color: AppTheme.selectedColor, width: 2),
+            borderSide: BorderSide(
+              color: context.colors.selectedColor,
+              width: 2,
+            ),
           ),
           filled: true,
-          fillColor: AppTheme.backgroundColor,
+          fillColor: context.colors.cardBackground,
         ),
       ),
     );
@@ -267,7 +273,7 @@ class _CustomerSearchPanelState extends State<CustomerSearchPanel> {
                   // 필터 변경 시 현재 검색어로 다시 검색
                   if (_searchController.text.isNotEmpty) {
                     if (filter == '사용자HP' &&
-                        _searchController.text.length >= 1) {
+                        _searchController.text.isNotEmpty) {
                       _searchCustomers(_searchController.text);
                     } else if (_searchController.text.length >= 2) {
                       _searchCustomers(_searchController.text);
@@ -277,24 +283,26 @@ class _CustomerSearchPanelState extends State<CustomerSearchPanel> {
                 borderRadius: BorderRadius.circular(6),
                 child: Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
+                    horizontal: 7,
                     vertical: 6,
                   ),
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? AppTheme.selectedColor
-                        : AppTheme.backgroundColor,
+                        ? context.colors.selectedColor
+                        : context.colors.cardBackground,
                     borderRadius: BorderRadius.circular(6),
                     border: Border.all(
                       color: isSelected
-                          ? AppTheme.selectedColor
-                          : AppTheme.dividerColor,
+                          ? context.colors.selectedColor
+                          : context.colors.dividerColor,
                     ),
                   ),
                   child: Text(
                     filter,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: isSelected ? Colors.white : AppTheme.textPrimary,
+                      color: isSelected
+                          ? Colors.white
+                          : context.colors.textPrimary,
                       fontWeight: isSelected
                           ? FontWeight.w600
                           : FontWeight.normal,
@@ -328,7 +336,7 @@ class _CustomerSearchPanelState extends State<CustomerSearchPanel> {
                     _loadCustomers();
                   } else if (_searchController.text.isNotEmpty) {
                     if (selectedFilter == '사용자HP' &&
-                        _searchController.text.length >= 1) {
+                        _searchController.text.isNotEmpty) {
                       _searchCustomers(_searchController.text);
                     } else if (_searchController.text.length >= 2) {
                       _searchCustomers(_searchController.text);
@@ -340,20 +348,22 @@ class _CustomerSearchPanelState extends State<CustomerSearchPanel> {
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? AppTheme.selectedColor
-                        : AppTheme.backgroundColor,
+                        ? context.colors.selectedColor
+                        : context.colors.cardBackground,
                     borderRadius: BorderRadius.circular(6),
                     border: Border.all(
                       color: isSelected
-                          ? AppTheme.selectedColor
-                          : AppTheme.dividerColor,
+                          ? context.colors.selectedColor
+                          : context.colors.dividerColor,
                     ),
                   ),
                   child: Text(
                     sort,
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: isSelected ? Colors.white : AppTheme.textPrimary,
+                      color: isSelected
+                          ? Colors.white
+                          : context.colors.textPrimary,
                       fontWeight: isSelected
                           ? FontWeight.w600
                           : FontWeight.normal,
@@ -371,7 +381,7 @@ class _CustomerSearchPanelState extends State<CustomerSearchPanel> {
   Widget _buildCustomerList() {
     if (isLoading) {
       return Center(
-        child: CircularProgressIndicator(color: AppTheme.selectedColor),
+        child: CircularProgressIndicator(color: context.colors.selectedColor),
       );
     }
 
@@ -380,13 +390,17 @@ class _CustomerSearchPanelState extends State<CustomerSearchPanel> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.info_outline, size: 48, color: AppTheme.textTertiary),
+            Icon(
+              Icons.info_outline,
+              size: 48,
+              color: context.colors.textTertiary,
+            ),
             const SizedBox(height: 16),
             Text(
               '고객 데이터가 없습니다',
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: AppTheme.textSecondary),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: context.colors.textSecondary,
+              ),
             ),
           ],
         ),
@@ -400,13 +414,17 @@ class _CustomerSearchPanelState extends State<CustomerSearchPanel> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.search_off, size: 48, color: AppTheme.textTertiary),
+            Icon(
+              Icons.search_off,
+              size: 48,
+              color: context.colors.textTertiary,
+            ),
             const SizedBox(height: 16),
             Text(
               '검색 결과가 없습니다',
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: AppTheme.textSecondary),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: context.colors.textSecondary,
+              ),
             ),
           ],
         ),
@@ -421,6 +439,22 @@ class _CustomerSearchPanelState extends State<CustomerSearchPanel> {
 
         return InkWell(
           onTap: () {
+            // 편집 중인지 확인
+            if (!_customerService.canLeave(() {
+              // 확인 후 실행할 로직
+              setState(() {
+                selectedCustomer = customer;
+              });
+              // 전역 서비스에 고객 정보 저장
+              SelectedCustomerService().selectCustomer(customer);
+              widget.onCustomerSelected(customer);
+            })) {
+              // 편집 중이므로 여기서는 아무것도 하지 않음
+              // canLeave가 다이얼로그를 표시함
+              return;
+            }
+
+            // 편집 중이 아니면 바로 실행
             setState(() {
               selectedCustomer = customer;
             });
@@ -432,10 +466,13 @@ class _CustomerSearchPanelState extends State<CustomerSearchPanel> {
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: isSelected
-                  ? AppTheme.selectedColor.withOpacity(0.1)
-                  : null,
+                  ? context.colors.selectedColor.withOpacity(0.3)
+                  : context.colors.gray10,
               border: Border(
-                bottom: BorderSide(color: AppTheme.dividerColor, width: 0.5),
+                bottom: BorderSide(
+                  color: context.colors.dividerColor,
+                  width: 0.5,
+                ),
               ),
             ),
             child: Column(
@@ -449,14 +486,14 @@ class _CustomerSearchPanelState extends State<CustomerSearchPanel> {
                         vertical: 2,
                       ),
                       decoration: BoxDecoration(
-                        color: AppTheme.selectedColor.withOpacity(0.1),
+                        color: context.colors.selectedColor.withOpacity(0.4),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
                         customer.controlManagementNumber,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppTheme.selectedColor,
-                          fontWeight: FontWeight.w600,
+                          color: context.colors.white,
+                          fontSize: 12,
                         ),
                       ),
                     ),
@@ -482,20 +519,20 @@ class _CustomerSearchPanelState extends State<CustomerSearchPanel> {
                       ),
                       decoration: BoxDecoration(
                         color: _getStatusColor(
-                          customer.customerStatusName ?? '정상',
-                        ).withOpacity(0.1),
+                          customer.customerStatusName ?? '로드오류',
+                        ).withOpacity(0.2),
                         borderRadius: BorderRadius.circular(4),
                         border: Border.all(
                           color: _getStatusColor(
-                            customer.customerStatusName ?? '정상',
+                            customer.customerStatusName ?? '로드오류',
                           ).withOpacity(0.3),
                         ),
                       ),
                       child: Text(
-                        customer.customerStatusName ?? '정상',
+                        customer.customerStatusName ?? '로드오류',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: _getStatusColor(
-                            customer.customerStatusName ?? '정상',
+                            customer.customerStatusName ?? '로드오류',
                           ),
                           fontWeight: FontWeight.w500,
                           fontSize: 11,
@@ -508,7 +545,7 @@ class _CustomerSearchPanelState extends State<CustomerSearchPanel> {
                 Text(
                   customer.propertyAddress,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppTheme.textSecondary,
+                    color: context.colors.textSecondary,
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -524,12 +561,12 @@ class _CustomerSearchPanelState extends State<CustomerSearchPanel> {
   Color _getStatusColor(String status) {
     // 상태에 따른 색상 구분
     if (status.contains('정상') || status.contains('관제중')) {
-      return Colors.green;
+      return context.colors.green;
     } else if (status.contains('보류') || status.contains('대기')) {
-      return Colors.orange;
+      return context.colors.orange;
     } else if (status.contains('해지') || status.contains('중지')) {
-      return Colors.red;
+      return context.colors.red;
     }
-    return AppTheme.textSecondary;
+    return context.colors.textSecondary;
   }
 }

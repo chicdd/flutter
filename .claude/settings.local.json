@@ -29,7 +29,11 @@
       "WebFetch(domain:dev.to)",
       "Bash(findstr:*)",
       "Bash(xargs cat:*)",
-      "Bash(vcpkg version:*)"
+      "Bash(vcpkg version:*)",
+      "Bash(systeminfo:*)",
+      "Bash(ver:*)",
+      "Bash(cmd.exe //c ver)",
+      "Bash(grep:*)"
     ],
     "deny": [
       "Read(./securityindexAPI/appsettings.json)",

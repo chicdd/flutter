@@ -25,6 +25,9 @@ class AsLogState extends State<AsLogScreen>
   @override
   bool get wantKeepAlive => true;
 
+  // 현재 로드된 고객의 관제관리번호 (중복 API 호출 방지)
+  String? _loadedCustomerManagementNumber;
+
   // 데이터 목록
   List<AsLog> _dataList = [];
 
@@ -149,6 +152,7 @@ class AsLogState extends State<AsLogScreen>
     final customer = customerService.selectedCustomer;
 
     if (customer != null) {
+      _loadedCustomerManagementNumber = customer.controlManagementNumber;
       await _loadData(customer.controlManagementNumber);
     } else {
       setState(() {
@@ -160,12 +164,19 @@ class AsLogState extends State<AsLogScreen>
   /// CustomerServiceHandler 콜백 구현
   @override
   void onCustomerChanged(SearchPanel? customer, detail) {
-    if (customer != null) {
-      _loadData(customer.controlManagementNumber);
-    } else {
-      setState(() {
-        _dataList = [];
-      });
+    final currentCustomerNumber = customer?.controlManagementNumber;
+
+    // 고객이 변경된 경우에만 API 호출
+    if (currentCustomerNumber != _loadedCustomerManagementNumber) {
+      _loadedCustomerManagementNumber = currentCustomerNumber;
+
+      if (customer != null) {
+        _loadData(customer.controlManagementNumber);
+      } else {
+        setState(() {
+          _dataList = [];
+        });
+      }
     }
   }
 
@@ -467,7 +478,7 @@ class _AddModalState extends State<_AddModal> {
               if (_isLoadingManager)
                 const CircularProgressIndicator()
               else
-                buildDropdownField(
+                BuildDropdownField(
                   label: '담당자',
                   value: _selectedManager,
                   items: _managerList,
@@ -476,6 +487,7 @@ class _AddModalState extends State<_AddModal> {
                       _selectedManager = value;
                     });
                   },
+                  searchQuery: '',
                 ),
 
               const SizedBox(height: 16),

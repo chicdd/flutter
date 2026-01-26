@@ -19,25 +19,35 @@ class SelectedCustomerService extends ChangeNotifier {
   CustomerDetail? _customerDetail;
   bool _isLoadingDetail = false;
 
+  // 편집 상태 관리
+  bool _isEditing = false;
+  bool _hasChanges = false;
+  Function? _onCancelConfirm; // 취소 확인 다이얼로그 콜백
+
   // Getters
   SearchPanel? get selectedCustomer => _selectedCustomer;
   CustomerDetail? get customerDetail => _customerDetail;
   bool get isLoadingDetail => _isLoadingDetail;
+  bool get isEditing => _isEditing;
+  bool get hasChanges => _hasChanges;
 
   /// 고객 선택
   void selectCustomer(SearchPanel? customer) {
+    // 같은 고객을 다시 선택한 경우 아무것도 하지 않음
+    if (_selectedCustomer?.controlManagementNumber == customer?.controlManagementNumber) {
+      return;
+    }
+
     _selectedCustomer = customer;
-    _customerDetail = null; // 새로운 고객 선택 시 이전 상세 정보 초기화
+    _customerDetail = null; // 다른 고객 선택 시에만 이전 상세 정보 초기화
     notifyListeners();
 
-    // 고객이 선택되면 자동으로 상세 정보 로드
-    if (customer != null) {
-      loadCustomerDetail();
-    }
+    // 자동으로 상세 정보를 로드하지 않음
+    // 각 화면에서 필요한 경우 loadCustomerDetail() 또는 해당 화면의 API를 직접 호출
   }
 
   /// 고객 상세 정보 로드
-  Future<void> loadCustomerDetail() async {
+  Future<void> loadCustomerDetail({bool force = false}) async {
     if (_selectedCustomer == null) {
       return;
     }
@@ -47,7 +57,9 @@ class SelectedCustomerService extends ChangeNotifier {
       return;
     }
 
-    if (_customerDetail != null &&
+    // force가 true가 아닐 때만 캐시 사용
+    if (!force &&
+        _customerDetail != null &&
         _customerDetail!.controlManagementNumber ==
             _selectedCustomer!.controlManagementNumber) {
       return;
@@ -68,6 +80,43 @@ class SelectedCustomerService extends ChangeNotifier {
       // 로딩 완료 후에만 notifyListeners 호출
       notifyListeners();
     }
+  }
+
+  /// 편집 모드 시작
+  void startEditing(Function onCancelConfirm) {
+    _isEditing = true;
+    _hasChanges = false;
+    _onCancelConfirm = onCancelConfirm;
+    notifyListeners();
+  }
+
+  /// 변경사항 추적
+  void markAsChanged() {
+    if (_isEditing) {
+      _hasChanges = true;
+      notifyListeners();
+    }
+  }
+
+  /// 편집 모드 종료 (저장 또는 정상 취소)
+  void endEditing() {
+    _isEditing = false;
+    _hasChanges = false;
+    _onCancelConfirm = null;
+    notifyListeners();
+  }
+
+  /// 편집 중 이탈 시도 시 확인
+  /// 반환값: true면 이탈 가능, false면 이탈 불가 (다이얼로그 표시 중)
+  bool canLeave(Function onConfirmed) {
+    if (_isEditing && _hasChanges) {
+      // 변경사항이 있으면 취소 확인 다이얼로그 표시
+      if (_onCancelConfirm != null) {
+        _onCancelConfirm!(onConfirmed);
+      }
+      return false;
+    }
+    return true;
   }
 
   // /// 고객 정보 새로고침

@@ -66,20 +66,26 @@ class MaintenanceInspectionHistoryState
       TableColumnConfig(
         header: '존점검',
         width: columnWidths[2],
-        cellBuilder: (data, value) =>
-            buildCheckboxCell(data['존점검'] == true, columnWidths[2]!),
+        cellBuilder: (data, value) => BuildCheckboxCell(
+          isChecked: data['존점검'] == true,
+          width: columnWidths[2]!,
+        ),
       ),
       TableColumnConfig(
         header: '키테스트',
         width: columnWidths[3],
-        cellBuilder: (data, value) =>
-            buildCheckboxCell(data['키테스트'] == true, columnWidths[3]!),
+        cellBuilder: (data, value) => BuildCheckboxCell(
+          isChecked: data['키테스트'] == true,
+          width: columnWidths[3]!,
+        ),
       ),
       TableColumnConfig(
         header: '키예탁',
         width: columnWidths[4],
-        cellBuilder: (data, value) =>
-            buildCheckboxCell(data['키예탁'] == true, columnWidths[4]!),
+        cellBuilder: (data, value) => BuildCheckboxCell(
+          isChecked: data['키예탁'] == true,
+          width: columnWidths[4]!,
+        ),
       ),
       TableColumnConfig(
         header: '키수량',
@@ -89,14 +95,18 @@ class MaintenanceInspectionHistoryState
       TableColumnConfig(
         header: '도면점검',
         width: columnWidths[6],
-        cellBuilder: (data, value) =>
-            buildCheckboxCell(data['도면점검'] == true, columnWidths[6]!),
+        cellBuilder: (data, value) => BuildCheckboxCell(
+          isChecked: data['도면점검'] == true,
+          width: columnWidths[6]!,
+        ),
       ),
       TableColumnConfig(
         header: '고객카드',
         width: columnWidths[7],
-        cellBuilder: (data, value) =>
-            buildCheckboxCell(data['고객카드'] == true, columnWidths[7]!),
+        cellBuilder: (data, value) => BuildCheckboxCell(
+          isChecked: data['고객카드'] == true,
+          width: columnWidths[7]!,
+        ),
       ),
       TableColumnConfig(
         header: '점검완료자',
@@ -264,26 +274,10 @@ class _AddModalState extends BaseAddModalState<_AddModal> {
           spacing: 16,
           runSpacing: 8,
           children: [
-            buildCheckbox('존점검결과', _zoneCheck, (value) {
-              setState(() {
-                _zoneCheck = value ?? false;
-              });
-            }),
-            buildCheckbox('도면점검', _mapCheck, (value) {
-              setState(() {
-                _mapCheck = value ?? false;
-              });
-            }),
-            buildCheckbox('고객카드', _customerCard, (value) {
-              setState(() {
-                _customerCard = value ?? false;
-              });
-            }),
-            buildCheckbox('예탁키테스트', _depositKeyTest, (value) {
-              setState(() {
-                _depositKeyTest = value ?? false;
-              });
-            }),
+            buildCheckbox(label: '존점검결과', value: _zoneCheck),
+            buildCheckbox(label: '도면점검', value: _mapCheck),
+            buildCheckbox(label: '고객카드', value: _customerCard),
+            buildCheckbox(label: '예탁키테스트', value: _depositKeyTest),
           ],
         ),
         const SizedBox(height: 16),

@@ -23,8 +23,13 @@ class TopBarConfig {
   /// 기본고객정보 화면 버튼
   static List<TopBarButton> basicCustomerInfoButtons(
     BuildContext context, {
-    BasicCustomerInfoState? state,
+    BasicCustomerInfoState? Function()? getState,
+    VoidCallback? onStateChanged,
   }) {
+    // 현재 편집 모드 상태 확인
+    final currentState = getState?.call();
+    final isEditMode = currentState?.isEditMode ?? false;
+
     return [
       TopBarButton(
         label: '원격',
@@ -39,13 +44,26 @@ class TopBarConfig {
         onPressed: () => TopBarActions.onVideoSearchPressed(context),
       ),
       TopBarButton(
-        label: '편집',
-        onPressed: () => TopBarActions.onEditPressed(context, state: state),
+        label: isEditMode ? '취소' : '편집',
+        backgroundColor: isEditMode ? Colors.grey : null,
+        textColor: isEditMode ? Colors.white : null,
+        onPressed: () {
+          final state = getState?.call();
+          TopBarActions.onEditPressed(context, state: state);
+          // 편집 모드 변경 후 UI 업데이트
+          onStateChanged?.call();
+        },
       ),
-      TopBarButton(
-        label: '저장',
-        onPressed: () => TopBarActions.onSavePressed(context, state: state),
-      ),
+      if (isEditMode)
+        TopBarButton(
+          label: '저장',
+          onPressed: () {
+            final state = getState?.call();
+            TopBarActions.onSavePressed(context, state: state);
+            // 저장 후 UI 업데이트 (편집 모드 종료)
+            onStateChanged?.call();
+          },
+        ),
     ];
   }
 
@@ -174,15 +192,19 @@ class TopBarActions {
     BasicCustomerInfoState? state,
   }) {
     // BasicCustomerInfo 화면의 State를 찾아서 enterEditMode 호출
-    print(context);
-    if (state != null) {
-      print(state);
-      if (state.isEditMode) {
+    final targetState =
+        state ?? context.findAncestorStateOfType<BasicCustomerInfoState>();
+
+    if (targetState != null) {
+      if (targetState.isEditMode) {
         // 이미 편집 모드인 경우 취소
-        state.exitEditMode();
+        targetState.exitEditMode();
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('편집 모드가 취소되었습니다.')));
       } else {
         // 편집 모드 진입
-        state.enterEditMode();
+        targetState.enterEditMode();
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(const SnackBar(content: Text('편집 모드가 활성화되었습니다.')));

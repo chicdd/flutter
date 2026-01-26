@@ -7,6 +7,7 @@ import '../services/api_service.dart';
 import '../services/selected_customer_service.dart';
 import '../style.dart';
 import '../widgets/custom_top_bar.dart';
+import '../widgets/content_area.dart';
 
 class BasicCustomerInfo extends StatefulWidget {
   final SearchPanel? searchpanel;
@@ -24,6 +25,9 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
   bool
   _isLoading = false;
   CustomerDetail? _customerDetail;
+
+  // 현재 로드된 고객의 관제관리번호 (중복 API 호출 방지)
+  String? _loadedCustomerManagementNumber;
 
   // 편집 모드 상태
   bool isEditMode = false;
@@ -65,7 +69,7 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
   String? _selectVehicleCode; // 차량코드
   String? _selectedCallLocation; // 관할경찰서
   String? _selectedCallArea; // 지구대
-  final _emergencyContactController = TextEditingController();
+  final _emergencyContactController = TextEditingController(); //기관연락처
   final _securityStartDateController = TextEditingController(); // 경비개시일자
 
   // 관제 세부 정보
@@ -77,12 +81,13 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
   final _remotePhoneController = TextEditingController(); // 원격전화
   final _remotePasswordController = TextEditingController(); // 원격암호
   final _arsPhoneController = TextEditingController(); // ARS전화
-  final _cardKeyController = TextEditingController();
   String? _selectedMiSettings; // 미경계 설정
   bool _monthlyAggregation = false; // 월간집계 (발행 = true, 미발행 = false)
   bool _hasKeyHolder = false; // 키 인수여부
   final _acquisitionController = TextEditingController(); // 인수수량
   final _keyBoxesController = TextEditingController(); //키BOX
+  final _keypadController = TextEditingController(); //키패드
+  final _keypadQuantityController = TextEditingController(); //키패드수량
   final _emergencyPhoneController = TextEditingController();
   bool _isDvrInspection = false; // dvr여부
   bool _isWirelessSensorInspection = false; // 무선센서설치여부
@@ -98,6 +103,10 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
   final _controlActionController = TextEditingController(); //관제액션비고
   final _memo1Controller = TextEditingController(); // 메모1
   final _memo2Controller = TextEditingController(); // 메모2
+
+  // FocusNode for TextFormFields
+  final _controlActionFocusNode = FocusNode();
+  final _memoFocusNode = FocusNode();
 
   // 드롭다운 데이터 목록
   List<CodeData> _managementAreaList = [];
@@ -134,15 +143,18 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
     _remotePhoneController.dispose();
     _remotePasswordController.dispose();
     _arsPhoneController.dispose();
-    _cardKeyController.dispose();
     _acquisitionController.dispose();
     _keyBoxesController.dispose();
+    _keypadController.dispose();
+    _keypadQuantityController.dispose();
     _emergencyPhoneController.dispose();
     _mainLocationController.dispose();
     _searchController.dispose();
     _memo1Controller.dispose();
     _memo2Controller.dispose();
     _controlActionController.dispose();
+    _controlActionFocusNode.dispose();
+    _memoFocusNode.dispose();
     super.dispose();
   }
 
@@ -168,9 +180,10 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
     _remotePhoneController.clear();
     _remotePasswordController.clear();
     _arsPhoneController.clear();
-    _cardKeyController.clear();
     _acquisitionController.clear();
     _keyBoxesController.clear();
+    _keypadController.clear();
+    _keypadQuantityController.clear();
     _emergencyPhoneController.clear();
     _memo1Controller.clear();
     _memo2Controller.clear();
@@ -210,7 +223,7 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
     _referenceController.text = detail.responsePath1 ?? '';
     _representativeNameController.text = detail.representative ?? '';
     _representativePhoneController.text = detail.representativeHP ?? '';
-
+    _emergencyContactController.text = detail.emergencyContact ?? '';
     // 관제 기본 정보
     _securityStartDateController.text = detail.securityStartDateFormatted;
     _publicNumberController.text = detail.publicLine ?? '';
@@ -255,6 +268,8 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
     _remotePasswordController.text = detail.remotePassword ?? '';
     _acquisitionController.text = detail.acquisition ?? '';
     _keyBoxesController.text = detail.keyBoxes ?? '';
+    _keypadController.text = detail.keypad ?? '';
+    _keypadQuantityController.text = detail.keypadQuantity ?? '';
 
     // bool 값 직접 사용
     _monthlyAggregation = detail.monthlyAggregationChecked;
@@ -280,14 +295,39 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
     // ChangeNotifier 리스너 등록
     _customerService.addListener(_onCustomerServiceChanged);
 
+    // FocusNode 리스너 등록
+    _controlActionFocusNode.addListener(() {
+      if (!_controlActionFocusNode.hasFocus && isEditMode) {
+        _trackChanges();
+      }
+    });
+    _memoFocusNode.addListener(() {
+      if (!_memoFocusNode.hasFocus && isEditMode) {
+        _trackChanges();
+      }
+    });
+
     // 드롭다운 데이터를 먼저 로드한 후 고객 데이터 로드
     _initializeData();
   }
 
   /// 고객 서비스 변경 시 호출
   void _onCustomerServiceChanged() {
-    if (mounted && !_customerService.isLoadingDetail) {
-      // 로딩 중이 아닐 때만 UI 업데이트
+    // 편집 모드 중이거나 로딩 중일 때는 UI 업데이트 안 함
+    if (mounted && !_customerService.isLoadingDetail && !isEditMode) {
+      final currentCustomerNumber =
+          _customerService.selectedCustomer?.controlManagementNumber;
+
+      // 고객이 변경된 경우에만 API 호출
+      if (currentCustomerNumber != _loadedCustomerManagementNumber) {
+        _loadedCustomerManagementNumber = currentCustomerNumber;
+
+        // 선택된 고객이 있으면 상세 정보 로드
+        if (_customerService.selectedCustomer != null) {
+          _customerService.loadCustomerDetail();
+        }
+      }
+
       _updateUIFromService();
     }
   }
@@ -328,7 +368,14 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
     _miSettingsList = await loadDropdownData('misettings');
     _customerStatusList = await loadDropdownData('customerstatus');
 
-    // 2. 고객 데이터 로드 (전역 서비스에서)
+    // 2. 기본고객정보 화면에서는 고객 상세 정보를 로드
+    if (_customerService.selectedCustomer != null) {
+      _loadedCustomerManagementNumber =
+          _customerService.selectedCustomer!.controlManagementNumber;
+      await _customerService.loadCustomerDetail();
+    }
+
+    // 3. 고객 데이터 로드 (전역 서비스에서)
     await _updateUIFromService();
   }
 
@@ -339,6 +386,12 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
       _hasChanges = false;
       _saveOriginalData();
     });
+    // 서비스에 편집 모드 시작 등록
+    _customerService.startEditing(_showCancelConfirmDialogForService);
+    // ContentArea의 setState를 호출하여 topbar 버튼 업데이트
+    if (mounted) {
+      context.findAncestorStateOfType<ContentAreaState>()?.setState(() {});
+    }
   }
 
   /// 편집 모드 종료 (취소)
@@ -349,6 +402,10 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
       setState(() {
         isEditMode = false;
       });
+      // ContentArea의 setState를 호출하여 topbar 버튼 업데이트
+      if (mounted) {
+        context.findAncestorStateOfType<ContentAreaState>()?.setState(() {});
+      }
     }
   }
 
@@ -360,7 +417,7 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
       '관제연락처1': _contact1Controller.text,
       '관제연락처2': _contact2Controller.text,
       '물건주소': _addressController.text,
-      '대지경로': _referenceController.text,
+      '대처경로1': _referenceController.text,
       '대표자이름': _representativeNameController.text,
       '대표자HP': _representativePhoneController.text,
       '공중회선': _publicNumberController.text,
@@ -384,10 +441,11 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
       '원격전화': _remotePhoneController.text,
       '원격암호': _remotePasswordController.text,
       'ARS전화': _arsPhoneController.text,
-      '키패드수량': _cardKeyController.text,
       '미경계설정': _selectedMiSettings,
       '인수수량': _acquisitionController.text,
       '키BOX': _keyBoxesController.text,
+      '키패드': _keypadController.text,
+      '키패드수량': _keypadQuantityController.text,
       '키인수여부': _hasKeyHolder,
       '월간집계': _monthlyAggregation,
       'DVR여부': _isDvrInspection,
@@ -403,6 +461,8 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
     setState(() {
       _hasChanges = true;
     });
+    // 서비스에 변경사항 알림
+    _customerService.markAsChanged();
   }
 
   /// 저장 확인 및 실행
@@ -411,44 +471,52 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
       final success = await DatabaseService.updateBasicCustomerInfo(
         managementNumber: _managementNumberController.text,
         data: {
-          '관제상호': _controlTypeController.text,
-          '고객용상호': _smsNameController.text,
-          '관제연락처1': _contact1Controller.text,
-          '관제연락처2': _contact2Controller.text,
-          '물건주소': _addressController.text,
-          '대지경로1': _referenceController.text,
-          '대표자': _representativeNameController.text,
-          '대표자휴대폰': _representativePhoneController.text,
+          '사용회선종류': _selectedUsageType,
+          '관제고객상태코드': _selectedCustomerStatus,
           '공중회선': _publicNumberController.text,
           '전용회선': _transmissionNumberController.text,
           '인터넷회선': _publicTransmissionController.text,
-          '원격포트': _remoteCodeController.text,
-          '기관연락처': _emergencyContactController.text,
-          '경비개시일자': _securityStartDateController.text,
-          '관제고객상태코드': _selectedCustomerStatus,
+          '관제상호': _controlTypeController.text,
+          '관제연락처1': _contact1Controller.text,
+          '관제연락처2': _contact2Controller.text,
+          '물건주소': _addressController.text,
+          '대처경로1': _referenceController.text,
+          '대표자': _representativeNameController.text,
+          '대표자HP': _representativePhoneController.text,
+          '개통일자': _securityStartDateController.text.isEmpty
+              ? null
+              : '${_securityStartDateController.text} 00:00:00.000',
           '관리구역코드': _selectedManagementArea,
           '출동권역코드': _selectedOperationArea,
-          '업종대코드': _selectedBusinessType,
           '차량코드': _selectVehicleCode,
           '경찰서코드': _selectedCallLocation,
           '지구대코드': _selectedCallArea,
-          '사용회선종류': _selectedUsageType,
-          '서비스종류코드': _selectedServiceType,
+          '소방서코드': _emergencyContactController.text, //기관연락처
+          '업종대코드': _selectedBusinessType,
+          '원격전화번호': _remotePhoneController.text,
           '기기종류코드': _selectedMainSystem,
-          '미경계분류코드': _selectedSubSystem,
-          '원격전화': _remotePhoneController.text,
-          '원격암호': _remotePasswordController.text,
-          'ARS전화번호': _arsPhoneController.text,
+
           '미경계종류코드': _selectedMiSettings,
-          '인수수량': _acquisitionController.text,
-          '키BOX': _keyBoxesController.text,
-          '키인수여부': _hasKeyHolder,
-          '월간집계': _monthlyAggregation,
-          'DVR여부': _isDvrInspection,
-          '무선여부': _isWirelessSensorInspection.toString(),
+
+          '원격암호': _remotePasswordController.text,
+          '월간집계': _monthlyAggregation ? 1 : 0,
           '관제액션': _controlActionController.text,
-          '메모1': _memo1Controller.text,
+          '키인수여부': _hasKeyHolder ? 1 : 0,
+          'ARS전화번호': _arsPhoneController.text,
+          '미경계분류코드': _selectedSubSystem,
+          '서비스종류코드': _selectedServiceType,
+          'DVR여부': _isDvrInspection ? 1 : 0,
+          '키박스번호': _keyBoxesController.text,
+          '원격포트': _remoteCodeController.text,
+          'TMP1': _acquisitionController.text, //인수수량
+          'TMP2': _keypadController.text, //키패드
+          'TMP3': _keypadQuantityController.text, //키패드수량
+
+          'TMP8': _isWirelessSensorInspection ? 1 : 0, //무선센서설치여부
+
+          '메모': _memo1Controller.text,
           '메모2': _memo2Controller.text,
+          '고객용상호': _smsNameController.text,
         },
       );
 
@@ -460,8 +528,21 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
           isEditMode = false;
           _hasChanges = false;
         });
-        // 데이터 새로고침
-        await _customerService.loadCustomerDetail();
+        // 서비스에 편집 종료 알림
+        _customerService.endEditing();
+        // 데이터 새로고침 (force: true로 캐시 무시하고 서버에서 최신 데이터 가져오기)
+        await _customerService.loadCustomerDetail(force: true);
+        // 명시적으로 UI 업데이트
+        if (_customerService.customerDetail != null && mounted) {
+          setState(() {
+            _customerDetail = _customerService.customerDetail;
+            _updateFieldsFromDetail(_customerService.customerDetail!);
+          });
+        }
+        // ContentArea의 setState를 호출하여 topbar 버튼 업데이트
+        if (mounted) {
+          context.findAncestorStateOfType<ContentAreaState>()?.setState(() {});
+        }
       } else if (mounted) {
         ScaffoldMessenger.of(
           context,
@@ -500,6 +581,57 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
                   // 원본 데이터로 복원
                   _restoreOriginalData();
                 });
+                // 서비스에 편집 종료 알림
+                _customerService.endEditing();
+                // ContentArea의 setState를 호출하여 topbar 버튼 업데이트
+                if (mounted) {
+                  context.findAncestorStateOfType<ContentAreaState>()?.setState(
+                    () {},
+                  );
+                }
+              },
+              child: const Text('예'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  /// 서비스에서 호출할 취소 확인 다이얼로그 (콜백 포함)
+  void _showCancelConfirmDialogForService(Function onConfirmed) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('편집 취소'),
+          content: const Text('변경사항이 저장되지 않습니다. 그래도 나가시겠습니까?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('아니오'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                setState(() {
+                  isEditMode = false;
+                  _hasChanges = false;
+                  // 원본 데이터로 복원
+                  _restoreOriginalData();
+                });
+                // 서비스에 편집 종료 알림
+                _customerService.endEditing();
+                // ContentArea의 setState를 호출하여 topbar 버튼 업데이트
+                if (mounted) {
+                  context.findAncestorStateOfType<ContentAreaState>()?.setState(
+                    () {},
+                  );
+                }
+                // 확인 후 콜백 실행
+                onConfirmed();
               },
               child: const Text('예'),
             ),
@@ -516,7 +648,7 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
     _contact1Controller.text = _originalData['관제연락처1'] ?? '';
     _contact2Controller.text = _originalData['관제연락처2'] ?? '';
     _addressController.text = _originalData['물건주소'] ?? '';
-    _referenceController.text = _originalData['대지경로'] ?? '';
+    _referenceController.text = _originalData['대처경로'] ?? '';
     _representativeNameController.text = _originalData['대표자이름'] ?? '';
     _representativePhoneController.text = _originalData['대표자HP'] ?? '';
     _publicNumberController.text = _originalData['공중회선'] ?? '';
@@ -539,11 +671,11 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
     _mainLocationController.text = _originalData['주장치위치'] ?? '';
     _remotePhoneController.text = _originalData['원격전화'] ?? '';
     _remotePasswordController.text = _originalData['원격암호'] ?? '';
-    _arsPhoneController.text = _originalData['ARS전화'] ?? '';
-    _cardKeyController.text = _originalData['키패드수량'] ?? '';
     _selectedMiSettings = _originalData['미경계설정'];
     _acquisitionController.text = _originalData['인수수량'] ?? '';
     _keyBoxesController.text = _originalData['키BOX'] ?? '';
+    _keypadController.text = _originalData['키패드'] ?? '';
+    _keypadQuantityController.text = _originalData['키패드수량'] ?? '';
     _hasKeyHolder = _originalData['키인수여부'] ?? false;
     _monthlyAggregation = _originalData['월간집계'] ?? false;
     _isDvrInspection = _originalData['DVR여부'] ?? false;
@@ -632,7 +764,7 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: context.colors.background,
       body: LayoutBuilder(
         builder: (context, constraints) {
           final isWideScreen = constraints.maxWidth >= 1200;
@@ -693,9 +825,12 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.colors.cardBackground,
         borderRadius: BorderRadius.circular(12),
         boxShadow: AppTheme.cardShadow,
+        border: isEditMode
+            ? Border.all(color: context.colors.selectedColor, width: 1)
+            : null,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -710,7 +845,7 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
                   controller: _controlTypeController,
                   searchQuery: _pageSearchQuery,
                   readOnly: !isEditMode,
-                  onChanged: (_) => _trackChanges(),
+                  onFocusLost: _trackChanges,
                 ),
               ),
               const SizedBox(width: 12),
@@ -720,7 +855,7 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
                   controller: _smsNameController,
                   searchQuery: _pageSearchQuery,
                   readOnly: !isEditMode,
-                  onChanged: (_) => _trackChanges(),
+                  onFocusLost: _trackChanges,
                 ),
               ),
             ],
@@ -735,7 +870,7 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
                   suffixIcon: Icons.phone,
                   searchQuery: _pageSearchQuery,
                   readOnly: !isEditMode,
-                  onChanged: (_) => _trackChanges(),
+                  onFocusLost: _trackChanges,
                 ),
               ),
               const SizedBox(width: 12),
@@ -746,7 +881,7 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
                   suffixIcon: Icons.phone,
                   searchQuery: _pageSearchQuery,
                   readOnly: !isEditMode,
-                  onChanged: (_) => _trackChanges(),
+                  onFocusLost: _trackChanges,
                 ),
               ),
             ],
@@ -762,7 +897,7 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
           const SizedBox(height: 16),
           CommonTextField(
             searchQuery: _pageSearchQuery,
-            label: '대지경로',
+            label: '대처경로',
             controller: _referenceController,
             readOnly: !isEditMode,
             onChanged: (_) => _trackChanges(),
@@ -776,7 +911,7 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
                   label: '대표자 이름',
                   controller: _representativeNameController,
                   readOnly: !isEditMode,
-                  onChanged: (_) => _trackChanges(),
+                  onFocusLost: _trackChanges,
                 ),
               ),
               const SizedBox(width: 12),
@@ -787,7 +922,7 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
                   controller: _representativePhoneController,
                   suffixIcon: Icons.phone_android,
                   readOnly: !isEditMode,
-                  onChanged: (_) => _trackChanges(),
+                  onFocusLost: _trackChanges,
                 ),
               ),
             ],
@@ -802,9 +937,12 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.colors.cardBackground,
         borderRadius: BorderRadius.circular(12),
         boxShadow: AppTheme.cardShadow,
+        border: isEditMode
+            ? Border.all(color: context.colors.selectedColor, width: 1)
+            : null,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -818,8 +956,8 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
                   searchQuery: _pageSearchQuery,
                   label: '관제관리번호',
                   controller: _managementNumberController,
-                  readOnly: !isEditMode,
-                  onChanged: (_) => _trackChanges(),
+                  readOnly: true,
+                  onFocusLost: _trackChanges,
                 ),
               ),
               const SizedBox(width: 12),
@@ -829,7 +967,7 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
                   label: '영업관리번호',
                   controller: _erpCusNumberController,
                   readOnly: !isEditMode,
-                  onChanged: (_) => _trackChanges(),
+                  onFocusLost: _trackChanges,
                 ),
               ),
             ],
@@ -843,7 +981,7 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
                   label: '공중회선',
                   controller: _publicNumberController,
                   readOnly: !isEditMode,
-                  onChanged: (_) => _trackChanges(),
+                  onFocusLost: _trackChanges,
                 ),
               ),
               const SizedBox(width: 12),
@@ -853,7 +991,7 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
                   label: '전용회선',
                   controller: _transmissionNumberController,
                   readOnly: !isEditMode,
-                  onChanged: (_) => _trackChanges(),
+                  onFocusLost: _trackChanges,
                 ),
               ),
             ],
@@ -867,7 +1005,7 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
                   label: '인터넷회선',
                   controller: _publicTransmissionController,
                   readOnly: !isEditMode,
-                  onChanged: (_) => _trackChanges(),
+                  onFocusLost: _trackChanges,
                 ),
               ),
               const SizedBox(width: 12),
@@ -877,7 +1015,7 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
                   label: '원격포트 구분',
                   controller: _remoteCodeController,
                   readOnly: !isEditMode,
-                  onChanged: (_) => _trackChanges(),
+                  onFocusLost: _trackChanges,
                 ),
               ),
             ],
@@ -886,7 +1024,7 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
           Row(
             children: [
               Expanded(
-                child: buildDropdownField(
+                child: BuildDropdownField(
                   label: '관리구역',
                   value: _selectedManagementArea,
                   items: _managementAreaList,
@@ -895,13 +1033,14 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
                     setState(() {
                       _selectedManagementArea = newValue!;
                     });
+                    _trackChanges();
                   },
                   readOnly: !isEditMode,
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: buildDropdownField(
+                child: BuildDropdownField(
                   label: '출동권역',
                   value: _selectedOperationArea,
                   items: _operationAreaList,
@@ -910,6 +1049,7 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
                     setState(() {
                       _selectedOperationArea = newValue!;
                     });
+                    _trackChanges();
                   },
                   readOnly: !isEditMode,
                 ),
@@ -920,7 +1060,7 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
           Row(
             children: [
               Expanded(
-                child: buildDropdownField(
+                child: BuildDropdownField(
                   label: '업종코드',
                   value: _selectedBusinessType,
                   items: _businessTypeList,
@@ -929,13 +1069,14 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
                     setState(() {
                       _selectedBusinessType = newValue!;
                     });
+                    _trackChanges();
                   },
                   readOnly: !isEditMode,
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: buildDropdownField(
+                child: BuildDropdownField(
                   label: '차량코드',
                   value: _selectVehicleCode,
                   items: _vehicleCodeList,
@@ -944,6 +1085,7 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
                     setState(() {
                       _selectVehicleCode = newValue!;
                     });
+                    _trackChanges();
                   },
                   readOnly: !isEditMode,
                 ),
@@ -954,7 +1096,7 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
           Row(
             children: [
               Expanded(
-                child: buildDropdownField(
+                child: BuildDropdownField(
                   label: '관할경찰서',
                   value: _selectedCallLocation,
                   items: _policeStationList,
@@ -963,13 +1105,14 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
                     setState(() {
                       _selectedCallLocation = newValue!;
                     });
+                    _trackChanges();
                   },
                   readOnly: !isEditMode,
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: buildDropdownField(
+                child: BuildDropdownField(
                   label: '관할지구대',
                   value: _selectedCallArea,
                   items: _policeDistrictList,
@@ -978,6 +1121,7 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
                     setState(() {
                       _selectedCallArea = newValue!;
                     });
+                    _trackChanges();
                   },
                   readOnly: !isEditMode,
                 ),
@@ -993,7 +1137,7 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
                   label: '기관연락처',
                   controller: _emergencyContactController,
                   readOnly: !isEditMode,
-                  onChanged: (_) => _trackChanges(),
+                  onFocusLost: _trackChanges,
                 ),
               ),
               const SizedBox(width: 12),
@@ -1003,7 +1147,7 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
                   label: '경비개시일자',
                   controller: _securityStartDateController,
                   readOnly: !isEditMode,
-                  onChanged: (_) => _trackChanges(),
+                  onFocusLost: _trackChanges,
                 ),
               ),
             ],
@@ -1018,25 +1162,36 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.colors.cardBackground,
         borderRadius: BorderRadius.circular(12),
         boxShadow: AppTheme.cardShadow,
+        border: isEditMode
+            ? Border.all(color: context.colors.selectedColor, width: 1)
+            : null,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           buildSectionTitle('관제 세부 정보'),
           const SizedBox(height: 16),
-          _buildStatusDropdownField(
-            '관제고객상태',
-            _selectedCustomerStatus,
-            _customerStatusList,
+          BuildDropdownField(
+            label: '관제고객상태',
+            value: _selectedCustomerStatus,
+            items: _customerStatusList,
+            onChanged: (String? newValue) {
+              setState(() {
+                _selectedCustomerStatus = newValue!;
+              });
+              _trackChanges();
+            },
+            readOnly: !isEditMode,
+            searchQuery: '',
           ),
           const SizedBox(height: 16),
           Row(
             children: [
               Expanded(
-                child: buildDropdownField(
+                child: BuildDropdownField(
                   label: '주 사용회선',
                   value: _selectedUsageType,
                   items: _usageLineList,
@@ -1045,13 +1200,14 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
                     setState(() {
                       _selectedUsageType = newValue!;
                     });
+                    _trackChanges();
                   },
                   readOnly: !isEditMode,
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: buildDropdownField(
+                child: BuildDropdownField(
                   label: '서비스종류',
                   value: _selectedServiceType,
                   items: _serviceTypeList,
@@ -1060,6 +1216,7 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
                     setState(() {
                       _selectedServiceType = newValue!;
                     });
+                    _trackChanges();
                   },
                   readOnly: !isEditMode,
                 ),
@@ -1070,7 +1227,7 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
           Row(
             children: [
               Expanded(
-                child: buildDropdownField(
+                child: BuildDropdownField(
                   label: '주장치종류',
                   value: _selectedMainSystem,
                   items: _mainSystemList,
@@ -1079,13 +1236,14 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
                     setState(() {
                       _selectedMainSystem = newValue!;
                     });
+                    _trackChanges();
                   },
                   readOnly: !isEditMode,
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: buildDropdownField(
+                child: BuildDropdownField(
                   label: '주장치분류',
                   value: _selectedSubSystem,
                   items: _subSystemList,
@@ -1094,6 +1252,7 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
                     setState(() {
                       _selectedSubSystem = newValue!;
                     });
+                    _trackChanges();
                   },
                   readOnly: !isEditMode,
                 ),
@@ -1117,7 +1276,7 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
                   label: '원격전화',
                   controller: _remotePhoneController,
                   readOnly: !isEditMode,
-                  onChanged: (_) => _trackChanges(),
+                  onFocusLost: _trackChanges,
                 ),
               ),
               const SizedBox(width: 12),
@@ -1127,7 +1286,7 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
                   label: '원격암호',
                   controller: _remotePasswordController,
                   readOnly: !isEditMode,
-                  onChanged: (_) => _trackChanges(),
+                  onFocusLost: _trackChanges,
                 ),
               ),
             ],
@@ -1141,17 +1300,27 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
                   label: 'ARS전화',
                   controller: _arsPhoneController,
                   readOnly: !isEditMode,
-                  onChanged: (_) => _trackChanges(),
+                  onFocusLost: _trackChanges,
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: CommonTextField(
                   searchQuery: _pageSearchQuery,
-                  label: '키패드/수량',
-                  controller: _cardKeyController,
+                  label: '키패드',
+                  controller: _keypadController,
                   readOnly: !isEditMode,
-                  onChanged: (_) => _trackChanges(),
+                  onFocusLost: _trackChanges,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: CommonTextField(
+                  searchQuery: _pageSearchQuery,
+                  label: '수량',
+                  controller: _keypadQuantityController,
+                  readOnly: !isEditMode,
+                  onFocusLost: _trackChanges,
                 ),
               ),
             ],
@@ -1160,7 +1329,7 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
           Row(
             children: [
               Expanded(
-                child: buildDropdownField(
+                child: BuildDropdownField(
                   label: '미경계설정',
                   value: _selectedMiSettings,
                   items: _miSettingsList,
@@ -1169,6 +1338,7 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
                     setState(() {
                       _selectedMiSettings = newValue!;
                     });
+                    _trackChanges();
                   },
                   readOnly: !isEditMode,
                 ),
@@ -1183,7 +1353,7 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
                         label: '인수수량',
                         controller: _acquisitionController,
                         readOnly: !isEditMode,
-                        onChanged: (_) => _trackChanges(),
+                        onFocusLost: _trackChanges,
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -1193,7 +1363,7 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
                         label: '키BOX',
                         controller: _keyBoxesController,
                         readOnly: !isEditMode,
-                        onChanged: (_) => _trackChanges(),
+                        onFocusLost: _trackChanges,
                       ),
                     ),
                   ],
@@ -1208,24 +1378,36 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       '키 인수여부',
                       style: TextStyle(
                         fontSize: 12,
-                        color: AppTheme.textSecondary,
+                        color: context.colors.textSecondary,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
                     const SizedBox(height: 8),
                     Row(
                       children: [
-                        buildRadioOption('Y', _hasKeyHolder, (val) {
-                          setState(() => _hasKeyHolder = true);
-                        }),
+                        BuildRadioOption(
+                          label: 'Y',
+                          value: _hasKeyHolder,
+                          readOnly: !isEditMode,
+                          onChanged: (val) {
+                            setState(() => _hasKeyHolder = true);
+                            _trackChanges();
+                          },
+                        ),
                         const SizedBox(width: 16),
-                        buildRadioOption('N', !_hasKeyHolder, (val) {
-                          setState(() => _hasKeyHolder = false);
-                        }),
+                        BuildRadioOption(
+                          label: 'N',
+                          value: !_hasKeyHolder,
+                          readOnly: !isEditMode,
+                          onChanged: (val) {
+                            setState(() => _hasKeyHolder = false);
+                            _trackChanges();
+                          },
+                        ),
                       ],
                     ),
                   ],
@@ -1236,24 +1418,36 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       '집계',
                       style: TextStyle(
                         fontSize: 12,
-                        color: AppTheme.textSecondary,
+                        color: context.colors.textSecondary,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
                     const SizedBox(height: 8),
                     Row(
                       children: [
-                        buildRadioOption('발행', _monthlyAggregation, (val) {
-                          setState(() => _monthlyAggregation = true);
-                        }),
+                        BuildRadioOption(
+                          label: '발행',
+                          value: _monthlyAggregation,
+                          readOnly: !isEditMode,
+                          onChanged: (val) {
+                            setState(() => _monthlyAggregation = true);
+                            _trackChanges();
+                          },
+                        ),
                         const SizedBox(width: 16),
-                        buildRadioOption('미발행', !_monthlyAggregation, (val) {
-                          setState(() => _monthlyAggregation = false);
-                        }),
+                        BuildRadioOption(
+                          label: '미발행',
+                          value: !_monthlyAggregation,
+                          readOnly: !isEditMode,
+                          onChanged: (val) {
+                            setState(() => _monthlyAggregation = false);
+                            _trackChanges();
+                          },
+                        ),
                       ],
                     ),
                   ],
@@ -1270,7 +1464,7 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
                   label: '연동전화번호',
                   controller: _emergencyPhoneController,
                   readOnly: !isEditMode,
-                  onChanged: (_) => _trackChanges(),
+                  onFocusLost: _trackChanges,
                 ),
               ),
               const SizedBox(width: 12),
@@ -1279,35 +1473,36 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     const SizedBox(height: 20),
-                    ElevatedButton(
-                      onPressed: () {
-                        final phoneNumber = _emergencyPhoneController.text
-                            .trim();
-                        if (phoneNumber.isNotEmpty) {
-                          setState(() {
-                            _linkedPhoneNumbers.add(phoneNumber);
-                            _emergencyPhoneController.clear();
-                          });
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.selectedColor,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
+                    if (isEditMode)
+                      ElevatedButton(
+                        onPressed: () {
+                          final phoneNumber = _emergencyPhoneController.text
+                              .trim();
+                          if (phoneNumber.isNotEmpty) {
+                            setState(() {
+                              _linkedPhoneNumbers.add(phoneNumber);
+                              _emergencyPhoneController.clear();
+                            });
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: context.colors.selectedColor,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(6),
+                          ),
                         ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(6),
+                        child: const Text(
+                          '추가',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
-                      child: const Text(
-                        '추가',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
                   ],
                 ),
               ),
@@ -1326,17 +1521,17 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
                     vertical: 8,
                   ),
                   decoration: BoxDecoration(
-                    color: AppTheme.backgroundColor,
-                    border: Border.all(color: AppTheme.dividerColor),
+                    color: context.colors.gray10,
+                    border: Border.all(color: context.colors.dividerColor),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.phone,
                         size: 16,
-                        color: AppTheme.textSecondary,
+                        color: context.colors.textSecondary,
                       ),
                       const SizedBox(width: 8),
                       Text(
@@ -1365,13 +1560,29 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              buildCheckbox('DVR고객', _isDvrInspection, (val) {
-                setState(() => _isDvrInspection = val ?? false);
-              }),
+              buildCheckbox(
+                label: 'DVR고객',
+                value: _isDvrInspection,
+                readOnly: !isEditMode,
+                onChanged: (val) {
+                  setState(() {
+                    _isDvrInspection = val;
+                  });
+                  _trackChanges();
+                },
+              ),
               const SizedBox(width: 20),
-              buildCheckbox('무선센서 설치고객', _isWirelessSensorInspection, (val) {
-                setState(() => _isWirelessSensorInspection = val ?? false);
-              }),
+              buildCheckbox(
+                label: '무선센서 설치고객',
+                value: _isWirelessSensorInspection,
+                readOnly: !isEditMode,
+                onChanged: (val) {
+                  setState(() {
+                    _isWirelessSensorInspection = val;
+                  });
+                  _trackChanges();
+                },
+              ),
             ],
           ),
         ],
@@ -1384,9 +1595,12 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.colors.cardBackground,
         borderRadius: BorderRadius.circular(12),
         boxShadow: AppTheme.cardShadow,
+        border: isEditMode
+            ? Border.all(color: context.colors.selectedColor, width: 1)
+            : null,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1396,32 +1610,36 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
           // 비고사항 입력 영역
           TextFormField(
             controller: _controlActionController,
+            focusNode: _controlActionFocusNode,
             maxLines: 5,
             style: const TextStyle(fontSize: 13, color: Color(0xFF1D1D1F)),
             decoration: InputDecoration(
               //hintText:  '여기에 비고사항을 입력하세요...',
-              hintStyle: TextStyle(color: Colors.grey.shade400),
+              hintStyle: TextStyle(color: context.colors.textSecondary),
               contentPadding: const EdgeInsets.all(12),
               filled: true,
-              fillColor: Colors.white,
+              fillColor: isEditMode
+                  ? context.colors.textEnable
+                  : context.colors.gray10,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(color: Colors.grey.shade300),
+                borderSide: BorderSide(color: context.colors.dividerColor),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(color: Colors.grey.shade300),
+                borderSide: BorderSide(color: context.colors.dividerColor),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(
-                  color: Color(0xFF007AFF),
-                  width: 2,
+                borderSide: BorderSide(
+                  color: isEditMode
+                      ? context.colors.selectedColor
+                      : context.colors.dividerColor,
+                  width: isEditMode ? 2 : 1,
                 ),
               ),
             ),
             readOnly: !isEditMode,
-            onChanged: (_) => _trackChanges(),
           ),
           const SizedBox(height: 16),
           // 메모 탭
@@ -1431,38 +1649,45 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
             controller: _selectedMemoTab == 0
                 ? _memo1Controller
                 : _memo2Controller,
+            focusNode: _memoFocusNode,
             maxLines: 8,
-            style: const TextStyle(fontSize: 13, color: Color(0xFF1D1D1F)),
+            style: TextStyle(fontSize: 13, color: context.colors.textPrimary),
             decoration: InputDecoration(
               //hintText: '메모${_selectedMemoTab + 1} 내용을 입력하세요...',
-              hintStyle: TextStyle(color: Colors.grey.shade400),
+              hintStyle: TextStyle(color: context.colors.textSecondary),
               contentPadding: const EdgeInsets.all(12),
               filled: true,
-              fillColor: Colors.white,
-              border: const OutlineInputBorder(
+              fillColor: !isEditMode
+                  ? context.colors.gray10
+                  : context.colors.textEnable,
+              border: OutlineInputBorder(
                 borderRadius: BorderRadius.only(
                   bottomLeft: Radius.circular(8),
                   bottomRight: Radius.circular(8),
                 ),
-                borderSide: BorderSide(color: Color(0xFFD1D1D6)),
+                borderSide: BorderSide(color: context.colors.dividerColor),
               ),
-              enabledBorder: const OutlineInputBorder(
+              enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.only(
                   bottomLeft: Radius.circular(8),
                   bottomRight: Radius.circular(8),
                 ),
-                borderSide: BorderSide(color: Color(0xFFD1D1D6)),
+                borderSide: BorderSide(color: context.colors.dividerColor),
               ),
-              focusedBorder: const OutlineInputBorder(
+              focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.only(
                   bottomLeft: Radius.circular(8),
                   bottomRight: Radius.circular(8),
                 ),
-                borderSide: BorderSide(color: Color(0xFF007AFF), width: 2),
+                borderSide: BorderSide(
+                  color: isEditMode
+                      ? context.colors.selectedColor
+                      : context.colors.dividerColor,
+                  width: isEditMode ? 2 : 1,
+                ),
               ),
             ),
             readOnly: !isEditMode,
-            onChanged: (_) => _trackChanges(),
           ),
         ],
       ),
@@ -1481,8 +1706,10 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
-            color: isSelected ? Colors.white : AppTheme.backgroundColor,
-            border: Border.all(color: AppTheme.dividerColor, width: 1),
+            color: isSelected
+                ? context.colors.textSecondary
+                : context.colors.gray10,
+            border: Border.all(color: context.colors.dividerColor, width: 1),
             borderRadius: BorderRadius.only(
               topLeft: index == 0 ? const Radius.circular(8) : Radius.zero,
               topRight: index == 1 ? const Radius.circular(8) : Radius.zero,
@@ -1497,8 +1724,8 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
                 fontSize: 14,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                 color: isSelected
-                    ? const Color(0xFF007AFF)
-                    : AppTheme.textSecondary,
+                    ? context.colors.gray10
+                    : context.colors.textSecondary,
               ),
             ),
           ),
@@ -1514,9 +1741,9 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
       children: [
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 12,
-            color: AppTheme.textSecondary,
+            color: context.colors.textSecondary,
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -1532,19 +1759,19 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
                 vertical: 10,
               ),
               filled: true,
-              fillColor: AppTheme.backgroundColor,
+              fillColor: context.colors.gray10,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: AppTheme.dividerColor),
+                borderSide: BorderSide(color: context.colors.dividerColor),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: AppTheme.dividerColor),
+                borderSide: BorderSide(color: context.colors.dividerColor),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(
-                  color: AppTheme.selectedColor,
+                borderSide: BorderSide(
+                  color: context.colors.selectedColor,
                   width: 1,
                 ),
               ),
@@ -1567,7 +1794,7 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
     } else if (status.contains('해지') || status.contains('중지')) {
       return Colors.red;
     }
-    return AppTheme.textSecondary;
+    return context.colors.textSecondary;
   }
 
   // Widget _buildStatusButton(String label, bool isSelected, Color color) {
@@ -1576,12 +1803,12 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
   //     decoration: BoxDecoration(
   //       color: isSelected ? color : Colors.transparent,
   //       borderRadius: BorderRadius.circular(6),
-  //       border: Border.all(color: isSelected ? color : AppTheme.dividerColor),
+  //       border: Border.all(color: isSelected ? color : context.colors.dividerColor),
   //     ),
   //     child: Text(
   //       label,
   //       style: TextStyle(
-  //         color: isSelected ? Colors.white : AppTheme.textSecondary,
+  //         color: isSelected ? Colors.white : context.colors.textSecondary,
   //         fontWeight: FontWeight.w600,
   //       ),
   //     ),
@@ -1601,9 +1828,9 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
         children: [
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
-              color: AppTheme.textSecondary,
+              color: context.colors.textSecondary,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -1611,13 +1838,16 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
-              color: AppTheme.backgroundColor,
-              border: Border.all(color: AppTheme.dividerColor),
+              color: context.colors.gray10,
+              border: Border.all(color: context.colors.dividerColor),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Text(
+            child: Text(
               '로딩 중...',
-              style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
+              style: TextStyle(
+                fontSize: 14,
+                color: context.colors.textSecondary,
+              ),
             ),
           ),
         ],
@@ -1648,9 +1878,9 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
       children: [
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 12,
-            color: AppTheme.textSecondary,
+            color: context.colors.textSecondary,
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -1738,9 +1968,9 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
       children: [
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 12,
-            color: AppTheme.textSecondary,
+            color: context.colors.textSecondary,
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -1749,9 +1979,9 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
           height: 32, // 고정 높이 설정
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
-            color: AppTheme.backgroundColor,
+            color: context.colors.gray10,
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: AppTheme.dividerColor),
+            border: Border.all(color: context.colors.dividerColor),
           ),
           alignment: Alignment.centerLeft,
           child: Text(value.toString(), style: const TextStyle(fontSize: 14)),

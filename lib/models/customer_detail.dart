@@ -33,6 +33,7 @@ class CustomerDetail {
   final String? policeSubstationName; // 지구대코드명
   final String? businessTypeLargeCode; // 업종대코드
   final String? businessTypeLargeName; // 업종대코드명
+  final String? emergencyContact; // DB컬럼 : 소방서코드, 인덱스 : 기관연락처
 
   // 추가 정보
   final String? arsPhoneNumber; // ARS전화번호
@@ -55,6 +56,8 @@ class CustomerDetail {
   final String? serviceTypeName; // 서비스종류코드명
   final String? customerStatusCode; // 관제고객상태코드
   final String? customerStatusName; // 관제고객상태코드명
+  final String? keypad; // 키패드
+  final String? keypadQuantity; // 키패드 수량
   final bool? dvrStatus; // dvr여부
   final String? gpsX1; // gpsX좌표1
   final String? gpsY1; // gpsY좌표1
@@ -122,6 +125,7 @@ class CustomerDetail {
     this.policeSubstationName,
     this.businessTypeLargeCode,
     this.businessTypeLargeName,
+    this.emergencyContact,
     this.arsPhoneNumber,
     this.remotePhoneNumber,
     this.usageLineTypeCode,
@@ -142,6 +146,8 @@ class CustomerDetail {
     this.serviceTypeName,
     this.customerStatusCode,
     this.customerStatusName,
+    this.keypad,
+    this.keypadQuantity,
     this.dvrStatus,
     this.gpsX1,
     this.gpsY1,
@@ -204,6 +210,7 @@ class CustomerDetail {
       policeStationName: json['경찰서코드명']?.toString(),
       policeSubstationCode: json['지구대코드']?.toString(),
       policeSubstationName: json['지구대코드명']?.toString(),
+      emergencyContact: json['소방서코드']?.toString(),
       businessTypeLargeCode: json['업종대코드']?.toString(),
       businessTypeLargeName: json['업종대코드명']?.toString(),
       arsPhoneNumber: json['ARS전화번호']?.toString(),
@@ -216,7 +223,7 @@ class CustomerDetail {
       monthlyAggregation: json['월간집계'] as bool?,
       controlAction: json['관제액션']?.toString(),
       keyReceiptStatus: json['키인수여부'] as bool?,
-      acquisition: json['tmP1']?.toString(),
+      acquisition: json['tmP1']?.toString(), //인수수량
       keyBoxes: json['키박스번호']?.toString(),
       unguardedClassificationCode: json['미경계분류코드']?.toString(),
       unguardedClassificationName: json['미경계분류코드명']?.toString(),
@@ -225,6 +232,8 @@ class CustomerDetail {
       customerStatusCode: json['관제고객상태코드']?.toString(),
       customerStatusName: json['관제고객상태코드명']?.toString(),
       dvrStatus: json['dvr여부'] as bool?,
+      keypad: json['tmP2']?.toString(),
+      keypadQuantity: json['tmP3']?.toString(),
       gpsX1: json['tmP4']?.toString(),
       gpsY1: json['tmP5']?.toString(),
       gpsX2: json['tmP6']?.toString(),
@@ -232,11 +241,11 @@ class CustomerDetail {
       wirelessSetStatus: json['tmP8']?.toString(),
       remotePort: json['원격포트']?.toString(),
       customerBusinessName: json['고객용상호']?.toString(),
-      memo1: json['메모1']?.toString(),
+      memo1: json['메모']?.toString(),
       memo2: json['메모2']?.toString(),
       openingPhone: json['cu1']?.toString(),
       modemSerial: json['cu2']?.toString(),
-      openingDate: json['cu3']?.toString(),
+      openingDate: dateParsing(json['cu3'].toString()),
       additionalMemo: json['cu4']?.toString(),
       weekdayGuardTime: json['평일경계']?.toString(),
       weekdayReleaseTime: json['평일해제']?.toString(),

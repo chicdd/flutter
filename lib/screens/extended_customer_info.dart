@@ -22,6 +22,10 @@ class ExtendedCustomerInfo extends StatefulWidget {
 
 class ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
   final _customerService = SelectedCustomerService();
+
+  // 현재 로드된 고객의 관제관리번호 (중복 API 호출 방지)
+  String? _loadedCustomerManagementNumber;
+
   // 경계약정 및 무단해제 설정 - 평일
   int? _weekdayGuardStartHour;
   int? _weekdayGuardStartMinute;
@@ -321,7 +325,14 @@ class ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
     _companyTypeList = await loadDropdownData('companytype');
     _branchTypeList = await loadDropdownData('branchtype');
 
-    // 2. 고객 데이터 로드
+    // 2. 확장고객정보 화면에서는 고객 상세 정보를 로드
+    if (_customerService.selectedCustomer != null) {
+      _loadedCustomerManagementNumber =
+          _customerService.selectedCustomer!.controlManagementNumber;
+      await _customerService.loadCustomerDetail();
+    }
+
+    // 3. 고객 데이터 로드
     await _updateUIFromService();
   }
 
@@ -338,6 +349,19 @@ class ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
   /// 고객 서비스 변경 시 호출
   void _onCustomerServiceChanged() {
     if (mounted && !_customerService.isLoadingDetail) {
+      final currentCustomerNumber =
+          _customerService.selectedCustomer?.controlManagementNumber;
+
+      // 고객이 변경된 경우에만 API 호출
+      if (currentCustomerNumber != _loadedCustomerManagementNumber) {
+        _loadedCustomerManagementNumber = currentCustomerNumber;
+
+        // 선택된 고객이 있으면 상세 정보 로드
+        if (_customerService.selectedCustomer != null) {
+          _customerService.loadCustomerDetail();
+        }
+      }
+
       // 로딩 중이 아닐 때만 UI 업데이트
       _updateUIFromService();
     }
@@ -1044,17 +1068,25 @@ class ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
                       ),
                     ),
                     const Spacer(),
-                    buildCheckbox('사용', isUsed, (value) {
-                      setState(() {
-                        if (isWeekday == true) {
-                          _isWeekdayUsed = value ?? false;
-                        } else if (isWeekday == false) {
-                          _isWeekendUsed = value ?? false;
-                        } else {
-                          _isHolidayUsed = value ?? false;
-                        }
-                      });
-                    }),
+
+                    buildCheckbox(
+                      label: '사용',
+                      value: isUsed,
+                      readOnly: true,
+                      onChanged: (val) {
+                        setState(
+                          () => setState(() {
+                            if (isWeekday == true) {
+                              _isWeekdayUsed = val ?? false;
+                            } else if (isWeekday == false) {
+                              _isWeekendUsed = val ?? false;
+                            } else {
+                              _isHolidayUsed = val ?? false;
+                            }
+                          }),
+                        );
+                      },
+                    ),
                   ],
                 ),
                 const SizedBox(height: 12),
@@ -1324,7 +1356,7 @@ class ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
         children: [
           buildSectionTitle('회사 / 지사 구분'),
           const SizedBox(height: 16),
-          buildDropdownField(
+          BuildDropdownField(
             label: '회사구분',
             value: companyType,
             items: _companyTypeList,
@@ -1336,7 +1368,7 @@ class ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
             },
           ),
           const SizedBox(height: 12),
-          buildDropdownField(
+          BuildDropdownField(
             label: '지사구분',
             value: branchType,
             items: _branchTypeList,

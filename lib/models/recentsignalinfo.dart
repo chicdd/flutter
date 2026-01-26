@@ -35,7 +35,7 @@ class RecentSignalInfo {
     return RecentSignalInfo(
       controlManagementNumber: json['관제관리번호']?.toString(),
       controlBusinessName: json['관제상호']?.toString(),
-      receiveDate: dateParsing(json['수신일자'] as String),
+      receiveDate: dateParsing(json['수신일자']?.toString() ?? ""),
       receiveTime: json['수신시간']?.toString(),
       signalName: json['신호명']?.toString(),
       signalCode: json['신호코드']?.toString(),

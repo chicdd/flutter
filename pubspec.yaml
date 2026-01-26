@@ -56,6 +56,10 @@ dependencies:
   # 창 관리
   window_manager: ^0.4.3
 
+  # Windows Acrylic/Blur 효과
+  flutter_acrylic: ^1.1.4
+  google_fonts: ^7.1.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
