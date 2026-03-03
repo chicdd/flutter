@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import '../theme.dart';
 import '../style.dart';
 import '../config/topbar_config.dart';
@@ -56,7 +55,6 @@ class CustomTopBarState extends State<CustomTopBar>
   bool _isSearchExpanded = false;
   late TextEditingController _internalSearchController;
   late AnimationController _searchAnimationController;
-  late Animation<double> _searchAnimation;
   final FocusNode _searchFocusNode = FocusNode();
 
   @override
@@ -67,10 +65,6 @@ class CustomTopBarState extends State<CustomTopBar>
     _searchAnimationController = AnimationController(
       duration: const Duration(milliseconds: 300),
       vsync: this,
-    );
-    _searchAnimation = CurvedAnimation(
-      parent: _searchAnimationController,
-      curve: Curves.easeInOut,
     );
   }
 
@@ -158,20 +152,6 @@ class CustomTopBarState extends State<CustomTopBar>
       closeSearch();
     } else {
       openSearch();
-    }
-  }
-
-  void _handleKeyEvent(RawKeyEvent event) {
-    // Ctrl+F: 검색바 열기
-    if (event is RawKeyDownEvent) {
-      if (event.isControlPressed &&
-          event.logicalKey == LogicalKeyboardKey.keyF) {
-        openSearch();
-      }
-      // ESC: 검색바 닫기
-      else if (event.logicalKey == LogicalKeyboardKey.escape) {
-        closeSearch();
-      }
     }
   }
 
@@ -338,7 +318,7 @@ class HighlightedText extends StatelessWidget {
   final TextAlign? textAlign;
 
   const HighlightedText({
-    Key? key,
+    super.key,
     required this.text,
     required this.query,
     this.style,
@@ -347,7 +327,7 @@ class HighlightedText extends StatelessWidget {
     this.maxLines,
     this.softWrap,
     this.textAlign,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

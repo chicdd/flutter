@@ -34,7 +34,8 @@ class SelectedCustomerService extends ChangeNotifier {
   /// 고객 선택
   void selectCustomer(SearchPanel? customer) {
     // 같은 고객을 다시 선택한 경우 아무것도 하지 않음
-    if (_selectedCustomer?.controlManagementNumber == customer?.controlManagementNumber) {
+    if (_selectedCustomer?.controlManagementNumber ==
+        customer?.controlManagementNumber) {
       return;
     }
 
@@ -104,6 +105,13 @@ class SelectedCustomerService extends ChangeNotifier {
     _hasChanges = false;
     _onCancelConfirm = null;
     notifyListeners();
+  }
+
+  /// 편집 모드 종료 (notifyListeners 호출 안 함 - 중복 API 호출 방지용)
+  void endEditingSilent() {
+    _isEditing = false;
+    _hasChanges = false;
+    _onCancelConfirm = null;
   }
 
   /// 편집 중 이탈 시도 시 확인

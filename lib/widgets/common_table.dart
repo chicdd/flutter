@@ -4,13 +4,13 @@ import '../theme.dart';
 import 'custom_top_bar.dart'; // HighlightedText import
 
 /// 열 구분선 위젯 (공통 함수)
-Widget buildColumnDivider() {
+Widget buildColumnDivider(BuildContext context) {
   return Container(
     width: 8,
     decoration: BoxDecoration(
       border: Border(
-        left: BorderSide(color: const Color(0xFFE0E0E0), width: 0.5),
-        right: BorderSide(color: const Color(0xFFE0E0E0), width: 0.5),
+        left: BorderSide(color: context.colors.gray30, width: 0.5),
+        right: BorderSide(color: context.colors.gray30, width: 0.5),
       ),
     ),
   );
@@ -22,6 +22,7 @@ Widget buildTableCell({
   required Map<int, double> columnWidths,
   required int columnIndex,
   String searchQuery = '',
+  required BuildContext context,
 }) {
   return Container(
     width: columnWidths[columnIndex],
@@ -30,8 +31,8 @@ Widget buildTableCell({
       child: HighlightedText(
         text: value,
         query: searchQuery,
-        style: const TextStyle(
-          color: Color(0xFF252525),
+        style: TextStyle(
+          color: context.colors.textPrimary,
           fontSize: 15,
           fontFamily: 'Inter',
           fontWeight: FontWeight.w400,
@@ -336,6 +337,7 @@ Widget buildTable<T>({
   required List<T> dataList,
   required List<TableColumnConfig> columns,
   required Map<int, double> columnWidths,
+  bool isEditable = false,
   required void Function(int columnIndex, double newWidth) onColumnResize,
   String searchQuery = '',
   bool showTotalCount = false,
@@ -344,12 +346,17 @@ Widget buildTable<T>({
   int? pagingTotalcount,
   ScrollController? verticalScrollController,
   bool isLoading = false,
+  void Function(T item)? onDelete,
 }) {
   return Container(
     padding: const EdgeInsets.all(20),
     decoration: BoxDecoration(
-      color: Colors.white,
+      color: context.colors.cardBackground,
       borderRadius: BorderRadius.circular(12),
+      border: Border.all(
+        color: isEditable ? context.colors.selectedColor : Colors.transparent,
+        width: 1,
+      ),
       boxShadow: AppTheme.cardShadow,
     ),
     child: Column(
@@ -359,8 +366,8 @@ Widget buildTable<T>({
           children: [
             Text(
               title,
-              style: const TextStyle(
-                color: Color(0xFF252525),
+              style: TextStyle(
+                color: context.colors.textPrimary,
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
               ),
@@ -373,13 +380,13 @@ Widget buildTable<T>({
                   vertical: 4,
                 ),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF4318FF).withOpacity(0.1),
+                  color: context.colors.deepBlue,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
                   '총 ${(pagingTotalcount != null && pagingTotalcount != 0) ? pagingTotalcount : dataList.length}건',
-                  style: const TextStyle(
-                    color: Color(0xFF4318FF),
+                  style: TextStyle(
+                    color: context.colors.white,
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                   ),
@@ -387,14 +394,14 @@ Widget buildTable<T>({
               ),
             ],
             if (onAdd != null) ...[
-              const SizedBox(width: 12),
+              const SizedBox(width: 0),
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 12,
                   vertical: 4,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: context.colors.cardBackground,
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: AppTheme.cardShadow,
                 ),
@@ -404,8 +411,8 @@ Widget buildTable<T>({
                       onPressed: onAdd,
                       label: Text(addButtonLabel),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.selectedColor,
-                        foregroundColor: Colors.white,
+                        backgroundColor: context.colors.selectedColor,
+                        foregroundColor: context.colors.white,
                         padding: const EdgeInsets.symmetric(
                           horizontal: 20,
                           vertical: 12,
@@ -421,25 +428,24 @@ Widget buildTable<T>({
         const SizedBox(height: 16),
         Expanded(
           child: isLoading
-              ? const Center(
-                  child: CircularProgressIndicator(),
-                )
+              ? const Center(child: CircularProgressIndicator())
               : dataList.isEmpty
-                  ? const Center(
-                      child: Text(
-                        '조회된 데이터가 없습니다.',
-                        style: TextStyle(color: Colors.grey, fontSize: 16),
-                      ),
-                    )
-                  : buildResizableTable(
-                      context: context,
-                      dataList: dataList,
-                      columns: columns,
-                      columnWidths: columnWidths,
-                      onColumnResize: onColumnResize,
-                      searchQuery: searchQuery,
-                      verticalScrollController: verticalScrollController,
-                    ),
+              ? const Center(
+                  child: Text(
+                    '조회된 데이터가 없습니다.',
+                    style: TextStyle(color: Colors.grey, fontSize: 16),
+                  ),
+                )
+              : buildResizableTable(
+                  context: context,
+                  dataList: dataList,
+                  columns: columns,
+                  columnWidths: columnWidths,
+                  onColumnResize: onColumnResize,
+                  searchQuery: searchQuery,
+                  verticalScrollController: verticalScrollController,
+                  onDelete: onDelete,
+                ),
         ),
       ],
     ),
@@ -456,6 +462,7 @@ class ResizableTableWidget<T> extends StatefulWidget {
   final ScrollController? verticalScrollController;
   final void Function(int columnIndex, double newWidth) onColumnResize;
   final String searchQuery;
+  final void Function(T item)? onDelete;
 
   const ResizableTableWidget({
     super.key,
@@ -467,6 +474,7 @@ class ResizableTableWidget<T> extends StatefulWidget {
     this.verticalScrollController,
     required this.onColumnResize,
     this.searchQuery = '',
+    this.onDelete,
   });
 
   @override
@@ -585,9 +593,11 @@ class _ResizableTableWidgetState<T> extends State<ResizableTableWidget<T>> {
             scrollDirection: Axis.horizontal,
             physics: const ClampingScrollPhysics(),
             child: buildTableHeader(
+              context: context,
               columns: widget.columns,
               columnWidths: widget.columnWidths,
               onColumnResize: widget.onColumnResize,
+              showDeleteColumn: widget.onDelete != null,
             ),
           ),
           Expanded(
@@ -599,10 +609,12 @@ class _ResizableTableWidgetState<T> extends State<ResizableTableWidget<T>> {
                 scrollDirection: Axis.horizontal,
                 physics: const ClampingScrollPhysics(),
                 child: buildTableBody(
+                  context: context,
                   dataList: widget.dataList,
                   columns: widget.columns,
                   columnWidths: widget.columnWidths,
                   searchQuery: widget.searchQuery,
+                  onDelete: widget.onDelete,
                 ),
               ),
             ),
@@ -624,6 +636,7 @@ Widget buildResizableTable<T>({
   ScrollController? verticalScrollController,
   required void Function(int columnIndex, double newWidth) onColumnResize,
   String searchQuery = '',
+  void Function(T item)? onDelete,
 }) {
   return ResizableTableWidget<T>(
     dataList: dataList,
@@ -634,6 +647,7 @@ Widget buildResizableTable<T>({
     verticalScrollController: verticalScrollController,
     onColumnResize: onColumnResize,
     searchQuery: searchQuery,
+    onDelete: onDelete,
   );
 }
 
@@ -642,44 +656,76 @@ Widget buildTableHeader<T>({
   required List<TableColumnConfig> columns,
   required Map<int, double> columnWidths,
   required void Function(int columnIndex, double newWidth) onColumnResize,
+  required BuildContext context,
+  bool showDeleteColumn = false,
 }) {
   return Container(
     height: 45,
     decoration: BoxDecoration(
-      color: const Color(0xFFF5F7FA),
-      border: Border.all(color: const Color(0xFFE0E0E0)),
+      color: context.colors.textReadOnly,
+      border: Border.all(color: context.colors.gray30),
     ),
     child: Row(
-      children: columns.asMap().entries.map((entry) {
-        final columnIndex = entry.key;
-        final column = entry.value;
+      children: [
+        ...columns.asMap().entries.map((entry) {
+          final columnIndex = entry.key;
+          final column = entry.value;
 
-        return Row(
-          children: [
-            Container(
-              width: columnWidths[columnIndex],
-              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-              alignment: Alignment.center,
-              child: Text(
-                column.header,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF252525),
+          return Row(
+            children: [
+              Container(
+                width: columnWidths[columnIndex],
+                padding: const EdgeInsets.symmetric(
+                  vertical: 12,
+                  horizontal: 8,
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  column.header,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: context.colors.textPrimary,
+                  ),
                 ),
               ),
-            ),
-            // 크기 조절 핸들 (마지막 열 제외)
-            if (columnIndex < columns.length - 1)
-              buildResizeHandle(
-                columnIndex: columnIndex,
-                columnWidths: columnWidths,
-                onColumnResize: onColumnResize,
+              // 크기 조절 핸들 (마지막 열 제외)
+              if (columnIndex < columns.length - 1)
+                buildResizeHandle(
+                  context: context,
+                  columnIndex: columnIndex,
+                  columnWidths: columnWidths,
+                  onColumnResize: onColumnResize,
+                ),
+            ],
+          );
+        }),
+        // 삭제 버튼 컬럼 헤더
+        if (showDeleteColumn)
+          Row(
+            children: [
+              buildColumnDivider(context),
+              Container(
+                width: 80,
+                padding: const EdgeInsets.symmetric(
+                  vertical: 12,
+                  horizontal: 8,
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  '삭제',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: context.colors.textPrimary,
+                  ),
+                ),
               ),
-          ],
-        );
-      }).toList(),
+            ],
+          ),
+      ],
     ),
   );
 }
@@ -689,6 +735,7 @@ Widget buildResizeHandle({
   required int columnIndex,
   required Map<int, double> columnWidths,
   required void Function(int columnIndex, double newWidth) onColumnResize,
+  required BuildContext context,
 }) {
   return MouseRegion(
     cursor: SystemMouseCursors.resizeColumn,
@@ -704,8 +751,8 @@ Widget buildResizeHandle({
         width: 8,
         decoration: BoxDecoration(
           border: Border(
-            left: BorderSide(color: const Color(0xFFE0E0E0), width: 0.5),
-            right: BorderSide(color: const Color(0xFFE0E0E0), width: 0.5),
+            left: BorderSide(color: context.colors.gray30, width: 0.5),
+            right: BorderSide(color: context.colors.gray30, width: 0.5),
           ),
         ),
       ),
@@ -718,7 +765,9 @@ Widget buildTableBody<T>({
   required List<T> dataList,
   required List<TableColumnConfig> columns,
   required Map<int, double> columnWidths,
+  required BuildContext context,
   String searchQuery = '',
+  void Function(T item)? onDelete,
 }) {
   return Column(
     children: List.generate(dataList.length, (index) {
@@ -728,35 +777,67 @@ Widget buildTableBody<T>({
       return Container(
         height: 45,
         decoration: BoxDecoration(
-          color: isEven ? Colors.white : const Color(0xFFFAFAFA),
-          border: const Border(
-            left: BorderSide(color: Color(0xFFE0E0E0)),
-            right: BorderSide(color: Color(0xFFE0E0E0)),
-            bottom: BorderSide(color: Color(0xFFE0E0E0)),
+          color: isEven
+              ? context.colors.cardBackground
+              : context.colors.secondBackground,
+          border: Border(
+            left: BorderSide(color: context.colors.gray30),
+            right: BorderSide(color: context.colors.gray30),
+            bottom: BorderSide(color: context.colors.gray30),
           ),
         ),
         child: Row(
-          children: columns.asMap().entries.map((entry) {
-            final columnIndex = entry.key;
-            final column = entry.value;
-            final value = column.valueBuilder?.call(data) ?? '';
+          children: [
+            ...columns.asMap().entries.map((entry) {
+              final columnIndex = entry.key;
+              final column = entry.value;
+              final value = column.valueBuilder?.call(data) ?? '';
 
-            final cellWidget = column.cellBuilder != null
-                ? column.cellBuilder!(data, value)
-                : buildTableCell(
-                    value: value,
-                    columnWidths: columnWidths,
-                    columnIndex: columnIndex,
-                    searchQuery: searchQuery,
-                  );
+              final cellWidget = column.cellBuilder != null
+                  ? column.cellBuilder!(data, value)
+                  : buildTableCell(
+                      context: context,
+                      value: value,
+                      columnWidths: columnWidths,
+                      columnIndex: columnIndex,
+                      searchQuery: searchQuery,
+                    );
 
-            return Row(
-              children: [
-                cellWidget,
-                if (columnIndex < columns.length - 1) buildColumnDivider(),
-              ],
-            );
-          }).toList(),
+              return Row(
+                children: [
+                  cellWidget,
+                  if (columnIndex < columns.length - 1)
+                    buildColumnDivider(context),
+                ],
+              );
+            }),
+            // 삭제 버튼 컬럼
+            if (onDelete != null)
+              Row(
+                children: [
+                  buildColumnDivider(context),
+                  Container(
+                    width: 80,
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 4,
+                      horizontal: 8,
+                    ),
+                    child: Center(
+                      child: IconButton(
+                        icon: Icon(
+                          Icons.delete_outline,
+                          color: context.colors.red,
+                          size: 20,
+                        ),
+                        onPressed: () => onDelete(data),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+          ],
         ),
       );
     }),

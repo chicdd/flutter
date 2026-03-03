@@ -1,12 +1,13 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:http/http.dart' as http;
+import 'dart:typed_data';
+import '../config/api_config.dart';
 import '../models/search_panel.dart';
 import '../models/customer_detail.dart';
 import '../models/customerHoliday.dart';
 import '../models/additional_service.dart';
 import '../models/dvr_info.dart';
-import '../models/AuthRegist.dart';
+import '../models/authRegist.dart';
 import '../models/document_info.dart';
 import '../models/userZone.dart';
 import '../models/recentsignalinfo.dart';
@@ -18,10 +19,10 @@ import '../models/aslog.dart';
 import '../models/sales_info.dart';
 import '../models/payment_history.dart';
 import '../models/visit_as_history.dart';
+import 'user_service.dart';
 
 class DatabaseService {
-  static const String baseUrl = 'https://localhost:5001/api';
-
+  static String url = ApiConfig().Url;
   // SSL 인증서 검증 무시를 위한 HttpClient (개발용)
   static HttpClient _createHttpClient() {
     final client = HttpClient();
@@ -34,9 +35,18 @@ class DatabaseService {
   static Future<List<SearchPanel>> getCustomers() async {
     try {
       final httpClient = _createHttpClient();
-      final request = await httpClient.getUrl(
-        Uri.parse('https://localhost:7088/api/관제고객/top'),
-      );
+
+      // 현재 로그인한 사용자의 지역코드 조회
+      final regionCode = await UserService.getRegionCode();
+
+      // 지역코드가 있으면 쿼리 파라미터에 추가
+      final uri = regionCode != null && regionCode.isNotEmpty
+          ? Uri.parse(
+              '$url/api/top',
+            ).replace(queryParameters: {'regionCode': regionCode})
+          : Uri.parse('$url/api/top');
+
+      final request = await httpClient.getUrl(uri);
       final response = await request.close();
 
       if (response.statusCode == 200) {
@@ -62,11 +72,7 @@ class DatabaseService {
   }) async {
     try {
       final httpClient = DatabaseService._createHttpClient();
-      final encodedNumber = Uri.encodeComponent(managementNumber);
-      final uri = Uri.parse(
-        'https://localhost:7088/api/Update/$managementNumber',
-      );
-      print(data);
+      final uri = Uri.parse('$url/api/Update/$managementNumber');
       print('기본 고객 정보 수정 API 호출: $uri');
 
       final request = await httpClient.putUrl(uri);
@@ -89,6 +95,37 @@ class DatabaseService {
     }
   }
 
+  /// 확장 고객 정보 수정 (기본 고객 정보와 동일한 API 사용)
+  static Future<bool> updateExtendedCustomerInfo({
+    required String managementNumber,
+    required Map<String, dynamic> data,
+  }) async {
+    try {
+      final httpClient = DatabaseService._createHttpClient();
+      final uri = Uri.parse('$url/api/Update/$managementNumber');
+      print(data);
+      print('확장 고객 정보 수정 API 호출: $uri');
+
+      final request = await httpClient.putUrl(uri);
+      request.headers.set('Content-Type', 'application/json; charset=utf-8');
+      request.write(json.encode(data));
+      print(json.encode(data));
+      final response = await request.close();
+      final String responseBody = await response.transform(utf8.decoder).join();
+
+      if (response.statusCode == 200) {
+        print('확장 고객 정보 수정 성공');
+        return true;
+      } else {
+        print('확장 고객 정보 수정 실패: ${response.statusCode}, $responseBody');
+        return false;
+      }
+    } catch (e) {
+      print('확장 고객 정보 수정 API 호출 오류: $e');
+      return false;
+    }
+  }
+
   // 검색어로 고객 검색 (서버 API 사용)
   static Future<List<SearchPanel>> searchCustomers({
     required String filterType,
@@ -99,15 +136,25 @@ class DatabaseService {
     try {
       final httpClient = _createHttpClient();
 
+      // 현재 로그인한 사용자의 지역코드 조회
+      final regionCode = await UserService.getRegionCode();
+
       // URL 인코딩을 위한 파라미터 구성
-      final uri = Uri.parse('https://localhost:7088/api/관제고객/search').replace(
-        queryParameters: {
-          'filterType': filterType,
-          'query': query,
-          'sortType': sortType,
-          'count': count.toString(),
-        },
-      );
+      final queryParams = {
+        'filterType': filterType,
+        'query': query,
+        'sortType': sortType,
+        'count': count.toString(),
+      };
+
+      // 지역코드가 있으면 추가
+      if (regionCode != null && regionCode.isNotEmpty) {
+        queryParams['regionCode'] = regionCode;
+      }
+
+      final uri = Uri.parse(
+        '$url/api/search',
+      ).replace(queryParameters: queryParams);
       final request = await httpClient.getUrl(uri);
       final response = await request.close();
 
@@ -156,8 +203,7 @@ class DatabaseService {
     try {
       final httpClient = _createHttpClient();
       final encodedNumber = Uri.encodeComponent(managementNumber);
-      print(encodedNumber);
-      final uri = Uri.parse('https://localhost:7088/api/관제고객/$encodedNumber');
+      final uri = Uri.parse('$url/api/$encodedNumber');
 
       print('고객 상세 조회 API 호출: $uri');
 
@@ -183,6 +229,38 @@ class DatabaseService {
     }
   }
 
+  // 관제관리번호로 고객 정보 저장
+  static Future<bool> insertCustomer({
+    required String managementNumber,
+    required Map<String, dynamic> data,
+  }) async {
+    try {
+      final httpClient = _createHttpClient();
+      final encodedNumber = Uri.encodeComponent(managementNumber);
+      final uri = Uri.parse('$url/api/Insert/$encodedNumber');
+
+      print('관제 고객 저장 API 호출: $uri');
+
+      final request = await httpClient.getUrl(uri);
+      request.headers.set('Content-Type', 'application/json; charset=utf-8');
+      request.write(json.encode(data));
+      print(json.encode(data));
+      final response = await request.close();
+      final String responseBody = await response.transform(utf8.decoder).join();
+
+      if (response.statusCode == 200) {
+        print('관제 고객 저장 성공');
+        return true;
+      } else {
+        print('관제 고객 저장 실패: ${response.statusCode}, $responseBody');
+        return false;
+      }
+    } catch (e) {
+      print('관제 고객 저장 API 호출 오류: $e');
+      return false;
+    }
+  }
+
   // 관제관리번호로 휴일주간 정보 조회
   static Future<List<CustomerHoliday>> getHoliday(
     String managementNumber,
@@ -190,9 +268,7 @@ class DatabaseService {
     try {
       final httpClient = _createHttpClient();
       final encodedNumber = Uri.encodeComponent(managementNumber);
-      final uri = Uri.parse(
-        'https://localhost:7088/api/관제고객/$encodedNumber/holiday',
-      );
+      final uri = Uri.parse('$url/api/휴일주간리스트/$encodedNumber');
 
       print('휴일주간 조회 API 호출: $uri');
 
@@ -222,9 +298,7 @@ class DatabaseService {
     try {
       final httpClient = _createHttpClient();
       final encodedNumber = Uri.encodeComponent(managementNumber);
-      final uri = Uri.parse(
-        'https://localhost:7088/api/관제고객/$encodedNumber/service',
-      );
+      final uri = Uri.parse('$url/부가서비스조회/$encodedNumber');
 
       print('부가서비스 조회 API 호출: $uri');
 
@@ -254,9 +328,7 @@ class DatabaseService {
     try {
       final httpClient = _createHttpClient();
       final encodedNumber = Uri.encodeComponent(managementNumber);
-      final uri = Uri.parse(
-        'https://localhost:7088/api/관제고객/$encodedNumber/dvr',
-      );
+      final uri = Uri.parse('$url/api/DVR조회/$encodedNumber');
 
       print('DVR 정보 조회 API 호출: $uri');
 
@@ -286,9 +358,7 @@ class DatabaseService {
     try {
       final httpClient = _createHttpClient();
       final encodedNumber = Uri.encodeComponent(managementNumber);
-      final uri = Uri.parse(
-        'https://localhost:7088/api/관제고객/$encodedNumber/smartphone-auth',
-      );
+      final uri = Uri.parse('$url/api/스마트폰인증번호조회/$encodedNumber');
 
       print('스마트폰 인증 정보 조회 API 호출: $uri');
 
@@ -315,7 +385,7 @@ class DatabaseService {
   Future<List<CodeData>> fetchCodeData(String codeType) async {
     try {
       final httpClient = DatabaseService._createHttpClient();
-      final uri = Uri.parse('https://localhost:7088/api/Dropdown/$codeType');
+      final uri = Uri.parse('$url/api/Dropdown/$codeType');
 
       print('드롭다운 데이터 조회 API 호출: $uri');
 
@@ -346,9 +416,7 @@ class DatabaseService {
     try {
       final httpClient = _createHttpClient();
       final encodedNumber = Uri.encodeComponent(managementNumber);
-      final uri = Uri.parse(
-        'https://localhost:7088/api/관제고객/$encodedNumber/user-info',
-      );
+      final uri = Uri.parse('$url/api/사용자정보/$encodedNumber');
 
       print('사용자 정보 조회 API 호출: $uri');
 
@@ -377,9 +445,7 @@ class DatabaseService {
     try {
       final httpClient = _createHttpClient();
       final encodedNumber = Uri.encodeComponent(managementNumber);
-      final uri = Uri.parse(
-        'https://localhost:7088/api/관제고객/$encodedNumber/zone-info',
-      );
+      final uri = Uri.parse('$url/api/존정보/$encodedNumber');
 
       print('존정보 조회 API 호출: $uri');
 
@@ -409,9 +475,7 @@ class DatabaseService {
     try {
       final httpClient = _createHttpClient();
       final encodedNumber = Uri.encodeComponent(managementNumber);
-      final uri = Uri.parse(
-        'https://localhost:7088/api/관제고객/$encodedNumber/documents',
-      );
+      final uri = Uri.parse('$url/api/문서리스트/$encodedNumber');
 
       print('문서 정보 조회 API 호출: $uri');
 
@@ -456,19 +520,16 @@ class DatabaseService {
       final endDateStr =
           '${endDate.year}-${endDate.month.toString().padLeft(2, '0')}-${endDate.day.toString().padLeft(2, '0')}';
 
-      final uri =
-          Uri.parse(
-            'https://localhost:7088/api/관제고객/$encodedNumber/recent-signals',
-          ).replace(
-            queryParameters: {
-              '시작일자': startDateStr,
-              '종료일자': endDateStr,
-              '신호필터': signalFilter,
-              '오름차순정렬': ascending.toString(),
-              'skip': skip.toString(),
-              'take': take.toString(),
-            },
-          );
+      final uri = Uri.parse('$url/api/최근신호/$encodedNumber/').replace(
+        queryParameters: {
+          '시작일자': startDateStr,
+          '종료일자': endDateStr,
+          '신호필터': signalFilter,
+          '오름차순정렬': ascending.toString(),
+          'skip': skip.toString(),
+          'take': take.toString(),
+        },
+      );
 
       print('최근 수신신호 조회 API 호출: $uri');
 
@@ -505,7 +566,7 @@ class DatabaseService {
     try {
       final httpClient = _createHttpClient();
       final encodedNumber = Uri.encodeComponent(managementNumber);
-      final uri = Uri.parse('https://localhost:7088/api/관제개시/$encodedNumber');
+      final uri = Uri.parse('$url/api/관제개시조회/$encodedNumber');
 
       print('관제개시 조회 API 호출: $uri');
 
@@ -534,9 +595,7 @@ class DatabaseService {
   ) async {
     try {
       final httpClient = _createHttpClient();
-      final request = await httpClient.postUrl(
-        Uri.parse('https://localhost:7088/api/관제개시'),
-      );
+      final request = await httpClient.postUrl(Uri.parse('$url/api/관제개시정보추가'));
 
       request.headers.set('Content-Type', 'application/json; charset=utf-8');
       request.write(json.encode(data));
@@ -565,7 +624,7 @@ class DatabaseService {
     try {
       final httpClient = _createHttpClient();
       final encodedNumber = Uri.encodeComponent(managementNumber);
-      final uri = Uri.parse('https://localhost:7088/api/보수점검/$encodedNumber');
+      final uri = Uri.parse('$url/api/보수점검조회/$encodedNumber');
 
       print('보수점검 완료이력 조회 API 호출: $uri');
 
@@ -594,9 +653,7 @@ class DatabaseService {
   ) async {
     try {
       final httpClient = _createHttpClient();
-      final request = await httpClient.postUrl(
-        Uri.parse('https://localhost:7088/api/보수점검'),
-      );
+      final request = await httpClient.postUrl(Uri.parse('$url/api/보수점검추가'));
 
       request.headers.set('Content-Type', 'application/json; charset=utf-8');
       request.write(json.encode(data));
@@ -637,17 +694,14 @@ class DatabaseService {
       final endDateStr =
           '${endDate.year}-${endDate.month.toString().padLeft(2, '0')}-${endDate.day.toString().padLeft(2, '0')}';
 
-      final uri =
-          Uri.parse(
-            'https://localhost:7088/api/관제고객/검색로그내역조회/$encodedNumber',
-          ).replace(
-            queryParameters: {
-              '시작일자': startDateStr,
-              '종료일자': endDateStr,
-              'skip': skip.toString(),
-              'take': take.toString(),
-            },
-          );
+      final uri = Uri.parse('$url/api/검색로그내역조회/$encodedNumber').replace(
+        queryParameters: {
+          '시작일자': startDateStr,
+          '종료일자': endDateStr,
+          'skip': skip.toString(),
+          'take': take.toString(),
+        },
+      );
 
       print('검색로그 내역조회 API 호출: $uri');
 
@@ -696,17 +750,14 @@ class DatabaseService {
       final endDateStr =
           '${endDate.year}-${endDate.month.toString().padLeft(2, '0')}-${endDate.day.toString().padLeft(2, '0')}';
 
-      final uri =
-          Uri.parse(
-            'https://localhost:7088/api/관제고객/고객정보변동이력/$encodedNumber',
-          ).replace(
-            queryParameters: {
-              '시작일자': startDateStr,
-              '종료일자': endDateStr,
-              'skip': skip.toString(),
-              'take': take.toString(),
-            },
-          );
+      final uri = Uri.parse('$url/api/고객정보변동이력/$encodedNumber').replace(
+        queryParameters: {
+          '시작일자': startDateStr,
+          '종료일자': endDateStr,
+          'skip': skip.toString(),
+          'take': take.toString(),
+        },
+      );
 
       print('고객정보 변동이력 조회 API 호출: $uri');
 
@@ -746,9 +797,7 @@ class DatabaseService {
       print('약도 조회 요청: 관제관리번호=$managementNumber');
 
       final encodedNumber = Uri.encodeComponent(managementNumber);
-      final uri = Uri.parse(
-        'https://localhost:7088/api/관제고객/약도조회/$encodedNumber',
-      );
+      final uri = Uri.parse('$url/api/약도조회/$encodedNumber');
 
       final client = HttpClient()
         ..badCertificateCallback =
@@ -783,6 +832,54 @@ class DatabaseService {
     }
   }
 
+  /// 약도 이미지 업데이트 & 업데이트 안 됐으면 인서트
+  ///
+  /// [managementNumber] - 관제관리번호
+  /// [mapDiagramImage] - 약도 이미지 바이트 데이터
+  /// 반환: bool - 성공 여부
+  static Future<bool> updateMapDiagram({
+    required String managementNumber,
+    required Uint8List mapDiagramImage,
+  }) async {
+    try {
+      print('약도 업데이트 요청: 관제관리번호=$managementNumber');
+
+      final encodedNumber = Uri.encodeComponent(managementNumber);
+      final uri = Uri.parse('$url/api/Update/약도업데이트/$encodedNumber');
+
+      final client = HttpClient()
+        ..badCertificateCallback =
+            (X509Certificate cert, String host, int port) => true;
+
+      final request = await client.putUrl(uri);
+      request.headers.set('Content-Type', 'application/json; charset=utf-8');
+      // 이미지를 Base64로 인코딩하여 JSON으로 전송
+      final base64Image = base64Encode(mapDiagramImage);
+      final body = json.encode({
+        '관제관리번호': managementNumber,
+        '약도데이터': base64Image,
+      });
+
+      request.write(body);
+
+      final response = await request.close();
+
+      if (response.statusCode == 200) {
+        print('약도 업데이트 성공: 관제관리번호=$managementNumber');
+        return true;
+      } else {
+        final String responseBody = await response
+            .transform(utf8.decoder)
+            .join();
+        print('약도 업데이트 오류: ${response.statusCode}, $responseBody');
+        return false;
+      }
+    } catch (e) {
+      print('약도 업데이트 API 호출 오류: $e');
+      return false;
+    }
+  }
+
   /// 도면 데이터 조회 (도면마스터 및 도면마스터2)
   ///
   /// [managementNumber] - 관제관리번호
@@ -794,9 +891,7 @@ class DatabaseService {
       print('도면 조회 요청: 관제관리번호=$managementNumber');
 
       final encodedNumber = Uri.encodeComponent(managementNumber);
-      final uri = Uri.parse(
-        'https://localhost:7088/api/관제고객/도면조회/$encodedNumber',
-      );
+      final uri = Uri.parse('$url/api/도면조회/$encodedNumber');
 
       final client = HttpClient()
         ..badCertificateCallback =
@@ -833,15 +928,64 @@ class DatabaseService {
     }
   }
 
+  /// 도면 이미지 업데이트 & 업데이트 안 됐으면 인서트
+  ///
+  /// [managementNumber] - 관제관리번호
+  /// [blueprintImage] - 도면 이미지 바이트 데이터
+  /// [blueprintType] - 도면 타입 ('1': 도면마스터, '2': 도면마스터2)
+  /// 반환: bool - 성공 여부
+  static Future<bool> updateBlueprint({
+    required String managementNumber,
+    required Uint8List blueprintImage,
+    required String blueprintType,
+  }) async {
+    try {
+      print('도면 업데이트 요청: 관제관리번호=$managementNumber, 도면타입=$blueprintType');
+
+      final encodedNumber = Uri.encodeComponent(managementNumber);
+      final uri = Uri.parse('$url/api/Update/도면업데이트/$encodedNumber');
+
+      final client = HttpClient()
+        ..badCertificateCallback =
+            (X509Certificate cert, String host, int port) => true;
+
+      final request = await client.putUrl(uri);
+      request.headers.set('Content-Type', 'application/json; charset=utf-8');
+      // 이미지를 Base64로 인코딩하여 JSON으로 전송
+      final base64Image = base64Encode(blueprintImage);
+      final body = json.encode({
+        '관제관리번호': managementNumber,
+        '도면데이터': base64Image,
+        '도면타입': blueprintType,
+      });
+
+      request.write(body);
+
+      final response = await request.close();
+
+      if (response.statusCode == 200) {
+        print('도면 업데이트 성공: 관제관리번호=$managementNumber, 도면타입=$blueprintType');
+        return true;
+      } else {
+        final String responseBody = await response
+            .transform(utf8.decoder)
+            .join();
+        print('도면 업데이트 오류: ${response.statusCode}, $responseBody');
+        return false;
+      }
+    } catch (e) {
+      print('도면 업데이트 API 호출 오류: $e');
+      return false;
+    }
+  }
+
   /// AS접수 정보 조회
   /// 관제관리번호로 AS접수 정보를 조회합니다.
   static Future<List<AsLog>> getASLog(String managementNumber) async {
     try {
       final httpClient = _createHttpClient();
       final encodedNumber = Uri.encodeComponent(managementNumber);
-      final uri = Uri.parse(
-        'https://localhost:7088/api/관제고객/$encodedNumber/ashistory',
-      );
+      final uri = Uri.parse('$url/api/AS조회/$encodedNumber');
 
       print('AS접수 정보 조회 API 호출: $uri');
 
@@ -869,7 +1013,7 @@ class DatabaseService {
     try {
       final httpClient = _createHttpClient();
       final request = await httpClient.postUrl(
-        Uri.parse('https://localhost:7088/api/Insert/aslog'),
+        Uri.parse('$url/api/Insert/aslog'),
       );
 
       request.headers.set('Content-Type', 'application/json; charset=utf-8');
@@ -903,9 +1047,7 @@ class DatabaseService {
 
       final httpClient = _createHttpClient();
       final encodedNumber = Uri.encodeComponent(customerNumber);
-      final uri = Uri.parse(
-        'https://localhost:7088/api/관제고객/sales-info/$encodedNumber',
-      );
+      final uri = Uri.parse('$url/api/영업정보/$encodedNumber');
 
       print('영업정보 조회 API 호출: $uri (고객번호: $customerNumber)');
 
@@ -952,9 +1094,7 @@ class DatabaseService {
 
       final httpClient = _createHttpClient();
       final encodedNumber = Uri.encodeComponent(customerNumber);
-      final uri = Uri.parse(
-        'https://localhost:7088/api/관제고객/payment-history/$encodedNumber',
-      );
+      final uri = Uri.parse('$url/api/최근수금이력/$encodedNumber');
 
       print('최근수금이력 조회 API 호출: $uri (고객번호: $customerNumber)');
 
@@ -1001,9 +1141,7 @@ class DatabaseService {
 
       final httpClient = _createHttpClient();
       final encodedNumber = Uri.encodeComponent(customerNumber);
-      final uri = Uri.parse(
-        'https://localhost:7088/api/관제고객/visit-as-history/$encodedNumber',
-      );
+      final uri = Uri.parse('$url/api/방문AS조회/$encodedNumber');
 
       print('최근 방문 및 A/S이력 조회 API 호출: $uri (고객번호: $customerNumber)');
 
@@ -1035,136 +1173,275 @@ class DatabaseService {
       rethrow; // Exception을 다시 던짐
     }
   }
-}
 
-// 코드 데이터 모델
-class CodeData {
-  final String code;
-  final String name;
-  final String? description;
+  /// 개통코드 검증
+  /// 개통코드로 개통업체 정보를 검증합니다.
+  static Future<Map<String, dynamic>?> verifyOpeningCode(String code) async {
+    try {
+      final httpClient = _createHttpClient();
+      final encodedCode = Uri.encodeComponent(code);
+      final uri = Uri.parse('$url/api/개통코드인증/$encodedCode');
 
-  CodeData({required this.code, required this.name, this.description});
+      print('개통코드 검증 API 호출: $uri');
 
-  factory CodeData.fromJson(Map<String, dynamic> json) {
-    return CodeData(
-      code: json['code'] as String,
-      name: json['name'] as String,
-      description: json['description'] as String?,
-    );
-  }
+      final request = await httpClient.getUrl(uri);
+      final response = await request.close();
 
-  @override
-  String toString() => '$code - $name';
-}
-
-// 드롭다운 데이터 캐시 클래스
-class CodeDataCache {
-  static final Map<String, List<CodeData>> _cache = {};
-  static final Map<String, DateTime> _cacheTime = {};
-  static const Duration _cacheDuration = Duration(hours: 1);
-
-  /// 코드 데이터 조회 (캐시 우선, 없으면 API 호출)
-  static Future<List<CodeData>> getCodeData(String codeType) async {
-    final now = DateTime.now();
-
-    // 캐시에 있고 만료되지 않았는지 확인
-    if (_cache.containsKey(codeType) &&
-        _cacheTime[codeType]!.add(_cacheDuration).isAfter(now)) {
-      return _cache[codeType]!;
+      if (response.statusCode == 200) {
+        final String responseBody = await response
+            .transform(utf8.decoder)
+            .join();
+        final Map<String, dynamic> jsonData = json.decode(responseBody);
+        print('개통코드 검증 성공: ${jsonData['개통업체명']}');
+        return jsonData;
+      } else if (response.statusCode == 404) {
+        print('개통코드가 일치하지 않습니다: $code');
+        return null;
+      } else {
+        print('개통코드 검증 오류: ${response.statusCode}');
+        return null;
+      }
+    } catch (e) {
+      print('개통코드 검증 API 호출 오류: $e');
+      return null;
     }
-
-    // 캐시에 없으면 API에서 가져오기
-    final api = DatabaseService();
-    final data = await api.fetchCodeData(codeType);
-    _cache[codeType] = data;
-    _cacheTime[codeType] = now;
-    return data;
   }
 
-  /// 캐시 초기화
-  static void clearCache() {
-    _cache.clear();
-    _cacheTime.clear();
-  }
-
-  /// 특정 코드 유형의 캐시만 삭제
-  static void clearCacheForType(String codeType) {
-    _cache.remove(codeType);
-    _cacheTime.remove(codeType);
-  }
-
-  /// 코드 추가
-  static Future<bool> insertCode({
-    required String typeName,
-    required String code,
-    required String codeName,
+  /// 로그인 검증
+  /// ID와 비밀번호로 로그인을 검증합니다.
+  static Future<Map<String, dynamic>?> login({
+    required String id,
+    required String password,
   }) async {
     try {
-      final httpClient = DatabaseService._createHttpClient();
-      final uri = Uri.parse('https://localhost:7088/api/Insert/$typeName');
+      final httpClient = _createHttpClient();
+      final uri = Uri.parse('$url/api/로그인');
 
-      print('코드 추가 API 호출: $uri');
-      print('코드: $code, 코드명: $codeName');
+      print('로그인 API 호출: $uri');
 
       final request = await httpClient.postUrl(uri);
       request.headers.set('Content-Type', 'application/json; charset=utf-8');
 
-      // DeleteController와 동일한 구조로 code, codeName 키 사용
-      final body = json.encode({'code': code, 'codeName': codeName});
+      final body = json.encode({'Id': id, 'Password': password});
+
+      request.write(body);
+      final response = await request.close();
+      final String responseBody = await response.transform(utf8.decoder).join();
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> jsonData = json.decode(responseBody);
+        print('로그인 성공: ${jsonData['성명']}');
+        return jsonData;
+      } else if (response.statusCode == 401) {
+        final Map<String, dynamic> errorData = json.decode(responseBody);
+        print('로그인 실패: ${errorData['message']}');
+        return {'error': errorData['message']};
+      } else {
+        print('로그인 오류: ${response.statusCode}, $responseBody');
+        return {'error': '서버 오류가 발생했습니다.'};
+      }
+    } catch (e) {
+      print('로그인 API 호출 오류: $e');
+      return {'error': '네트워크 오류가 발생했습니다.'};
+    }
+  }
+
+  /// 부가서비스 추가
+  static Future<bool> insertAdditionalService({
+    required String controlManagementNumber,
+    required String serviceCode,
+    String? serviceEtcCode,
+    required String serviceDate,
+    String? memo,
+  }) async {
+    try {
+      final httpClient = DatabaseService._createHttpClient();
+      final uri = Uri.parse('$url/api/Insert/additionalservice');
+
+      print('부가서비스 추가 API 호출: $uri');
+      print('관제관리번호: $controlManagementNumber, 부가서비스코드: $serviceCode');
+
+      final request = await httpClient.postUrl(uri);
+      request.headers.set('Content-Type', 'application/json; charset=utf-8');
+
+      // 날짜를 DateTime으로 파싱하여 전송
+      DateTime? parsedDate;
+      try {
+        parsedDate = DateTime.parse(serviceDate);
+      } catch (e) {
+        print('날짜 파싱 오류: $e');
+        return false;
+      }
+
+      final body = json.encode({
+        '관제관리번호': controlManagementNumber,
+        '부가서비스코드': serviceCode,
+        '부가서비스제공코드': serviceEtcCode,
+        '부가서비스일자': parsedDate.toIso8601String(),
+        '추가메모': memo,
+      });
 
       request.write(body);
       final response = await request.close();
 
       if (response.statusCode == 201) {
-        print('코드 추가 성공');
-        // 캐시 삭제하여 다음 조회 시 최신 데이터 반영
-        clearCacheForType(typeName);
+        print('부가서비스 추가 성공');
         return true;
       } else {
         final String responseBody = await response
             .transform(utf8.decoder)
             .join();
-        print('코드 추가 오류: ${response.statusCode}, $responseBody');
+        print('부가서비스 추가 오류: ${response.statusCode}, $responseBody');
         return false;
       }
     } catch (e) {
-      print('코드 추가 API 호출 오류: $e');
+      print('부가서비스 추가 API 호출 오류: $e');
       return false;
     }
   }
 
-  /// 코드 삭제
-  static Future<bool> deleteCodeType({
-    required String typeName,
-    required String code,
+  /// DVR 연동 정보 추가
+  static Future<bool> insertDVR({
+    required String controlManagementNumber,
+    required int connectionMethod, // 0: CS방식, 1: 웹방식
+    required String dvrTypeCode,
+    required String connectionAddress,
+    String? connectionPort,
+    String? connectionId,
+    String? connectionPassword,
+    String? serialNumber,
   }) async {
     try {
       final httpClient = DatabaseService._createHttpClient();
-      // 쿼리 파라미터로 code 전달
-      final uri = Uri.parse(
-        'https://localhost:7088/api/Delete/$typeName',
-      ).replace(queryParameters: {'code': code});
+      final uri = Uri.parse('$url/api/Insert/dvr');
 
-      print('코드 삭제 API 호출: $uri');
-      print('code: $code');
+      print('DVR 연동 정보 추가 API 호출: $uri');
+      print('관제관리번호: $controlManagementNumber, 접속방식: $connectionMethod');
+
+      final request = await httpClient.postUrl(uri);
+      request.headers.set('Content-Type', 'application/json; charset=utf-8');
+
+      final body = json.encode({
+        '관제관리번호': controlManagementNumber,
+        '접속방식': connectionMethod,
+        'DVR종류코드': dvrTypeCode,
+        '접속주소': connectionAddress,
+        '접속포트': connectionPort,
+        '접속ID': connectionId,
+        '접속암호': connectionPassword,
+        '일련번호': serialNumber,
+      });
+
+      request.write(body);
+      final response = await request.close();
+
+      if (response.statusCode == 201) {
+        print('DVR 연동 정보 추가 성공');
+        return true;
+      } else {
+        final String responseBody = await response
+            .transform(utf8.decoder)
+            .join();
+        print('DVR 연동 정보 추가 오류: ${response.statusCode}, $responseBody');
+        return false;
+      }
+    } catch (e) {
+      print('DVR 연동 정보 추가 API 호출 오류: $e');
+      return false;
+    }
+  }
+
+  /// 부가서비스 삭제
+  static Future<bool> deleteAdditionalService({
+    required int managementId,
+  }) async {
+    try {
+      final httpClient = DatabaseService._createHttpClient();
+      final uri = Uri.parse('$url/api/Delete/additionalservice/$managementId');
+
+      print('부가서비스 삭제 API 호출: $uri');
 
       final request = await httpClient.deleteUrl(uri);
       final response = await request.close();
 
       if (response.statusCode == 200) {
-        print('코드 삭제 성공');
-        // 캐시 삭제하여 다음 조회 시 최신 데이터 반영
-        clearCacheForType(typeName);
+        print('부가서비스 삭제 성공');
         return true;
       } else {
         final String responseBody = await response
             .transform(utf8.decoder)
             .join();
-        print('코드 삭제 오류: ${response.statusCode}, $responseBody');
+        print('부가서비스 삭제 오류: ${response.statusCode}, $responseBody');
         return false;
       }
     } catch (e) {
-      print('코드 삭제 API 호출 오류: $e');
+      print('부가서비스 삭제 API 호출 오류: $e');
+      return false;
+    }
+  }
+
+  /// DVR 삭제
+  static Future<bool> deleteDVR({required int serialNumber}) async {
+    try {
+      final httpClient = DatabaseService._createHttpClient();
+      final uri = Uri.parse('$url/api/Delete/dvr/$serialNumber');
+
+      print('DVR 삭제 API 호출: $uri');
+
+      final request = await httpClient.deleteUrl(uri);
+      final response = await request.close();
+
+      if (response.statusCode == 200) {
+        print('DVR 삭제 성공');
+        return true;
+      } else {
+        final String responseBody = await response
+            .transform(utf8.decoder)
+            .join();
+        print('DVR 삭제 오류: ${response.statusCode}, $responseBody');
+        return false;
+      }
+    } catch (e) {
+      print('DVR 삭제 API 호출 오류: $e');
+      return false;
+    }
+  }
+
+  /// 주간휴일설정 저장
+  static Future<bool> updateHolidayWeek({
+    required String managementNumber,
+    required List<String> holidayCodes,
+  }) async {
+    try {
+      final httpClient = DatabaseService._createHttpClient();
+      final uri = Uri.parse('$url/api/Update/holiday');
+
+      print('주간휴일설정 저장 API 호출: $uri');
+      print('관제관리번호: $managementNumber, 휴일코드수: ${holidayCodes.length}');
+
+      final request = await httpClient.postUrl(uri);
+      request.headers.set('Content-Type', 'application/json; charset=utf-8');
+
+      final body = json.encode({
+        '관제관리번호': managementNumber,
+        '휴일주간코드목록': holidayCodes,
+      });
+
+      request.write(body);
+      final response = await request.close();
+
+      if (response.statusCode == 200) {
+        print('주간휴일설정 저장 성공');
+        return true;
+      } else {
+        final String responseBody = await response
+            .transform(utf8.decoder)
+            .join();
+        print('주간휴일설정 저장 오류: ${response.statusCode}, $responseBody');
+        return false;
+      }
+    } catch (e) {
+      print('주간휴일설정 저장 API 호출 오류: $e');
       return false;
     }
   }
@@ -1181,7 +1458,7 @@ class CodeDataCache {
   }) async {
     try {
       final httpClient = DatabaseService._createHttpClient();
-      final uri = Uri.parse('https://localhost:7088/api/Import/document');
+      final uri = Uri.parse('$url/api/Import/document');
 
       print('문서 업로드 API 호출: $uri');
       print('관제관리번호: $managementNumber, 문서명: $documentName');
@@ -1265,7 +1542,7 @@ class CodeDataCache {
   }) async {
     try {
       final httpClient = DatabaseService._createHttpClient();
-      final uri = Uri.parse('https://localhost:7088/api/Insert/auth');
+      final uri = Uri.parse('$url/api/Insert/auth');
 
       print('인증 정보 추가 API 호출: $uri');
       print('휴대폰번호: $phoneNumber, 관제관리번호: $controlManagementNumber');
@@ -1298,6 +1575,140 @@ class CodeDataCache {
       }
     } catch (e) {
       print('인증 정보 추가 API 호출 오류: $e');
+      return false;
+    }
+  }
+}
+
+// 코드 데이터 모델
+class CodeData {
+  final String code;
+  final String name;
+  final String? description;
+
+  CodeData({required this.code, required this.name, this.description});
+
+  factory CodeData.fromJson(Map<String, dynamic> json) {
+    return CodeData(
+      code: json['code'] as String,
+      name: json['name'] as String,
+      description: json['description'] as String?,
+    );
+  }
+
+  @override
+  String toString() => '$code - $name';
+}
+
+// 드롭다운 데이터 캐시 클래스
+class CodeDataCache {
+  static final Map<String, List<CodeData>> _cache = {};
+  static final Map<String, DateTime> _cacheTime = {};
+  static const Duration _cacheDuration = Duration(hours: 1);
+  static String url = ApiConfig().Url;
+
+  /// 코드 데이터 조회 (캐시 우선, 없으면 API 호출)
+  static Future<List<CodeData>> getCodeData(String codeType) async {
+    final now = DateTime.now();
+
+    // 캐시에 있고 만료되지 않았는지 확인
+    if (_cache.containsKey(codeType) &&
+        _cacheTime[codeType]!.add(_cacheDuration).isAfter(now)) {
+      return _cache[codeType]!;
+    }
+
+    // 캐시에 없으면 API에서 가져오기
+    final api = DatabaseService();
+    final data = await api.fetchCodeData(codeType);
+    _cache[codeType] = data;
+    _cacheTime[codeType] = now;
+    return data;
+  }
+
+  /// 캐시 초기화
+  static void clearCache() {
+    _cache.clear();
+    _cacheTime.clear();
+  }
+
+  /// 특정 코드 유형의 캐시만 삭제
+  static void clearCacheForType(String codeType) {
+    _cache.remove(codeType);
+    _cacheTime.remove(codeType);
+  }
+
+  /// 코드 추가
+  static Future<bool> insertCode({
+    required String typeName,
+    required String code,
+    required String codeName,
+  }) async {
+    try {
+      final httpClient = DatabaseService._createHttpClient();
+      final uri = Uri.parse('$url/api/Insert/$typeName');
+
+      print('코드 추가 API 호출: $uri');
+      print('코드: $code, 코드명: $codeName');
+
+      final request = await httpClient.postUrl(uri);
+      request.headers.set('Content-Type', 'application/json; charset=utf-8');
+
+      // DeleteController와 동일한 구조로 code, codeName 키 사용
+      final body = json.encode({'code': code, 'codeName': codeName});
+
+      request.write(body);
+      final response = await request.close();
+
+      if (response.statusCode == 201) {
+        print('코드 추가 성공');
+        // 캐시 삭제하여 다음 조회 시 최신 데이터 반영
+        clearCacheForType(typeName);
+        return true;
+      } else {
+        final String responseBody = await response
+            .transform(utf8.decoder)
+            .join();
+        print('코드 추가 오류: ${response.statusCode}, $responseBody');
+        return false;
+      }
+    } catch (e) {
+      print('코드 추가 API 호출 오류: $e');
+      return false;
+    }
+  }
+
+  /// 코드 삭제
+  static Future<bool> deleteCodeType({
+    required String typeName,
+    required String code,
+  }) async {
+    try {
+      final httpClient = DatabaseService._createHttpClient();
+      // 쿼리 파라미터로 code 전달
+      final uri = Uri.parse(
+        '$url/api/Delete/$typeName',
+      ).replace(queryParameters: {'code': code});
+
+      print('코드 삭제 API 호출: $uri');
+      print('code: $code');
+
+      final request = await httpClient.deleteUrl(uri);
+      final response = await request.close();
+
+      if (response.statusCode == 200) {
+        print('코드 삭제 성공');
+        // 캐시 삭제하여 다음 조회 시 최신 데이터 반영
+        clearCacheForType(typeName);
+        return true;
+      } else {
+        final String responseBody = await response
+            .transform(utf8.decoder)
+            .join();
+        print('코드 삭제 오류: ${response.statusCode}, $responseBody');
+        return false;
+      }
+    } catch (e) {
+      print('코드 삭제 API 호출 오류: $e');
       return false;
     }
   }

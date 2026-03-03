@@ -211,6 +211,39 @@ namespace securityindexAPI.Controllers
                             .ToListAsync();
                         break;
 
+                    case "addservicetype": // 부가서비스 코드
+                        result = await _context.부가서비스코드마스터
+                            .Select(x => new CodeData
+                            {
+                                Code = x.부가서비스코드,
+                                Name = x.부가서비스코드명 ?? string.Empty,
+                            })
+                            .OrderBy(x => x.Code)
+                            .ToListAsync();
+                        break;
+
+                    case "addserviceetc": // 부가서비스 코드
+                        result = await _context.부가서비스제공마스터
+                            .Select(x => new CodeData
+                            {
+                                Code = x.부가서비스제공코드,
+                                Name = x.부가서비스제공코드명 ?? string.Empty,
+                            })
+                            .OrderBy(x => x.Code)
+                            .ToListAsync();
+                        break;
+
+                    case "dvrtype": // dvr 코드
+                        result = await _context.DVR종류코드마스터
+                            .Select(x => new CodeData
+                            {
+                                Code = x.DVR종류코드,
+                                Name = x.DVR종류코드명 ?? string.Empty,
+                            })
+                            .OrderBy(x => x.Code)
+                            .ToListAsync();
+                        break;
+
                     default:
                         return BadRequest(new { message = $"지원하지 않는 코드 유형입니다: {codeType}" });
                 }

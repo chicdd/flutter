@@ -1,6 +1,7 @@
 import 'package:securityindex/style.dart';
 
 class AdditionalService {
+  final int? managementId; // 관리id
   final String? controlManagementNumber; // 관제관리번호
   final String? serviceName; // 부가서비스코드명
   final String? provisionType; // 부가서비스제공코드명
@@ -8,6 +9,7 @@ class AdditionalService {
   final String? memo; // 추가메모
 
   AdditionalService({
+    this.managementId,
     this.controlManagementNumber,
     this.serviceName,
     this.provisionType,
@@ -17,6 +19,7 @@ class AdditionalService {
 
   factory AdditionalService.fromJson(Map<String, dynamic> json) {
     return AdditionalService(
+      managementId: json['관리id'] as int?,
       controlManagementNumber: json['관제관리번호'] as String?,
       serviceName: json['부가서비스코드명'] as String?,
       provisionType: json['부가서비스제공코드명'] as String?,
@@ -27,6 +30,7 @@ class AdditionalService {
 
   Map<String, dynamic> toJson() {
     return {
+      '관리id': managementId,
       '관제관리번호': controlManagementNumber,
       '부가서비스코드명': serviceName,
       '부가서비스제공코드명': provisionType,

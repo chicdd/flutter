@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:securityindex/screens/customerregistration.dart';
 import 'package:securityindex/screens/maintenance_inspection_history.dart';
 import 'package:securityindex/screens/materialstatus.dart';
 import 'package:securityindex/screens/payment_history_table.dart';
@@ -22,6 +23,7 @@ import '../screens/basic_customer_info.dart';
 import '../screens/extended_customer_info.dart';
 import 'custom_top_bar.dart';
 import '../config/topbar_config.dart';
+import '../services/selected_customer_service.dart';
 
 class ContentArea extends StatefulWidget {
   final SearchPanel? selectedCustomer;
@@ -40,7 +42,8 @@ class ContentArea extends StatefulWidget {
 }
 
 class ContentAreaState extends State<ContentArea> {
-  String _pageSearchQuery = '';
+  final GlobalKey<CustomerRegistrationState> _customerRegistrationInfoKey =
+      GlobalKey();
   final GlobalKey<BasicCustomerInfoState> _basicCustomerInfoKey = GlobalKey();
   final GlobalKey<ExtendedCustomerInfoState> _extendedCustomerInfoKey =
       GlobalKey();
@@ -65,18 +68,72 @@ class ContentAreaState extends State<ContentArea> {
   final GlobalKey<VisitAsHistoryTableState> _visitashistoryKey = GlobalKey();
   final GlobalKey<CustomTopBarState> _topBarKey = GlobalKey();
 
+  final _customerService = SelectedCustomerService();
+
   @override
   void initState() {
     super.initState();
     // 하드웨어 키보드 리스너 추가
     HardwareKeyboard.instance.addHandler(_handleKeyEvent);
+    // 고객 서비스 변경 리스너 추가
+    _customerService.addListener(_onCustomerServiceChanged);
   }
 
   @override
   void dispose() {
     // 하드웨어 키보드 리스너 제거
     HardwareKeyboard.instance.removeHandler(_handleKeyEvent);
+    // 고객 서비스 리스너 제거
+    _customerService.removeListener(_onCustomerServiceChanged);
     super.dispose();
+  }
+
+  /// 고객 서비스 변경 시 호출 (에러 메시지 업데이트)
+  void _onCustomerServiceChanged() {
+    if (mounted) {
+      setState(() {
+        // errorMessage 등 상태 업데이트를 위해 build 재호출
+      });
+    }
+  }
+
+  /// 현재 약도 또는 도면 편집 중인지 확인
+  bool isEditing() {
+    final mapDiagramState = _mapDiagramKey.currentState;
+    final blueprintState = _blueprintKey.currentState;
+
+    return (mapDiagramState?.isEditMode ?? false) ||
+        (blueprintState?.isEditMode ?? false);
+  }
+
+  /// 편집 중인 그림판 프로세스 강제 종료
+  Future<void> closeEditingProcesses() async {
+    await _mapDiagramKey.currentState?.closeEditingProcess();
+    await _blueprintKey.currentState?.closeEditingProcess();
+  }
+
+  @override
+  void didUpdateWidget(ContentArea oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    // 영업정보 화면으로 전환될 때 에러 메시지 확인을 위해 다시 빌드
+    if (widget.selectedSubMenu == '영업정보' &&
+        oldWidget.selectedSubMenu != widget.selectedSubMenu) {
+      Future.delayed(const Duration(milliseconds: 100), () {
+        if (mounted) {
+          setState(() {});
+        }
+      });
+    }
+
+    // 화면이 변경된 경우 이전 화면의 편집 모드 강제 종료
+    // if (oldWidget.selectedSubMenu != widget.selectedSubMenu) {
+    //   if (oldWidget.selectedSubMenu == '기본고객정보') {
+    //     _basicCustomerInfoKey.currentState?.forceExitEditMode();
+    //   } else if (oldWidget.selectedSubMenu == '확장고객정보') {
+    //     _extendedCustomerInfoKey.currentState?.forceExitEditMode();
+    //   }
+    // }
   }
 
   bool _handleKeyEvent(KeyEvent event) {
@@ -100,7 +157,9 @@ class ContentAreaState extends State<ContentArea> {
 
   /// 현재 화면의 검색 쿼리 업데이트
   void _updateSearchForCurrentScreen(String query) {
-    if (widget.selectedSubMenu == '기본고객정보') {
+    if (widget.selectedSubMenu == '관제고객등록') {
+      _customerRegistrationInfoKey.currentState?.updateSearchQuery(query);
+    } else if (widget.selectedSubMenu == '기본고객정보') {
       _basicCustomerInfoKey.currentState?.updateSearchQuery(query);
     } else if (widget.selectedSubMenu == '확장고객정보') {
       _extendedCustomerInfoKey.currentState?.updateSearchQuery(query);
@@ -140,7 +199,7 @@ class ContentAreaState extends State<ContentArea> {
     String title = _getTitleForScreen();
 
     return Container(
-      color: AppTheme.backgroundColor,
+      color: context.colors.background,
       child: Column(
         children: [
           CustomTopBar(
@@ -148,9 +207,7 @@ class ContentAreaState extends State<ContentArea> {
             title: title,
             buttons: buttons,
             onPageSearch: (query) {
-              setState(() {
-                _pageSearchQuery = query;
-              });
+              setState(() {});
               // 현재 화면에 따라 해당 화면의 검색 쿼리 업데이트
               _updateSearchForCurrentScreen(query);
             },
@@ -185,7 +242,14 @@ class ContentAreaState extends State<ContentArea> {
     }
     // 확장고객정보 화면
     else if (widget.selectedSubMenu == '확장고객정보') {
-      return TopBarConfig.extendedCustomerInfoButtons(context);
+      return TopBarConfig.extendedCustomerInfoButtons(
+        context,
+        getState: () => _extendedCustomerInfoKey.currentState,
+        onStateChanged: () {
+          // 편집 모드 변경 시 UI 업데이트
+          setState(() {});
+        },
+      );
     }
     // 스마트어플인증등록 화면
     else if (widget.selectedSubMenu == '스마트어플인증등록') {
@@ -205,9 +269,23 @@ class ContentAreaState extends State<ContentArea> {
     } else if (widget.selectedSubMenu == '고객정보 변동이력') {
       return TopBarConfig.defaultButtons(context);
     } else if (widget.selectedMenu == '약도') {
-      return TopBarConfig.mapDiagramButtons(context);
+      return TopBarConfig.mapDiagramButtons(
+        context,
+        getState: () => _mapDiagramKey.currentState,
+        onStateChanged: () {
+          // 편집 모드 변경 시 UI 업데이트
+          setState(() {});
+        },
+      );
     } else if (widget.selectedMenu == '도면') {
-      return TopBarConfig.mapDiagramButtons(context);
+      return TopBarConfig.blueprintButtons(
+        context,
+        getState: () => _blueprintKey.currentState,
+        onStateChanged: () {
+          // 편집 모드 변경 시 UI 업데이트
+          setState(() {});
+        },
+      );
     } else if (widget.selectedSubMenu == '관제신호 개통처리') {
       return TopBarConfig.defaultButtons(context);
     } else if (widget.selectedSubMenu == '보수점검 완료이력') {
@@ -215,7 +293,7 @@ class ContentAreaState extends State<ContentArea> {
     } else if (widget.selectedMenu == 'AS 접수') {
       return TopBarConfig.defaultButtons(context);
     } else if (widget.selectedSubMenu == '영업정보') {
-      return TopBarConfig.defaultButtons(context);
+      return TopBarConfig.salesInfoButtons(context);
     } else if (widget.selectedSubMenu == '최근 수금 이력') {
       return TopBarConfig.defaultButtons(context);
     } else if (widget.selectedSubMenu == '최근 방문 및 A/S 이력') {
@@ -231,24 +309,31 @@ class ContentAreaState extends State<ContentArea> {
     if (widget.selectedMenu == '설정') {
       return Settings();
     }
+    if (widget.selectedMenu == '관제고객등록') {
+      return _buildCustomerRegistraionContent(context);
+    }
+
     if (widget.selectedCustomer == null) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.people_outline, size: 64, color: AppTheme.textTertiary),
+            Icon(
+              Icons.people_outline,
+              size: 64,
+              color: context.colors.textTertiary,
+            ),
             const SizedBox(height: 16),
             Text(
               '고객을 선택해주세요',
-              style: Theme.of(
-                context,
-              ).textTheme.bodyLarge?.copyWith(color: AppTheme.textSecondary),
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                color: context.colors.textSecondary,
+              ),
             ),
           ],
         ),
       );
     }
-
     // 고객이 선택되었고 메뉴가 선택되지 않았거나, 관제고객정보 메뉴일 때
     if (widget.selectedMenu == null || widget.selectedMenu == '관제고객정보') {
       return _buildCustomerInfoContent(context);
@@ -280,6 +365,12 @@ class ContentAreaState extends State<ContentArea> {
       return MapDiagram(
         key: _mapDiagramKey,
         searchpanel: widget.selectedCustomer!,
+        onEditModeChanged: () {
+          // 편집 모드 변경 시 UI 업데이트
+          if (mounted) {
+            setState(() {});
+          }
+        },
       );
     }
 
@@ -288,6 +379,12 @@ class ContentAreaState extends State<ContentArea> {
       return Blueprint(
         key: _blueprintKey,
         searchpanel: widget.selectedCustomer!,
+        onEditModeChanged: () {
+          // 편집 모드 변경 시 UI 업데이트
+          if (mounted) {
+            setState(() {});
+          }
+        },
       );
     }
 
@@ -315,11 +412,26 @@ class ContentAreaState extends State<ContentArea> {
     );
   }
 
+  Widget _buildCustomerRegistraionContent(BuildContext context) {
+    return CustomerRegistration(
+      key: _customerRegistrationInfoKey,
+      searchpanel: widget.selectedCustomer!,
+    );
+  }
+
   Widget _buildCustomerInfoContent(BuildContext context) {
     // 서브메뉴가 없거나 기본고객정보인 경우
     if (widget.selectedSubMenu == null || widget.selectedSubMenu == '기본고객정보') {
       return BasicCustomerInfo(
         key: _basicCustomerInfoKey,
+        searchpanel: widget.selectedCustomer!,
+      );
+    }
+
+    // 관제고객등록
+    if (widget.selectedSubMenu == '관제고객등록') {
+      return CustomerRegistration(
+        key: _customerRegistrationInfoKey,
         searchpanel: widget.selectedCustomer!,
       );
     }
@@ -372,22 +484,22 @@ class ContentAreaState extends State<ContentArea> {
               Icon(
                 Icons.construction_outlined,
                 size: 64,
-                color: AppTheme.textTertiary,
+                color: context.colors.textTertiary,
               ),
               const SizedBox(height: 16),
               Text(
                 widget.selectedSubMenu ?? '준비 중',
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                   fontWeight: FontWeight.w600,
-                  color: AppTheme.textSecondary,
+                  color: context.colors.textSecondary,
                 ),
               ),
               const SizedBox(height: 8),
               Text(
                 '해당 화면은 준비 중입니다.',
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(color: AppTheme.textSecondary),
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: context.colors.textSecondary,
+                ),
               ),
             ],
           ),
@@ -470,7 +582,7 @@ class ContentAreaState extends State<ContentArea> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppTheme.cardBackground,
+        color: context.colors.background,
         borderRadius: BorderRadius.circular(12),
         boxShadow: AppTheme.cardShadow,
       ),
@@ -482,7 +594,7 @@ class ContentAreaState extends State<ContentArea> {
               Icon(
                 Icons.description_outlined,
                 size: 20,
-                color: AppTheme.selectedColor,
+                color: context.colors.selectedColor,
               ),
               const SizedBox(width: 8),
               Text(
@@ -497,15 +609,15 @@ class ContentAreaState extends State<ContentArea> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppTheme.backgroundColor,
+              color: context.colors.background,
               borderRadius: BorderRadius.circular(8),
             ),
             child: Center(
               child: Text(
                 '${widget.selectedSubMenu ?? widget.selectedMenu} 내용이 여기에 표시됩니다.',
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(color: AppTheme.textSecondary),
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: context.colors.textSecondary,
+                ),
               ),
             ),
           ),

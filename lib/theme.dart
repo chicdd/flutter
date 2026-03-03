@@ -5,6 +5,7 @@ class AppColors extends ThemeExtension<AppColors> {
   final Color gray10;
   final Color gray30;
   final Color cardBackground;
+  final Color secondBackground;
   final Color dividerColor;
   final Color textEnable;
   final Color selectedColor;
@@ -15,6 +16,8 @@ class AppColors extends ThemeExtension<AppColors> {
   final Color fillhiright;
   final Color background;
   final Color textReadOnly;
+  final Color snackBarColor;
+  final Color deepBlue;
   final Color white;
   final Color orange;
   final Color green;
@@ -24,6 +27,7 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.gray10,
     required this.gray30,
     required this.cardBackground,
+    required this.secondBackground,
     required this.dividerColor,
     required this.textEnable,
     required this.selectedColor,
@@ -34,8 +38,10 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.fillhiright,
     required this.background,
     required this.textReadOnly,
-    required this.orange,
+    required this.snackBarColor,
+    required this.deepBlue,
     required this.white,
+    required this.orange,
     required this.green,
     required this.red,
   });
@@ -45,8 +51,10 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? gray10,
     Color? gray30,
     Color? cardBackground,
+    Color? secondBackground,
     Color? dividerColor,
     Color? textEnable,
+    Color? selectedColor,
     Color? textPrimary,
     Color? textSecondary,
     Color? textTertiary,
@@ -54,6 +62,8 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? fillhiright,
     Color? background,
     Color? textReadOnly,
+    Color? snackBarColor,
+    Color? deepBlue,
     Color? white,
     Color? orange,
     Color? green,
@@ -63,6 +73,7 @@ class AppColors extends ThemeExtension<AppColors> {
       gray10: gray10 ?? this.gray10,
       gray30: gray30 ?? this.gray30,
       cardBackground: cardBackground ?? this.cardBackground,
+      secondBackground: secondBackground ?? this.secondBackground,
       dividerColor: dividerColor ?? this.dividerColor,
       textEnable: textEnable ?? this.textEnable,
       selectedColor: selectedColor ?? this.selectedColor,
@@ -73,6 +84,8 @@ class AppColors extends ThemeExtension<AppColors> {
       fillhiright: fillhiright ?? this.fillhiright,
       background: background ?? this.background,
       textReadOnly: textReadOnly ?? this.textReadOnly,
+      snackBarColor: snackBarColor ?? this.snackBarColor,
+      deepBlue: deepBlue ?? this.deepBlue,
       white: white ?? this.white,
       orange: orange ?? this.orange,
       green: green ?? this.green,
@@ -87,6 +100,11 @@ class AppColors extends ThemeExtension<AppColors> {
       gray10: Color.lerp(gray10, other.gray10, t)!,
       gray30: Color.lerp(gray30, other.gray30, t)!,
       cardBackground: Color.lerp(cardBackground, other.cardBackground, t)!,
+      secondBackground: Color.lerp(
+        secondBackground,
+        other.secondBackground,
+        t,
+      )!,
       dividerColor: Color.lerp(dividerColor, other.dividerColor, t)!,
       selectedColor: Color.lerp(selectedColor, other.selectedColor, t)!,
       textEnable: Color.lerp(textEnable, other.textEnable, t)!,
@@ -97,6 +115,8 @@ class AppColors extends ThemeExtension<AppColors> {
       fillhiright: Color.lerp(fillhiright, other.fillhiright, t)!,
       background: Color.lerp(background, other.background, t)!,
       textReadOnly: Color.lerp(textReadOnly, other.textReadOnly, t)!,
+      snackBarColor: Color.lerp(snackBarColor, other.snackBarColor, t)!,
+      deepBlue: Color.lerp(deepBlue, other.deepBlue, t)!,
       white: Color.lerp(white, other.white, t)!,
       orange: Color.lerp(orange, other.orange, t)!,
       green: Color.lerp(green, other.green, t)!,
@@ -109,6 +129,7 @@ class AppColors extends ThemeExtension<AppColors> {
     gray10: Color(0xFFE8E8ED),
     gray30: Color(0xFFA9A9A9),
     cardBackground: Color(0xFFFFFFFF),
+    secondBackground: Color(0xFFF2F4F6),
     dividerColor: Color(0xFFD1D1D6),
     textEnable: Color(0xFFFFFFFF),
     selectedColor: Color(0xFF007AFF),
@@ -118,7 +139,9 @@ class AppColors extends ThemeExtension<AppColors> {
     borderColor: Color(0x00000000),
     fillhiright: Color(0x93007AFF),
     background: Color(0xFFf2f1f6),
-    textReadOnly: Color(0xFFE8E8ED),
+    textReadOnly: Color(0xFFF0F0F3),
+    snackBarColor: Color(0x80232525),
+    deepBlue: Color(0x930065CE),
     white: Colors.white,
     orange: Colors.orange,
     green: Colors.green,
@@ -130,6 +153,7 @@ class AppColors extends ThemeExtension<AppColors> {
     gray10: Color(0xFF1E1E1E),
     gray30: Color(0xFF505050),
     cardBackground: Color(0xFF1c1c1e),
+    secondBackground: Color(0xff262628),
     dividerColor: Color(0xFF3D3D3D),
     textEnable: Color(0xFF3D3D3D),
     selectedColor: Color(0xFF447FBB),
@@ -138,8 +162,10 @@ class AppColors extends ThemeExtension<AppColors> {
     textTertiary: Color(0xFF707070),
     borderColor: Color(0xFF707070),
     fillhiright: Color(0x00000000),
-    textReadOnly: Color(0xFF1c1c1e),
     background: Color(0xFF000000),
+    textReadOnly: Color(0xff171718),
+    snackBarColor: Color(0x7Bffffff),
+    deepBlue: Color(0x93115FAB),
     white: Colors.white,
     orange: Color(0xFFD5912E),
     green: Color(0xFF4CAF50),

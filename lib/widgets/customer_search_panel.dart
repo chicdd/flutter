@@ -7,8 +7,15 @@ import '../services/selected_customer_service.dart';
 
 class CustomerSearchPanel extends StatefulWidget {
   final Function(SearchPanel?) onCustomerSelected;
+  final ValueChanged<bool>? onExpandedChanged;
+  final bool? isExpanded;
 
-  const CustomerSearchPanel({super.key, required this.onCustomerSelected});
+  const CustomerSearchPanel({
+    super.key,
+    required this.onCustomerSelected,
+    this.onExpandedChanged,
+    this.isExpanded,
+  });
 
   @override
   State<CustomerSearchPanel> createState() => _CustomerSearchPanelState();
@@ -24,6 +31,7 @@ class _CustomerSearchPanelState extends State<CustomerSearchPanel> {
   Timer? _debounceTimer;
   final TextEditingController _searchController = TextEditingController();
   final _customerService = SelectedCustomerService(); // 서비스 추가
+  bool _isExpanded = true; // 패널 펼침/접힘 상태
 
   final List<String> filters = ['상호', '고객번호', '대표자', '주소', '전화번호', '사용자HP'];
 
@@ -33,6 +41,19 @@ class _CustomerSearchPanelState extends State<CustomerSearchPanel> {
   void initState() {
     super.initState();
     _loadCustomers();
+    if (widget.isExpanded != null) {
+      _isExpanded = widget.isExpanded!;
+    }
+  }
+
+  @override
+  void didUpdateWidget(CustomerSearchPanel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isExpanded != null && widget.isExpanded != _isExpanded) {
+      setState(() {
+        _isExpanded = widget.isExpanded!;
+      });
+    }
   }
 
   @override
@@ -152,23 +173,29 @@ class _CustomerSearchPanelState extends State<CustomerSearchPanel> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 320,
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+      width: _isExpanded ? 320 : 0,
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
         border: Border(
           right: BorderSide(color: context.colors.dividerColor, width: 1),
         ),
       ),
-      child: Column(
-        children: [
-          _buildHeader(),
-          _buildSearchBar(),
-          _buildFilters(),
-          _buildSortButtons(),
-          Expanded(child: _buildCustomerList()),
-        ],
-      ),
+      child: _isExpanded
+          ? Container(
+              decoration: BoxDecoration(color: context.colors.cardBackground),
+              child: Column(
+                children: [
+                  _buildHeader(),
+                  _buildSearchBar(),
+                  _buildFilters(),
+                  _buildSortButtons(),
+                  Expanded(child: _buildCustomerList()),
+                ],
+              ),
+            )
+          : const SizedBox.shrink(),
     );
   }
 
@@ -191,7 +218,9 @@ class _CustomerSearchPanelState extends State<CustomerSearchPanel> {
               context,
             ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
           ),
+
           const Spacer(),
+
           IconButton(
             icon: Icon(
               Icons.refresh,
@@ -202,6 +231,8 @@ class _CustomerSearchPanelState extends State<CustomerSearchPanel> {
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),
           ),
+          const SizedBox(width: 20),
+          _buildFoldingButton(),
         ],
       ),
     );
@@ -241,7 +272,7 @@ class _CustomerSearchPanelState extends State<CustomerSearchPanel> {
             ),
           ),
           filled: true,
-          fillColor: context.colors.cardBackground,
+          fillColor: context.colors.textEnable,
         ),
       ),
     );
@@ -467,7 +498,7 @@ class _CustomerSearchPanelState extends State<CustomerSearchPanel> {
             decoration: BoxDecoration(
               color: isSelected
                   ? context.colors.selectedColor.withOpacity(0.3)
-                  : context.colors.gray10,
+                  : context.colors.cardBackground,
               border: Border(
                 bottom: BorderSide(
                   color: context.colors.dividerColor,
@@ -504,7 +535,6 @@ class _CustomerSearchPanelState extends State<CustomerSearchPanel> {
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           fontWeight: FontWeight.w600,
                         ),
-                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],
@@ -555,6 +585,26 @@ class _CustomerSearchPanelState extends State<CustomerSearchPanel> {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildFoldingButton() {
+    return InkWell(
+      onTap: () {
+        setState(() {
+          _isExpanded = !_isExpanded;
+        });
+        if (widget.onExpandedChanged != null) {
+          widget.onExpandedChanged!(_isExpanded);
+        }
+      },
+      child: Center(
+        child: Icon(
+          _isExpanded ? Icons.chevron_left_sharp : Icons.chevron_right_sharp,
+          color: context.colors.textSecondary,
+          size: 25,
+        ),
+      ),
     );
   }
 

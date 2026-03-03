@@ -18,15 +18,12 @@ class SalesInfoScreenState extends State<SalesInfoScreen> {
   final _customerService = SelectedCustomerService();
 
   // 상세 정보 로딩 상태
-  bool _isLoading = false;
   SalesInfo? _salesInfo;
-  bool _isErpDbError = false; // ERP DB 연결 오류 상태
 
   // 페이지 내 검색
   String _pageSearchQuery = '';
 
   // 탭 선택 상태
-  int _selectedTabIndex = 0;
 
   // TextEditingController들
   final _customerNumberController = TextEditingController();
@@ -125,7 +122,6 @@ class SalesInfoScreenState extends State<SalesInfoScreen> {
       print('고객 정보가 없습니다.');
       setState(() {
         _salesInfo = null;
-        _isLoading = false;
       });
       return;
     }
@@ -145,7 +141,14 @@ class SalesInfoScreenState extends State<SalesInfoScreen> {
       print('영업관리번호가 없어서 영업정보를 조회할 수 없습니다.');
       setState(() {
         _salesInfo = null;
-        _isLoading = false;
+      });
+
+      // 부모 위젯에 에러 메시지 변경 알림
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          // 상위 위젯이 다시 빌드되도록 트리거
+          setState(() {});
+        }
       });
       return;
     }
@@ -154,8 +157,7 @@ class SalesInfoScreenState extends State<SalesInfoScreen> {
     erpCusNumber = erpCusNumber.trim();
 
     setState(() {
-      _isLoading = true;
-      _isErpDbError = false; // 로딩 시작 시 에러 상태 초기화
+      // 로딩 시작 시 에러 상태 초기화
     });
 
     try {
@@ -164,8 +166,6 @@ class SalesInfoScreenState extends State<SalesInfoScreen> {
       if (mounted) {
         setState(() {
           _salesInfo = salesInfo;
-          _isLoading = false;
-          _isErpDbError = false;
         });
       }
     } catch (e) {
@@ -174,15 +174,10 @@ class SalesInfoScreenState extends State<SalesInfoScreen> {
         // ERP DB 연결 오류인지 확인
         if (e.toString().contains('ERP_DB_NOT_CONNECTED')) {
           setState(() {
-            _isLoading = false;
-            _isErpDbError = true;
             _salesInfo = null;
           });
         } else {
-          setState(() {
-            _isLoading = false;
-            _isErpDbError = false;
-          });
+          setState(() {});
         }
       }
     }
@@ -191,7 +186,7 @@ class SalesInfoScreenState extends State<SalesInfoScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: context.colors.background,
       body: LayoutBuilder(
         builder: (context, constraints) {
           final isExtraWideScreen = constraints.maxWidth >= 1920;
@@ -285,7 +280,7 @@ class SalesInfoScreenState extends State<SalesInfoScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.colors.cardBackground,
         borderRadius: BorderRadius.circular(12),
         boxShadow: AppTheme.cardShadow,
       ),
@@ -433,7 +428,7 @@ class SalesInfoScreenState extends State<SalesInfoScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.colors.cardBackground,
         borderRadius: BorderRadius.circular(12),
         boxShadow: AppTheme.cardShadow,
       ),
@@ -538,7 +533,7 @@ class SalesInfoScreenState extends State<SalesInfoScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.colors.cardBackground,
         borderRadius: BorderRadius.circular(12),
         boxShadow: AppTheme.cardShadow,
       ),

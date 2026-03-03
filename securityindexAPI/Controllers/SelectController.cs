@@ -3,22 +3,25 @@ using Microsoft.EntityFrameworkCore;
 using securityindexAPI.Data;
 using securityindexAPI.Models;
 using System.Diagnostics;
+using System.Text.Json;
 
 namespace securityindexAPI.Controllers
 {
     [ApiController]
-    [Route("api/관제고객")]
+    [Route("api")]
     public class SelectController : ControllerBase
     {
         private readonly SecurityRingDBContext _context;
         private readonly neo_erpaDBContext _erpContext;
         private readonly ILogger<SelectController> _logger;
+        private readonly IConfiguration _configuration;
 
-        public SelectController(SecurityRingDBContext context, neo_erpaDBContext erpContext, ILogger<SelectController> logger)
+        public SelectController(SecurityRingDBContext context, neo_erpaDBContext erpContext, ILogger<SelectController> logger, IConfiguration configuration)
         {
             _context = context;
             _erpContext = erpContext;
             _logger = logger;
+            _configuration = configuration;
         }
 
         /// <summary>
@@ -80,15 +83,33 @@ namespace securityindexAPI.Controllers
         /// 필터링된 관제고객 데이터를 반환 (목록용 필드만)
         /// </summary>
         /// <param name="count">가져올 데이터 개수 (기본값: 100)</param>
+        /// <param name="regionCode">지역코드 필터 (선택사항)</param>
         /// <returns>관제고객 리스트</returns>
         [HttpGet("top")]
-        public async Task<ActionResult<IEnumerable<고객검색>>> GetTop관제고객([FromQuery] int count = 100)
+        public async Task<ActionResult<IEnumerable<고객검색>>> GetTop관제고객([FromQuery] int count = 100, [FromQuery] string? regionCode = null)
         {
             try
             {
                 if (count <= 0 || count > 1000)
                 {
                     return BadRequest(new { message = "count는 1에서 1000 사이의 값이어야 합니다." });
+                }
+
+                // WHERE 절 생성 (지역코드 필터)
+                string whereClause = "";
+                List<string> regionCodes = new List<string>();
+                if (!string.IsNullOrWhiteSpace(regionCode))
+                {
+                    regionCodes = regionCode.Split('/')
+                        .Select(c => c.Trim())
+                        .Where(c => !string.IsNullOrWhiteSpace(c))
+                        .ToList();
+
+                    if (regionCodes.Count > 0)
+                    {
+                        var paramNames = string.Join(", ", regionCodes.Select((_, i) => $"@regionCode{i}"));
+                        whereClause = $"WHERE (관리구역코드 IN ({paramNames}) OR 관리구역코드 = '000')";
+                    }
                 }
 
                 var query = $@"
@@ -100,6 +121,7 @@ namespace securityindexAPI.Controllers
                         대표자,
                         관제연락처1
                     FROM 관제고객마스터뷰
+                    {whereClause}
                     ORDER BY 관제관리번호";
 
                 var connection = _context.Database.GetDbConnection();
@@ -107,6 +129,18 @@ namespace securityindexAPI.Controllers
 
                 using var command = connection.CreateCommand();
                 command.CommandText = query;
+
+                // 지역코드 파라미터 추가
+                if (regionCodes.Count > 0)
+                {
+                    for (int i = 0; i < regionCodes.Count; i++)
+                    {
+                        var regionParam = command.CreateParameter();
+                        regionParam.ParameterName = $"@regionCode{i}";
+                        regionParam.Value = regionCodes[i];
+                        command.Parameters.Add(regionParam);
+                    }
+                }
 
                 using var reader = await command.ExecuteReaderAsync();
                 var 고객리스트 = new List<고객검색>();
@@ -229,11 +263,28 @@ namespace securityindexAPI.Controllers
                         cu2 = reader["cu2"]?.ToString(), //모뎀일련번호
                         cu3 = reader["cu3"]?.ToString(), //확장고객정보의 개통일자
                         cu4 = reader["cu4"]?.ToString(), //추가메모
+                        회사구분코드 = reader["회사구분코드"]?.ToString(),
+                        회사구분코드명 = reader["회사구분코드명"]?.ToString(),
+                        지사구분코드 = reader["지사구분코드"]?.ToString(),
+                        지사구분코드명 = reader["지사구분코드명"]?.ToString(),
+                        전용자번호 = reader["전용자번호"]?.ToString(),
+                        전용자메모 = reader["전용자메모"]?.ToString(),
                         키박스번호 = reader["키박스번호"]?.ToString(),
                         월간집계 = reader["월간집계"] == DBNull.Value ? false : Convert.ToBoolean(reader["월간집계"]),
                         키인수여부 = reader["키인수여부"] == DBNull.Value ? false : Convert.ToBoolean(reader["키인수여부"]),
                         dvr여부 = reader["dvr여부"] == DBNull.Value ? false : Convert.ToBoolean(reader["dvr여부"]),
-                        
+                        평일경계 = reader["평일경계"]?.ToString(),
+                        평일해제 = reader["평일해제"]?.ToString(),
+                        주말경계 = reader["주말경계"]?.ToString(),
+                        주말해제 = reader["주말해제"]?.ToString(),
+                        휴일경계 = reader["휴일경계"]?.ToString(),
+                        휴일해제 = reader["휴일해제"]?.ToString(),
+                        평일무단범위 = reader["평일무단범위"]?.ToString(),
+                        주말무단범위 = reader["주말무단범위"]?.ToString(),
+                        휴일무단범위 = reader["휴일무단범위"]?.ToString(),
+                        평일무단사용 = reader["평일무단사용"] == DBNull.Value ? false : Convert.ToBoolean(reader["평일무단사용"]),
+                        주말무단사용 = reader["주말무단사용"] == DBNull.Value ? false : Convert.ToBoolean(reader["주말무단사용"]),
+                        휴일무단사용 = reader["휴일무단사용"] == DBNull.Value ? false : Convert.ToBoolean(reader["휴일무단사용"]),
                         관제액션 = reader["관제액션"]?.ToString(),
                         메모 = reader["메모"]?.ToString(),
                         메모2 = reader["메모2"]?.ToString()
@@ -271,7 +322,8 @@ namespace securityindexAPI.Controllers
             [FromQuery] string? filterType,
             [FromQuery] string? query,
             [FromQuery] string? sortType,
-            [FromQuery] int count = 100)
+            [FromQuery] int count = 100,
+            [FromQuery] string? regionCode = null)
         {
             try
             {
@@ -283,30 +335,55 @@ namespace securityindexAPI.Controllers
                 string sqlQuery;
                 string whereClause = "";
                 string orderByClause = sortType == "상호정렬" ? "관제상호" : "관제관리번호";
+                var conditions = new List<string>();
 
-                // WHERE 절 생성
+                // 검색 조건 추가
                 if (!string.IsNullOrWhiteSpace(query))
                 {
                     var searchQuery = query.Trim();
 
-                    whereClause = filterType switch
+                    string searchCondition = filterType switch
                     {
-                        "고객번호" => $"WHERE 관제관리번호 LIKE '%{searchQuery}%'",
-                        "상호" => $"WHERE 관제상호 LIKE '%{searchQuery}%'",
-                        "대표자" => $"WHERE 대표자 LIKE '%{searchQuery}%'",
-                        "물건주소" => $"WHERE 물건주소 LIKE '%{searchQuery}%'",
-                        "전화번호" or "관제연락처1" => $"WHERE 관제연락처1 LIKE '%{searchQuery}%'",
-                        "사용자HP" => $@"WHERE 관제관리번호 IN (
+                        "고객번호" => $"관제관리번호 LIKE '%{searchQuery}%'",
+                        "상호" => $"관제상호 LIKE '%{searchQuery}%'",
+                        "대표자" => $"대표자 LIKE '%{searchQuery}%'",
+                        "물건주소" => $"물건주소 LIKE '%{searchQuery}%'",
+                        "전화번호" or "관제연락처1" => $"관제연락처1 LIKE '%{searchQuery}%'",
+                        "사용자HP" => $@"관제관리번호 IN (
                                 SELECT DISTINCT 관제관리번호
                                 FROM 사용자마스터
                                 WHERE 휴대전화 LIKE '%{searchQuery}%')",
-                        _ => $@"WHERE 관제관리번호 LIKE '%{searchQuery}%'
+                        _ => $@"(관제관리번호 LIKE '%{searchQuery}%'
                                 OR 관제상호 LIKE '%{searchQuery}%'
                                 OR 대표자 LIKE '%{searchQuery}%'
-                                OR 물건주소 LIKE '%{searchQuery}%'"
+                                OR 물건주소 LIKE '%{searchQuery}%')"
                     };
 
+                    conditions.Add(searchCondition);
                     _logger.LogInformation($"검색 조건: filterType={filterType}, query={query}");
+                }
+
+                // 지역코드 필터 추가
+                List<string> regionCodes = new List<string>();
+                if (!string.IsNullOrWhiteSpace(regionCode))
+                {
+                    regionCodes = regionCode.Split('/')
+                        .Select(c => c.Trim())
+                        .Where(c => !string.IsNullOrWhiteSpace(c))
+                        .ToList();
+
+                    if (regionCodes.Count > 0)
+                    {
+                        var paramNames = string.Join(", ", regionCodes.Select((_, i) => $"@regionCode{i}"));
+                        conditions.Add($"(관리구역코드 IN ({paramNames}) OR 관리구역코드 = '000')");
+                        _logger.LogInformation($"지역코드 필터: {regionCode} -> [{string.Join(", ", regionCodes)}] + 000");
+                    }
+                }
+
+                // WHERE 절 조합
+                if (conditions.Count > 0)
+                {
+                    whereClause = "WHERE " + string.Join(" AND ", conditions);
                 }
 
                 // 최종 쿼리 생성
@@ -329,6 +406,18 @@ namespace securityindexAPI.Controllers
 
                 using var command = connection.CreateCommand();
                 command.CommandText = sqlQuery;
+
+                // 지역코드 파라미터 추가
+                if (regionCodes.Count > 0)
+                {
+                    for (int i = 0; i < regionCodes.Count; i++)
+                    {
+                        var regionParam = command.CreateParameter();
+                        regionParam.ParameterName = $"@regionCode{i}";
+                        regionParam.Value = regionCodes[i];
+                        command.Parameters.Add(regionParam);
+                    }
+                }
 
                 using var reader = await command.ExecuteReaderAsync();
                 var 고객리스트 = new List<고객검색>();
@@ -366,7 +455,7 @@ namespace securityindexAPI.Controllers
         /// </summary>
         /// <param name="관제관리번호">관제관리번호</param>
         /// <returns>휴일주간 리스트</returns>
-        [HttpGet("{관제관리번호}/holiday")]
+        [HttpGet("휴일주간리스트/{관제관리번호}")]
         public async Task<ActionResult<IEnumerable<휴일주간>>> Get휴일주간(string 관제관리번호)
         {
             try
@@ -428,7 +517,7 @@ namespace securityindexAPI.Controllers
         /// </summary>
         /// <param name="관제관리번호">관제관리번호</param>
         /// <returns>부가서비스 리스트</returns>
-        [HttpGet("{관제관리번호}/service")]
+        [HttpGet("부가서비스조회/{관제관리번호}")]
         public async Task<ActionResult<IEnumerable<부가서비스마스터>>> Get부가서비스(string 관제관리번호)
         {
             try
@@ -440,6 +529,7 @@ namespace securityindexAPI.Controllers
 
                 var query = @"
                     SELECT TOP 1000
+                        a.관리id,
                         a.관제관리번호,
                         b.부가서비스코드명,
                         c.부가서비스제공코드명,
@@ -468,6 +558,7 @@ namespace securityindexAPI.Controllers
                 {
                     var serviceData = new 부가서비스마스터
                     {
+                        관리id = reader["관리id"] == DBNull.Value ? 0 : Convert.ToInt32(reader["관리id"]),
                         관제관리번호 = reader["관제관리번호"]?.ToString(),
                         부가서비스코드명 = reader["부가서비스코드명"]?.ToString(),
                         부가서비스제공코드명 = reader["부가서비스제공코드명"]?.ToString(),
@@ -495,7 +586,7 @@ namespace securityindexAPI.Controllers
         /// </summary>
         /// <param name="관제관리번호">관제관리번호</param>
         /// <returns>DVR 연동 리스트</returns>
-        [HttpGet("{관제관리번호}/dvr")]
+        [HttpGet("DVR조회/{관제관리번호}")]
         public async Task<ActionResult<IEnumerable<DVR연동마스터>>> GetDVR정보(string 관제관리번호)
         {
             try
@@ -507,6 +598,7 @@ namespace securityindexAPI.Controllers
 
                 var query = @"
                     SELECT TOP 1000
+                        a.일련번호,
                         a.관제관리번호,
                         a.접속방식,
                         a.DVR종류코드,
@@ -538,6 +630,7 @@ namespace securityindexAPI.Controllers
                 {
                     var dvrData = new DVR연동마스터
                     {
+                        일련번호 = reader["일련번호"] == DBNull.Value ? 0 : Convert.ToInt32(reader["일련번호"]),
                         관제관리번호 = reader["관제관리번호"]?.ToString(),
                         접속방식 = reader["접속방식"] == DBNull.Value ? false : Convert.ToBoolean(reader["접속방식"]),
                         DVR종류코드 = reader["DVR종류코드"]?.ToString(),
@@ -569,7 +662,7 @@ namespace securityindexAPI.Controllers
         /// </summary>
         /// <param name="관제관리번호">관제관리번호</param>
         /// <returns>스마트폰 인증 정보 리스트</returns>
-        [HttpGet("{관제관리번호}/smartphone-auth")]
+        [HttpGet("스마트폰인증번호조회/{관제관리번호}")]
         public async Task<ActionResult<IEnumerable<스마트정보조회마스터>>> Get스마트폰인증정보(string 관제관리번호)
         {
             try
@@ -640,7 +733,7 @@ namespace securityindexAPI.Controllers
         /// </summary>
         /// <param name="관제관리번호">관제관리번호</param>
         /// <returns>문서 정보 리스트</returns>
-        [HttpGet("{관제관리번호}/documents")]
+        [HttpGet("문서리스트/{관제관리번호}")]
         public async Task<ActionResult<IEnumerable<문서관리마스터>>> Get문서정보(string 관제관리번호)
         {
             try
@@ -670,7 +763,7 @@ namespace securityindexAPI.Controllers
         /// </summary>
         /// <param name="관제관리번호">관제관리번호</param>
         /// <returns>사용자 정보 리스트</returns>
-        [HttpGet("{관제관리번호}/user-info")]
+        [HttpGet("사용자정보/{관제관리번호}")]
         public async Task<ActionResult<IEnumerable<사용자마스터>>> Get사용자정보(string 관제관리번호)
         {
             try
@@ -755,7 +848,7 @@ namespace securityindexAPI.Controllers
         /// </summary>
         /// <param name="관제관리번호">관제관리번호</param>
         /// <returns>존정보 리스트</returns>
-        [HttpGet("{관제관리번호}/zone-info")]
+        [HttpGet("존정보/{관제관리번호}")]
         public async Task<ActionResult<IEnumerable<존마스터>>> Get존정보(string 관제관리번호)
         {
             try
@@ -827,8 +920,8 @@ namespace securityindexAPI.Controllers
         /// <param name="skip">건너뛸 개수 (기본값: 0)</param>
         /// <param name="take">가져올 개수 (기본값: 100)</param>
         /// <returns>수신신호 리스트 및 전체 개수</returns>
-        [HttpGet("{관제관리번호}/recent-signals")]
-        public async Task<ActionResult> Get최근수신신호(
+        [HttpGet("최근신호/{관제관리번호}")]
+        public async Task<ActionResult> getRecentSignals(
             string 관제관리번호,
             [FromQuery] string? 시작일자,
             [FromQuery] string? 종료일자,
@@ -874,6 +967,17 @@ namespace securityindexAPI.Controllers
                     return Ok(new List<수신신호마스터>());
                 }
 
+                // 신호 필터 조건 생성
+                string 신호필터조건 = "";
+                if (신호필터 == "경계해제신호")
+                {
+                    신호필터조건 = "AND (신호코드마스터.신호명 LIKE N'%경계%' OR 신호코드마스터.신호명 LIKE N'%해제%')";
+                }
+                else if (신호필터 == "처리신호제외")
+                {
+                    신호필터조건 = "AND (신호코드마스터.신호명 NOT LIKE N'%처리%' OR 신호코드마스터.신호명 IS NULL)";
+                }
+
                 // 동적 SQL 생성
                 var unionQueries = new List<string>();
 
@@ -903,7 +1007,10 @@ namespace securityindexAPI.Controllers
                             ON 관제사용자마스터.로그인ID = {tableName}.관제자ID
                         WHERE {tableName}.관제관리번호 = @관제관리번호
                             AND {tableName}.수신일자 >= @시작일자
-                            AND {tableName}.수신일자 <= @종료일자";
+                            AND {tableName}.수신일자 <= @종료일자
+                            AND 신호코드마스터.신호명 IS NOT NULL
+                            AND 신호코드마스터.신호명 != ''
+                            {신호필터조건}";
 
                     unionQueries.Add(query);
                 }
@@ -965,33 +1072,13 @@ namespace securityindexAPI.Controllers
                         바탕색 = reader["바탕색"]?.ToString()
                     };
 
-                    // 신호 필터 적용
-                    if (신호필터 == "경계해제신호")
-                    {
-                        // 경계/해제 신호만 포함
-                        if (signal.신호명?.Contains("경계") == true || signal.신호명?.Contains("해제") == true)
-                        {
-                            신호리스트.Add(signal);
-                        }
-                    }
-                    else if (신호필터 == "처리신호제외")
-                    {
-                        // 처리 신호 제외
-                        if (signal.신호명?.Contains("처리") != true)
-                        {
-                            신호리스트.Add(signal);
-                        }
-                    }
-                    else
-                    {
-                        // 전체신호
-                        신호리스트.Add(signal);
-                    }
+                    // SQL에서 이미 필터링되었으므로 모든 데이터 추가
+                    신호리스트.Add(signal);
                 }
 
                 await connection.CloseAsync();
 
-                // 전체 개수 조회 (필터 적용 전)
+                // 전체 개수 조회 (필터 적용 후)
                 var totalCount = 0;
                 await connection.OpenAsync();
 
@@ -1001,9 +1088,14 @@ namespace securityindexAPI.Controllers
                     countCmd.CommandText = $@"
                         SELECT COUNT(*)
                         FROM {tableName}
+                            LEFT JOIN 신호코드마스터
+                            ON 신호코드마스터.메인코드 = {tableName}.신호코드
                         WHERE 관제관리번호 = @관제관리번호
-                            AND 수신일자 >= @시작일자
-                            AND 수신일자 <= @종료일자";
+                        AND 수신일자 >= @시작일자
+                        AND 수신일자 <= @종료일자
+                        AND 신호코드마스터.신호명 IS NOT NULL
+                        AND 신호코드마스터.신호명 != ''
+                        {신호필터조건}";
 
                     var p1 = countCmd.CreateParameter();
                     p1.ParameterName = "@관제관리번호";
@@ -1540,7 +1632,7 @@ namespace securityindexAPI.Controllers
         /// </summary>
         /// <param name="관제관리번호">관제관리번호</param>
         /// <returns>AS접수 리스트</returns>
-        [HttpGet("{관제관리번호}/ashistory")]
+        [HttpGet("AS조회/{관제관리번호}")]
         public async Task<ActionResult<IEnumerable<AS접수조회>>> GetAS접수리스트(string 관제관리번호)
         {
             try
@@ -1625,7 +1717,7 @@ namespace securityindexAPI.Controllers
         /// </summary>
         /// <param name="customerNumber">고객번호</param>
         /// <returns>영업정보</returns>
-        [HttpGet("sales-info/{customerNumber}")]
+        [HttpGet("영업정보/{customerNumber}")]
         public async Task<ActionResult<영업정보>> Get영업정보(string customerNumber)
         {
             try
@@ -1643,7 +1735,8 @@ namespace securityindexAPI.Controllers
                 if (string.IsNullOrWhiteSpace(connection.ConnectionString))
                 {
                     _logger.LogError("ERP 데이터베이스 연결 문자열이 없습니다.");
-                    return StatusCode(503, new {
+                    return StatusCode(503, new
+                    {
                         message = "ERP_DB_NOT_CONNECTED",
                         detail = "영업DB에 연결되지 않음. 관리자에게 문의하세요."
                     });
@@ -1656,7 +1749,8 @@ namespace securityindexAPI.Controllers
                 catch (Exception dbEx)
                 {
                     _logger.LogError(dbEx, "ERP 데이터베이스 연결 실패");
-                    return StatusCode(503, new {
+                    return StatusCode(503, new
+                    {
                         message = "ERP_DB_NOT_CONNECTED",
                         detail = "영업DB에 연결되지 않음. 관리자에게 문의하세요."
                     });
@@ -1784,7 +1878,7 @@ namespace securityindexAPI.Controllers
         /// </summary>
         /// <param name="customerNumber">고객번호</param>
         /// <returns>최근수금이력 리스트</returns>
-        [HttpGet("payment-history/{customerNumber}")]
+        [HttpGet("최근수금이력/{customerNumber}")]
         public async Task<ActionResult<IEnumerable<매출마스터뷰>>> Get최근수금이력(string customerNumber)
         {
             try
@@ -1886,7 +1980,7 @@ namespace securityindexAPI.Controllers
         /// </summary>
         /// <param name="customerNumber">고객번호</param>
         /// <returns>최근 방문 및 A/S이력 리스트</returns>
-        [HttpGet("visit-as-history/{customerNumber}")]
+        [HttpGet("방문AS조회/{customerNumber}")]
         public async Task<ActionResult<IEnumerable<AS접수마스터뷰>>> Get최근방문AS이력(string customerNumber)
         {
             try
@@ -1982,5 +2076,700 @@ namespace securityindexAPI.Controllers
                 return StatusCode(500, new { message = "서버 오류가 발생했습니다.", error = ex.Message });
             }
         }
+
+        /// <summary>
+        /// 관제관리번호로 관제개시 정보 조회
+        /// </summary>
+        /// <param name="관제관리번호">관제관리번호</param>
+        /// <returns>관제개시 정보 리스트</returns>
+        [HttpGet("관제개시조회/{관제관리번호}/")]
+        public async Task<ActionResult> Get관제개시(string 관제관리번호)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(관제관리번호))
+                {
+                    return BadRequest(new { message = "관제관리번호는 필수입니다." });
+                }
+
+                var connection = _context.Database.GetDbConnection();
+                await connection.OpenAsync();
+
+                var command = connection.CreateCommand();
+                command.CommandText = @"
+                    SELECT TOP (1000)
+                        [경비개시일자],
+                        [존점검결과],
+                        [키테스트],
+                        [키수량],
+                        [도면점검],
+                        [고객카드],
+                        [점검자],
+                        [관제확인자],
+                        [설치공사자],
+                        [키인수자],
+                        [비고사항]
+                    FROM [neosecurity_Ring].[dbo].[관제개시마스터]
+                    WHERE 관제관리번호 = @관제관리번호
+                ";
+
+                var param = command.CreateParameter();
+                param.ParameterName = "@관제관리번호";
+                param.Value = 관제관리번호;
+                command.Parameters.Add(param);
+
+                using var reader = await command.ExecuteReaderAsync();
+                var 개시리스트 = new List<object>();
+
+                while (await reader.ReadAsync())
+                {
+                    개시리스트.Add(new
+                    {
+                        개시 = reader["경비개시일자"] == DBNull.Value ? null : Convert.ToDateTime(reader["경비개시일자"]).ToString("yyyy-MM-dd"),
+                        ZONECK = reader["존점검결과"] == DBNull.Value ? false : Convert.ToBoolean(reader["존점검결과"]),
+                        KEYCK = reader["키테스트"] == DBNull.Value ? false : Convert.ToBoolean(reader["키테스트"]),
+                        KEYS = reader["키수량"] == DBNull.Value ? 0 : Convert.ToInt32(reader["키수량"]),
+                        도면 = reader["도면점검"] == DBNull.Value ? false : Convert.ToBoolean(reader["도면점검"]),
+                        고객카드 = reader["고객카드"] == DBNull.Value ? false : Convert.ToBoolean(reader["고객카드"]),
+                        개시처리자 = reader["점검자"]?.ToString(),
+                        관제확인자 = reader["관제확인자"]?.ToString(),
+                        설치공사자 = reader["설치공사자"]?.ToString(),
+                        키인수자 = reader["키인수자"]?.ToString(),
+                        비고 = reader["비고사항"]?.ToString()
+                    });
+                }
+
+                await connection.CloseAsync();
+
+                _logger.LogInformation($"관제개시 조회 완료: 관제관리번호={관제관리번호}, 결과수={개시리스트.Count}");
+                return Ok(개시리스트);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"관제개시 조회 중 오류 발생: 관제관리번호={관제관리번호}");
+                return StatusCode(500, new { message = "서버 오류가 발생했습니다.", error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// 관제개시 정보 추가
+        /// </summary>
+        /// <param name="request">관제개시 정보</param>
+        /// <returns>추가 결과</returns>
+        [HttpPost("관제개시정보추가")]
+        public async Task<ActionResult> Post관제개시([FromBody] 관제개시Request request)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(request.관제관리번호))
+                {
+                    return BadRequest(new { message = "관제관리번호는 필수입니다." });
+                }
+
+                var connection = _context.Database.GetDbConnection();
+                await connection.OpenAsync();
+
+                var command = connection.CreateCommand();
+                command.CommandText = @"
+                    INSERT INTO [neosecurity_Ring].[dbo].[관제개시마스터]
+                    (
+                        [관제관리번호],
+                        [경비개시일자],
+                        [존점검결과],
+                        [키테스트],
+                        [키수량],
+                        [도면점검],
+                        [고객카드],
+                        [점검자],
+                        [관제확인자],
+                        [설치공사자],
+                        [키인수자],
+                        [비고사항]
+                    )
+                    VALUES
+                    (
+                        @관제관리번호,
+                        @경비개시일자,
+                        @존점검결과,
+                        @키테스트,
+                        @키수량,
+                        @도면점검,
+                        @고객카드,
+                        @점검자,
+                        @관제확인자,
+                        @설치공사자,
+                        @키인수자,
+                        @비고사항
+                    )
+                ";
+
+                var param1 = command.CreateParameter();
+                param1.ParameterName = "@관제관리번호";
+                param1.Value = request.관제관리번호;
+                command.Parameters.Add(param1);
+
+                var param2 = command.CreateParameter();
+                param2.ParameterName = "@경비개시일자";
+                param2.Value = request.경비개시일자.HasValue ? request.경비개시일자.Value : DBNull.Value;
+                command.Parameters.Add(param2);
+
+                var param3 = command.CreateParameter();
+                param3.ParameterName = "@존점검결과";
+                param3.Value = request.존점검결과.HasValue ? request.존점검결과.Value : DBNull.Value;
+                command.Parameters.Add(param3);
+
+                var param4 = command.CreateParameter();
+                param4.ParameterName = "@키테스트";
+                param4.Value = request.키테스트.HasValue ? request.키테스트.Value : DBNull.Value;
+                command.Parameters.Add(param4);
+
+                var param5 = command.CreateParameter();
+                param5.ParameterName = "@키수량";
+                param5.Value = request.키수량.HasValue ? request.키수량.Value : DBNull.Value;
+                command.Parameters.Add(param5);
+
+                var param6 = command.CreateParameter();
+                param6.ParameterName = "@도면점검";
+                param6.Value = request.도면점검.HasValue ? request.도면점검.Value : DBNull.Value;
+                command.Parameters.Add(param6);
+
+                var param7 = command.CreateParameter();
+                param7.ParameterName = "@고객카드";
+                param7.Value = request.고객카드.HasValue ? request.고객카드.Value : DBNull.Value;
+                command.Parameters.Add(param7);
+
+                var param8 = command.CreateParameter();
+                param8.ParameterName = "@점검자";
+                param8.Value = string.IsNullOrWhiteSpace(request.점검자) ? DBNull.Value : request.점검자;
+                command.Parameters.Add(param8);
+
+                var param9 = command.CreateParameter();
+                param9.ParameterName = "@관제확인자";
+                param9.Value = string.IsNullOrWhiteSpace(request.관제확인자) ? DBNull.Value : request.관제확인자;
+                command.Parameters.Add(param9);
+
+                var param10 = command.CreateParameter();
+                param10.ParameterName = "@설치공사자";
+                param10.Value = string.IsNullOrWhiteSpace(request.설치공사자) ? DBNull.Value : request.설치공사자;
+                command.Parameters.Add(param10);
+
+                var param11 = command.CreateParameter();
+                param11.ParameterName = "@키인수자";
+                param11.Value = string.IsNullOrWhiteSpace(request.키인수자) ? DBNull.Value : request.키인수자;
+                command.Parameters.Add(param11);
+
+                var param12 = command.CreateParameter();
+                param12.ParameterName = "@비고사항";
+                param12.Value = string.IsNullOrWhiteSpace(request.비고사항) ? DBNull.Value : request.비고사항;
+                command.Parameters.Add(param12);
+
+                await command.ExecuteNonQueryAsync();
+                await connection.CloseAsync();
+
+                _logger.LogInformation($"관제개시 추가 완료: 관제관리번호={request.관제관리번호}");
+                return StatusCode(201, new { message = "관제개시 정보가 추가되었습니다." });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "관제개시 추가 중 오류 발생");
+                return StatusCode(500, new { message = "서버 오류가 발생했습니다.", error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// 관제관리번호로 보수점검 완료이력 조회
+        /// </summary>
+        /// <param name="관제관리번호">관제관리번호</param>
+        /// <returns>보수점검 완료이력 리스트</returns>
+        [HttpGet("보수점검조회/{관제관리번호}")]
+        public async Task<ActionResult> Get보수점검(string 관제관리번호)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(관제관리번호))
+                {
+                    return BadRequest(new { message = "관제관리번호는 필수입니다." });
+                }
+
+                var connection = _context.Database.GetDbConnection();
+                await connection.OpenAsync();
+
+                var command = connection.CreateCommand();
+                command.CommandText = @"
+                    SELECT TOP (1000)
+                        [발생자],
+                        [점검기준월],
+                        [존점검],
+                        [키테스트],
+                        [키예탁],
+                        [키수량],
+                        [도면점검],
+                        [고객카드],
+                        [처리자],
+                        [고객요청사항]
+                    FROM [neosecurity_Ring].[dbo].[보수점검지시마스터]
+                    WHERE 관제관리번호 = @관제관리번호 AND 처리완료여부 = '1'
+                ";
+
+                var param = command.CreateParameter();
+                param.ParameterName = "@관제관리번호";
+                param.Value = 관제관리번호;
+                command.Parameters.Add(param);
+
+                using var reader = await command.ExecuteReaderAsync();
+                var 점검리스트 = new List<object>();
+
+                while (await reader.ReadAsync())
+                {
+                    점검리스트.Add(new
+                    {
+                        지시자 = reader["발생자"]?.ToString(),
+                        점검기준월 = reader["점검기준월"] == DBNull.Value ? null : Convert.ToDateTime(reader["점검기준월"]).ToString("yyyy-MM-dd"),
+                        존점검 = reader["존점검"] == DBNull.Value ? false : Convert.ToBoolean(reader["존점검"]),
+                        키테스트 = reader["키테스트"] == DBNull.Value ? false : Convert.ToBoolean(reader["키테스트"]),
+                        키예탁 = reader["키예탁"] == DBNull.Value ? false : Convert.ToBoolean(reader["키예탁"]),
+                        키수량 = reader["키수량"] == DBNull.Value ? 0 : Convert.ToInt32(reader["키수량"]),
+                        도면점검 = reader["도면점검"] == DBNull.Value ? false : Convert.ToBoolean(reader["도면점검"]),
+                        고객카드 = reader["고객카드"] == DBNull.Value ? false : Convert.ToBoolean(reader["고객카드"]),
+                        점검완료자 = reader["처리자"]?.ToString(),
+                        고객요청사항 = reader["고객요청사항"]?.ToString()
+                    });
+                }
+
+                await connection.CloseAsync();
+
+                _logger.LogInformation($"보수점검 완료이력 조회 완료: 관제관리번호={관제관리번호}, 결과수={점검리스트.Count}");
+                return Ok(점검리스트);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"보수점검 완료이력 조회 중 오류 발생: 관제관리번호={관제관리번호}");
+                return StatusCode(500, new { message = "서버 오류가 발생했습니다.", error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// 보수점검 정보 추가
+        /// </summary>
+        /// <param name="request">보수점검 정보</param>
+        /// <returns>추가 결과</returns>
+        [HttpPost("보수점검추가")]
+        public async Task<ActionResult> Post보수점검([FromBody] 보수점검Request request)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(request.관제관리번호))
+                {
+                    return BadRequest(new { message = "관제관리번호는 필수입니다." });
+                }
+
+                var connection = _context.Database.GetDbConnection();
+                await connection.OpenAsync();
+
+                var command = connection.CreateCommand();
+                command.CommandText = @"
+                    INSERT INTO [neosecurity_Ring].[dbo].[보수점검지시마스터]
+                    (
+                        [관제관리번호],
+                        [발생자],
+                        [점검기준월],
+                        [처리일자],
+                        [존점검],
+                        [키테스트],
+                        [키예탁],
+                        [키수량],
+                        [도면점검],
+                        [고객카드],
+                        [처리자],
+                        [고객요청사항],
+                        [처리완료여부]
+                    )
+                    VALUES
+                    (
+                        @관제관리번호,
+                        @발생자,
+                        @점검기준월,
+                        @처리일자,
+                        @존점검,
+                        @키테스트,
+                        @키예탁,
+                        @키수량,
+                        @도면점검,
+                        @고객카드,
+                        @처리자,
+                        @고객요청사항,
+                        '1'
+                    )
+                ";
+
+                var param1 = command.CreateParameter();
+                param1.ParameterName = "@관제관리번호";
+                param1.Value = request.관제관리번호;
+                command.Parameters.Add(param1);
+
+                var param2 = command.CreateParameter();
+                param2.ParameterName = "@발생자";
+                param2.Value = string.IsNullOrWhiteSpace(request.발생자) ? DBNull.Value : request.발생자;
+                command.Parameters.Add(param2);
+
+                var param3 = command.CreateParameter();
+                param3.ParameterName = "@점검기준월";
+                param3.Value = request.점검기준월.HasValue ? request.점검기준월.Value : DBNull.Value;
+                command.Parameters.Add(param3);
+
+                var param4 = command.CreateParameter();
+                param4.ParameterName = "@처리일자";
+                param4.Value = request.처리일자.HasValue ? request.처리일자.Value : DBNull.Value;
+                command.Parameters.Add(param4);
+
+                var param5 = command.CreateParameter();
+                param5.ParameterName = "@존점검";
+                param5.Value = request.존점검.HasValue ? request.존점검.Value : DBNull.Value;
+                command.Parameters.Add(param5);
+
+                var param6 = command.CreateParameter();
+                param6.ParameterName = "@키테스트";
+                param6.Value = request.키테스트.HasValue ? request.키테스트.Value : DBNull.Value;
+                command.Parameters.Add(param6);
+
+                var param7 = command.CreateParameter();
+                param7.ParameterName = "@키예탁";
+                param7.Value = request.키예탁.HasValue ? request.키예탁.Value : DBNull.Value;
+                command.Parameters.Add(param7);
+
+                var param8 = command.CreateParameter();
+                param8.ParameterName = "@키수량";
+                param8.Value = request.키수량.HasValue ? request.키수량.Value : DBNull.Value;
+                command.Parameters.Add(param8);
+
+                var param9 = command.CreateParameter();
+                param9.ParameterName = "@도면점검";
+                param9.Value = request.도면점검.HasValue ? request.도면점검.Value : DBNull.Value;
+                command.Parameters.Add(param9);
+
+                var param10 = command.CreateParameter();
+                param10.ParameterName = "@고객카드";
+                param10.Value = request.고객카드.HasValue ? request.고객카드.Value : DBNull.Value;
+                command.Parameters.Add(param10);
+
+                var param11 = command.CreateParameter();
+                param11.ParameterName = "@처리자";
+                param11.Value = string.IsNullOrWhiteSpace(request.처리자) ? DBNull.Value : request.처리자;
+                command.Parameters.Add(param11);
+
+                var param12 = command.CreateParameter();
+                param12.ParameterName = "@고객요청사항";
+                param12.Value = string.IsNullOrWhiteSpace(request.고객요청사항) ? DBNull.Value : request.고객요청사항;
+                command.Parameters.Add(param12);
+
+                await command.ExecuteNonQueryAsync();
+                await connection.CloseAsync();
+
+                _logger.LogInformation($"보수점검 추가 완료: 관제관리번호={request.관제관리번호}");
+                return StatusCode(201, new { message = "보수점검 정보가 추가되었습니다." });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "보수점검 추가 중 오류 발생");
+                return StatusCode(500, new { message = "서버 오류가 발생했습니다.", error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// 개통코드로 개통업체 정보 검증
+        /// </summary>
+        /// <param name="code">개통코드</param>
+        /// <returns>개통업체 정보</returns>
+        [HttpGet("개통코드인증/{code}")]
+        public ActionResult<OpeningCompany> VerifyOpeningCode(string code)
+        {
+            // 개통업체 정보 리스트 (하드코딩)
+            var companies = ConnectionString.GetCompanies();
+
+            var company = companies.FirstOrDefault(c => c.개통코드 == code);
+
+            if (company == null)
+            {
+                return NotFound(new { message = "개통코드가 일치하지 않습니다." });
+            }
+
+            // appsettings.json의 SecurityConnection을 업데이트
+            try
+            {
+                var connectionString = company.GetConnectionString();
+
+                // 메모리 내 설정 업데이트
+                _configuration["ConnectionStrings:SecurityConnection"] = connectionString;
+
+                // appsettings.json 파일 직접 수정
+                UpdateAppSettingsJson(connectionString);
+
+                _logger.LogInformation($"SecurityConnection updated for company: {company.개통업체명}");
+                _logger.LogInformation($"New connection string: {connectionString}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Failed to update SecurityConnection: {ex.Message}");
+            }
+
+            return Ok(company);
+        }
+
+        /// <summary>
+        /// appsettings.json 파일의 SecurityConnection 업데이트
+        /// </summary>
+        /// <param name="connectionString">새로운 연결 문자열</param>
+        private void UpdateAppSettingsJson(string connectionString)
+        {
+            try
+            {
+                // appsettings.json 파일 경로
+                var appSettingsPath = Path.Combine(AppContext.BaseDirectory, "appsettings.json");
+
+                if (!System.IO.File.Exists(appSettingsPath))
+                {
+                    _logger.LogWarning($"appsettings.json file not found at: {appSettingsPath}");
+                    return;
+                }
+
+                // 파일 읽기
+                var json = System.IO.File.ReadAllText(appSettingsPath);
+                var jsonDocument = JsonDocument.Parse(json);
+                var root = jsonDocument.RootElement;
+
+                // Dictionary로 변환
+                var settings = new Dictionary<string, object>();
+                foreach (var property in root.EnumerateObject())
+                {
+                    if (property.Name == "ConnectionStrings")
+                    {
+                        var connectionStrings = new Dictionary<string, object>();
+                        foreach (var conn in property.Value.EnumerateObject())
+                        {
+                            if (conn.Name == "SecurityConnection")
+                            {
+                                connectionStrings[conn.Name] = connectionString;
+                            }
+                            else
+                            {
+                                connectionStrings[conn.Name] = conn.Value.GetString() ?? "";
+                            }
+                        }
+                        settings[property.Name] = connectionStrings;
+                    }
+                    else
+                    {
+                        settings[property.Name] = JsonSerializer.Deserialize<object>(property.Value.GetRawText()) ?? new object();
+                    }
+                }
+
+                // JSON으로 직렬화
+                var options = new JsonSerializerOptions
+                {
+                    WriteIndented = true,
+                    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+                };
+                var updatedJson = JsonSerializer.Serialize(settings, options);
+
+                // 파일 쓰기
+                System.IO.File.WriteAllText(appSettingsPath, updatedJson);
+
+                _logger.LogInformation($"appsettings.json updated successfully at: {appSettingsPath}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Failed to update appsettings.json: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 로그인 검증
+        /// </summary>
+        /// <param name="id">사용자 ID</param>
+        /// <param name="password">사용자 비밀번호</param>
+        /// <returns>로그인 사용자 정보</returns>
+        [HttpPost("로그인")]
+        public async Task<ActionResult> Login([FromBody] LoginRequest request)
+        {
+            try
+            {
+                var query = @"
+                    SELECT TOP 1
+                        로그인id,
+                        성명,
+                        ID,
+                        PASS,
+                        사용여부,
+                        지역코드,
+                        최종로그인
+                    FROM [neosecurity_Ring].[dbo].[관제사용자마스터]
+                    WHERE ID = @ID
+                    ORDER BY 로그인id";
+
+                var connection = _context.Database.GetDbConnection();
+                await connection.OpenAsync();
+
+                using var command = connection.CreateCommand();
+                command.CommandText = query;
+
+                var idParam = command.CreateParameter();
+                idParam.ParameterName = "@ID";
+                idParam.Value = request.Id;
+                command.Parameters.Add(idParam);
+
+                using var reader = await command.ExecuteReaderAsync();
+
+                if (!await reader.ReadAsync())
+                {
+                    await connection.CloseAsync();
+                    return Unauthorized(new { message = "아이디 또는 비밀번호가 일치하지 않습니다." });
+                }
+
+                var 사용여부 = reader["사용여부"] != DBNull.Value && Convert.ToBoolean(reader["사용여부"]);
+                var 저장된비밀번호 = reader["PASS"]?.ToString() ?? string.Empty;
+
+                // 사용여부 확인
+                if (!사용여부)
+                {
+                    await connection.CloseAsync();
+                    return Unauthorized(new { message = "로그인 권한이 없습니다." });
+                }
+
+                // 비밀번호 확인
+                if (저장된비밀번호 != request.Password)
+                {
+                    await connection.CloseAsync();
+                    return Unauthorized(new { message = "아이디 또는 비밀번호가 일치하지 않습니다." });
+                }
+
+                // 로그인 성공 - 사용자 정보 반환
+                var loginUser = new
+                {
+                    로그인id = Convert.ToInt32(reader["로그인id"]),
+                    성명 = reader["성명"]?.ToString() ?? string.Empty,
+                    ID = reader["ID"]?.ToString() ?? string.Empty,
+                    지역코드 = reader["지역코드"]?.ToString() ?? string.Empty,
+                    최종로그인 = reader["최종로그인"] != DBNull.Value
+                        ? Convert.ToDateTime(reader["최종로그인"])
+                        : (DateTime?)null
+                };
+
+                await connection.CloseAsync();
+
+                // 최종로그인 시간 업데이트
+                await UpdateLastLoginTime(loginUser.로그인id);
+
+                return Ok(loginUser);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "로그인 처리 중 오류 발생");
+                return StatusCode(500, new { message = "서버 오류가 발생했습니다.", error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// 최종로그인 시간 업데이트
+        /// </summary>
+        private async Task UpdateLastLoginTime(int 로그인id)
+        {
+            try
+            {
+                var query = @"
+                    UPDATE [neosecurity_Ring].[dbo].[관제사용자마스터]
+                    SET 최종로그인 = GETDATE()
+                    WHERE 로그인id = @로그인id";
+
+                var connection = _context.Database.GetDbConnection();
+                if (connection.State != System.Data.ConnectionState.Open)
+                {
+                    await connection.OpenAsync();
+                }
+
+                using var command = connection.CreateCommand();
+                command.CommandText = query;
+
+                var idParam = command.CreateParameter();
+                idParam.ParameterName = "@로그인id";
+                idParam.Value = 로그인id;
+                command.Parameters.Add(idParam);
+
+                await command.ExecuteNonQueryAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "최종로그인 시간 업데이트 중 오류 발생");
+            }
+        }
+    }
+
+    /// <summary>
+    /// 관제개시 추가 요청 모델
+    /// </summary>
+    public class 관제개시Request
+    {
+        public string 관제관리번호 { get; set; } = string.Empty;
+        public DateTime? 경비개시일자 { get; set; }
+        public bool? 존점검결과 { get; set; }
+        public bool? 키테스트 { get; set; }
+        public int? 키수량 { get; set; }
+        public bool? 도면점검 { get; set; }
+        public bool? 고객카드 { get; set; }
+        public string? 점검자 { get; set; }
+        public string? 관제확인자 { get; set; }
+        public string? 설치공사자 { get; set; }
+        public string? 키인수자 { get; set; }
+        public string? 비고사항 { get; set; }
+    }
+
+    /// <summary>
+    /// 보수점검 추가 요청 모델
+    /// </summary>
+    public class 보수점검Request
+    {
+        public string 관제관리번호 { get; set; } = string.Empty;
+        public string? 발생자 { get; set; }
+        public DateTime? 점검기준월 { get; set; }
+        public DateTime? 처리일자 { get; set; }
+        public bool? 존점검 { get; set; }
+        public bool? 키테스트 { get; set; }
+        public bool? 키예탁 { get; set; }
+        public int? 키수량 { get; set; }
+        public bool? 도면점검 { get; set; }
+        public bool? 고객카드 { get; set; }
+        public string? 처리자 { get; set; }
+        public string? 고객요청사항 { get; set; }
+    }
+
+    /// <summary>
+    /// 개통업체 정보 모델
+    /// </summary>
+    public class OpeningCompany
+    {
+        public int 일련번호 { get; set; }
+        public string 개통업체명 { get; set; } = string.Empty;
+        public string 개통코드 { get; set; } = string.Empty;
+        public string DB서버 { get; set; } = string.Empty;
+        public string 포트 { get; set; } = string.Empty;
+        public string DB명 { get; set; } = string.Empty;
+        public string 사용자ID { get; set; } = string.Empty;
+        public string 비밀번호 { get; set; } = string.Empty;
+
+        /// <summary>
+        /// 연결 문자열 생성
+        /// </summary>
+        public string GetConnectionString()
+        {
+            return $"Server={DB서버},{포트};Database={DB명};User Id={사용자ID};Password={비밀번호};TrustServerCertificate=True;";
+        }
+    }
+
+    /// <summary>
+    /// 로그인 요청 모델
+    /// </summary>
+    public class LoginRequest
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
     }
 }

@@ -3,7 +3,6 @@ import '../models/search_panel.dart';
 import '../models/customer_detail.dart';
 import '../models/visit_as_history.dart';
 import '../services/api_service.dart';
-import '../functions.dart';
 import '../widgets/common_table.dart';
 import 'base_table_screen.dart';
 

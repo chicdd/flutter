@@ -29,9 +29,9 @@ class DVRInfo {
   /// JSON에서 DVRInfo 객체 생성
   factory DVRInfo.fromJson(Map<String, dynamic> json) {
     return DVRInfo(
-      serialNumber: json['일련번호'] ?? 0,
+      serialNumber: json['일련번호'] as int? ?? 0,
       controlManagementNumber: json['관제관리번호']?.toString(),
-      connectionMethod: json['접속방식'],
+      connectionMethod: json['접속방식'] as bool?,
       dvrTypeCode: json['dvR종류코드']?.toString(),
       dvrTypeName: json['dvR종류코드명']?.toString(),
       connectionAddress: json['접속주소']?.toString(),

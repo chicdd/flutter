@@ -89,25 +89,15 @@ class DocumentSupportState
   void onAddButtonPressed() {
     final customer = customerService.selectedCustomer;
     if (customer == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('고객을 먼저 선택해주세요.'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      showToast(context, message: '고객을 먼저 선택해주세요.');
       return;
     }
 
-    final managementNumber = customer.controlManagementNumber ?? '';
+    final managementNumber = customer.controlManagementNumber;
     print('선택된 고객 관제관리번호: $managementNumber');
 
     if (managementNumber.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('관제관리번호가 없습니다.'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      showToast(context, message: '관제관리번호가 없습니다.');
       return;
     }
 
@@ -128,7 +118,6 @@ class _AddDocumentModal extends StatefulWidget {
   final String managementNumber;
   final VoidCallback onDocumentAdded;
   const _AddDocumentModal({
-    super.key,
     required this.managementNumber,
     required this.onDocumentAdded,
   });
@@ -147,7 +136,7 @@ class _AddDocumentModalState extends State<_AddDocumentModal> {
   List<CodeData> _documentTypeList = [];
 
   // 체크박스 상태
-  bool _saveFilter = false;
+  final bool _saveFilter = false;
 
   // 선택된 파일 정보
   String? _selectedFileName;
@@ -203,42 +192,22 @@ class _AddDocumentModalState extends State<_AddDocumentModal> {
 
     // 유효성 검사
     if (widget.managementNumber.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('관제관리번호가 없습니다.'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      showToast(context, message: '관제관리번호가 없습니다.');
       return;
     }
 
     if (_fileBytes == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('파일을 선택해주세요.'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      showToast(context, message: '파일을 선택해주세요.');
       return;
     }
 
     if (_documentName == null || _documentName!.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('문서명이 없습니다.'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      showToast(context, message: '문서명이 없습니다.');
       return;
     }
 
     if (documentType == null || documentType!.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('문서종류를 선택해주세요.'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      showToast(context, message: '문서종류를 선택해주세요.');
       return;
     }
 
@@ -270,7 +239,7 @@ class _AddDocumentModalState extends State<_AddDocumentModal> {
       print('  - fileName: $_selectedFileName');
 
       // API 호출
-      final success = await CodeDataCache.uploadDocument(
+      final success = await DatabaseService.uploadDocument(
         managementNumber: widget.managementNumber,
         documentName: _documentName!,
         documentExtension: _documentExtension ?? '',
@@ -285,24 +254,14 @@ class _AddDocumentModalState extends State<_AddDocumentModal> {
 
       if (success) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('문서가 업로드되었습니다.'),
-              backgroundColor: Colors.green,
-            ),
-          );
+          showToast(context, message: '문서가 업로드되었습니다.');
 
           widget.onDocumentAdded(); // 문서 목록 새로고침
           Navigator.of(context).pop(); // 모달 닫기
         }
       } else {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('문서 업로드에 실패했습니다.'),
-              backgroundColor: Colors.red,
-            ),
-          );
+          showToast(context, message: '문서 업로드에 실패했습니다.');
         }
       }
     } catch (e) {
@@ -311,12 +270,7 @@ class _AddDocumentModalState extends State<_AddDocumentModal> {
 
       print('문서 업로드 오류: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('문서 업로드 중 오류가 발생했습니다: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        showToast(context, message: '문서 업로드 중 오류가 발생했습니다: $e');
       }
     }
   }
@@ -383,12 +337,7 @@ class _AddDocumentModalState extends State<_AddDocumentModal> {
           } catch (fileError) {
             print('파일 읽기 오류: $fileError');
             if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('파일을 읽을 수 없습니다.'),
-                  backgroundColor: Colors.red,
-                ),
-              );
+              showToast(context, message: '파일을 읽을 수 없습니다.');
             }
             return;
           }
@@ -407,22 +356,11 @@ class _AddDocumentModalState extends State<_AddDocumentModal> {
           print('문서명: $documentName, 확장자: $documentExtension');
 
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('파일이 선택되었습니다: $fullFileName'),
-                backgroundColor: Colors.green,
-                duration: const Duration(seconds: 2),
-              ),
-            );
+            showToast(context, message: '파일이 선택되었습니다: $fullFileName');
           }
         } else {
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('파일 데이터를 읽을 수 없습니다.'),
-                backgroundColor: Colors.red,
-              ),
-            );
+            showToast(context, message: '파일 데이터를 읽을 수 없습니다.');
           }
         }
       } else {
@@ -432,13 +370,7 @@ class _AddDocumentModalState extends State<_AddDocumentModal> {
       print('파일 선택 오류: $e');
       print('스택 트레이스: $stackTrace');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('파일 선택 중 오류가 발생했습니다.\n오류: $e'),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 4),
-          ),
-        );
+        showToast(context, message: '파일 선택 중 오류가 발생했습니다.\n오류: $e');
       }
     }
   }
@@ -447,7 +379,7 @@ class _AddDocumentModalState extends State<_AddDocumentModal> {
   Widget build(BuildContext context) {
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      backgroundColor: Colors.white,
+      backgroundColor: context.colors.cardBackground,
       child: Container(
         width: 500,
         padding: const EdgeInsets.all(24),
@@ -456,10 +388,10 @@ class _AddDocumentModalState extends State<_AddDocumentModal> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // 모달 제목
-            const Text(
+            Text(
               '문서형식',
               style: TextStyle(
-                color: Color(0xFF252525),
+                color: context.colors.textPrimary,
                 fontSize: 18,
                 fontFamily: 'Inter',
                 fontWeight: FontWeight.w600,
@@ -480,15 +412,15 @@ class _AddDocumentModalState extends State<_AddDocumentModal> {
                 ),
                 const SizedBox(width: 8),
                 Padding(
-                  padding: const EdgeInsets.only(top: 13),
+                  padding: const EdgeInsets.only(top: 20),
                   child: SizedBox(
                     height: 34,
                     width: 130,
                     child: ElevatedButton(
                       onPressed: _selectFile, // 파일 선택 메서드 연결
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF007AFF),
-                        foregroundColor: Colors.white,
+                        backgroundColor: context.colors.selectedColor,
+                        foregroundColor: context.colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(6),
                         ),
@@ -540,8 +472,8 @@ class _AddDocumentModalState extends State<_AddDocumentModal> {
                         _showAddDocumentTypeModal(context);
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF007AFF),
-                        foregroundColor: Colors.white,
+                        backgroundColor: context.colors.selectedColor,
+                        foregroundColor: context.colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(6),
                         ),
@@ -584,19 +516,12 @@ class _AddDocumentModalState extends State<_AddDocumentModal> {
                     hintStyle: TextStyle(color: Colors.grey.shade400),
                     contentPadding: const EdgeInsets.all(12),
                     filled: true,
-                    fillColor: Colors.white,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: Colors.grey.shade300),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: Colors.grey.shade300),
-                    ),
+                    fillColor: context.colors.textEnable,
+
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(
-                        color: Color(0xFF007AFF),
+                      borderSide: BorderSide(
+                        color: context.colors.selectedColor,
                         width: 2,
                       ),
                     ),
@@ -606,7 +531,7 @@ class _AddDocumentModalState extends State<_AddDocumentModal> {
             ),
             const SizedBox(height: 16),
             // 저장 폴더 열기
-            buildCheckbox(label: '저장 폴더 열기', value: _saveFilter),
+            BuildCheckbox(label: '저장 폴더 열기', value: _saveFilter),
             const SizedBox(height: 24),
             // 문서첨부저장 버튼
             SizedBox(
@@ -615,8 +540,8 @@ class _AddDocumentModalState extends State<_AddDocumentModal> {
               child: ElevatedButton(
                 onPressed: _uploadDocument, // 문서 업로드 메서드 연결
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF007AFF),
-                  foregroundColor: Colors.white,
+                  backgroundColor: context.colors.selectedColor,
+                  foregroundColor: context.colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -633,42 +558,6 @@ class _AddDocumentModalState extends State<_AddDocumentModal> {
       ),
     );
   }
-
-  /// 텍스트 필드 빌더
-  Widget _buildTextField(String label, TextEditingController controller) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            color: Color(0xFF666666),
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        const SizedBox(height: 6),
-        Container(
-          height: 40,
-          decoration: BoxDecoration(
-            color: const Color(0xFFF5F5F5),
-            borderRadius: BorderRadius.circular(6),
-          ),
-          child: TextField(
-            controller: controller,
-            decoration: const InputDecoration(
-              border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 10,
-              ),
-            ),
-            style: const TextStyle(fontSize: 14, color: Color(0xFF252525)),
-          ),
-        ),
-      ],
-    );
-  }
 }
 
 /// ========================================
@@ -677,7 +566,7 @@ class _AddDocumentModalState extends State<_AddDocumentModal> {
 class _AddDocumentTypeModal extends StatefulWidget {
   final VoidCallback onDocumentTypeAdded;
 
-  const _AddDocumentTypeModal({super.key, required this.onDocumentTypeAdded});
+  const _AddDocumentTypeModal({required this.onDocumentTypeAdded});
 
   @override
   State<_AddDocumentTypeModal> createState() => _AddDocumentTypeModalState();
@@ -755,22 +644,11 @@ class _AddDocumentTypeModalState extends State<_AddDocumentTypeModal> {
 
     if (mounted) {
       if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('문서 종류가 삭제되었습니다.'),
-            backgroundColor: Colors.green,
-          ),
-        );
-
+        showToast(context, message: '문서 종류가 삭제되었습니다.');
         await _loadDocumentTypes();
         widget.onDocumentTypeAdded();
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('문서 종류 삭제에 실패했습니다.'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        showToast(context, message: '문서 종류 삭제에 실패했습니다.');
       }
     }
   }
@@ -781,44 +659,26 @@ class _AddDocumentTypeModalState extends State<_AddDocumentTypeModal> {
     final codeName = _codeNameController.text.trim();
     // 유효성 검사
     if (code.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('문서종류코드를 입력해주세요.'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      showToast(context, message: '문서종류코드를 입력해주세요.');
+
       return;
     }
 
     if (codeName.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('문서코드명을 입력해주세요.'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      showToast(context, message: '문서코드명을 입력해주세요.');
       return;
     }
 
     // 3자리 숫자인지 확인
     if (code.length != 3) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('문서종류코드는 3자리여야 합니다.'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      showToast(context, message: '문서종류코드는 3자리여야 합니다.');
       return;
     }
 
     // 숫자만 입력되었는지 확인
     if (int.tryParse(code) == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('문서종류코드는 숫자만 입력 가능합니다.'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      showToast(context, message: '문서종류코드는 숫자만 입력 가능합니다.');
+
       return;
     }
 
@@ -831,24 +691,14 @@ class _AddDocumentTypeModalState extends State<_AddDocumentTypeModal> {
 
     if (mounted) {
       if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('문서 종류가 추가되었습니다.'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        showToast(context, message: '문서 종류가 추가되었습니다.');
 
         _codeController.clear();
         _codeNameController.clear();
         await _loadDocumentTypes();
         widget.onDocumentTypeAdded();
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('문서 종류 추가에 실패했습니다.'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        showToast(context, message: '문서 종류 추가에 실패했습니다.');
       }
     }
   }
@@ -904,9 +754,9 @@ class _AddDocumentTypeModalState extends State<_AddDocumentTypeModal> {
                     children: [
                       Text(
                         '문서종류코드',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
-                          color: AppTheme.textSecondary,
+                          color: context.colors.textSecondary,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -929,23 +779,23 @@ class _AddDocumentTypeModalState extends State<_AddDocumentTypeModal> {
                               vertical: 10,
                             ),
                             filled: true,
-                            fillColor: AppTheme.backgroundColor,
+                            fillColor: context.colors.background,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
-                              borderSide: const BorderSide(
-                                color: AppTheme.dividerColor,
+                              borderSide: BorderSide(
+                                color: context.colors.dividerColor,
                               ),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
-                              borderSide: const BorderSide(
-                                color: AppTheme.dividerColor,
+                              borderSide: BorderSide(
+                                color: context.colors.dividerColor,
                               ),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
-                              borderSide: const BorderSide(
-                                color: AppTheme.selectedColor,
+                              borderSide: BorderSide(
+                                color: context.colors.selectedColor,
                                 width: 1,
                               ),
                             ),
@@ -965,9 +815,9 @@ class _AddDocumentTypeModalState extends State<_AddDocumentTypeModal> {
                     children: [
                       Text(
                         '문서코드명',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
-                          color: AppTheme.textSecondary,
+                          color: context.colors.textSecondary,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -988,23 +838,23 @@ class _AddDocumentTypeModalState extends State<_AddDocumentTypeModal> {
                               vertical: 10,
                             ),
                             filled: true,
-                            fillColor: AppTheme.backgroundColor,
+                            fillColor: context.colors.background,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
-                              borderSide: const BorderSide(
-                                color: AppTheme.dividerColor,
+                              borderSide: BorderSide(
+                                color: context.colors.dividerColor,
                               ),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
-                              borderSide: const BorderSide(
-                                color: AppTheme.dividerColor,
+                              borderSide: BorderSide(
+                                color: context.colors.dividerColor,
                               ),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
-                              borderSide: const BorderSide(
-                                color: AppTheme.selectedColor,
+                              borderSide: BorderSide(
+                                color: context.colors.selectedColor,
                                 width: 1,
                               ),
                             ),

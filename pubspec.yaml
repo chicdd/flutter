@@ -47,19 +47,26 @@ dependencies:
   flutter_svg: ^2.0.9
 
   # 파일 선택
-  file_picker: ^8.1.4
+  file_picker: ^10.3.10 #8.3.7
   intl: ^0.20.2
+
+  # 로컬 저장소
+  shared_preferences: ^2.3.3
 
   # 데이터 그리드
   syncfusion_flutter_datagrid: ^32.1.19
 
   # 창 관리
-  window_manager: ^0.4.3
+  window_manager: ^0.5.1 #^0.4.3
 
   # Windows Acrylic/Blur 효과
   flutter_acrylic: ^1.1.4
-  google_fonts: ^7.1.0
+  google_fonts: ^8.0.1 #^7.1.0
 
+  # Toast 알림
+  toastification: ^3.0.3
+
+  path_provider: any
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -121,9 +121,7 @@ class DataLoadingHelper {
         onError(e);
       } else if (context.mounted) {
         // 기본 에러 처리
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('데이터 로딩 중 오류가 발생했습니다: $e')));
+        showToast(context, message: '데이터 로딩 중 오류가 발생했습니다: $e');
       }
     }
   }

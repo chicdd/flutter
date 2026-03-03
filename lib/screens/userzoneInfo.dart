@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import '../models/search_panel.dart';
 import '../models/customer_detail.dart';
@@ -8,8 +6,6 @@ import '../services/api_service.dart';
 import '../functions.dart';
 import '../style.dart';
 import '../theme.dart';
-
-import '../widgets/custom_top_bar.dart';
 import '../widgets/common_table.dart';
 
 /// 사용자존정보 화면
@@ -246,46 +242,40 @@ class UserZoneInfoState extends State<UserZoneInfoScreen>
 
   /// 사용자 정보 추가 모달 표시
   void showAddUserModal() {
-    final detail = customerService.customerDetail;
-    if (detail == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('고객 정보를 불러올 수 없습니다.'),
-          backgroundColor: Colors.red,
-        ),
-      );
+    final customer = customerService.selectedCustomer;
+    if (customer == null) {
+      showToast(context, message: '고객을 먼저 선택해주세요.');
       return;
     }
 
     showDialog(
       context: context,
-      builder: (context) => _AddUserModal(customerDetail: detail),
+      builder: (context) => _AddUserModal(
+        controlManagementNumber: customer.controlManagementNumber,
+      ),
     );
   }
 
   /// 존정보 추가 모달 표시
   void showAddZoneModal() {
-    final detail = customerService.customerDetail;
-    if (detail == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('고객 정보를 불러올 수 없습니다.'),
-          backgroundColor: Colors.red,
-        ),
-      );
+    final customer = customerService.selectedCustomer;
+    if (customer == null) {
+      showToast(context, message: '고객을 먼저 선택해주세요.');
       return;
     }
 
     showDialog(
       context: context,
-      builder: (context) => _AddZoneModal(customerDetail: detail),
+      builder: (context) => _AddZoneModal(
+        controlManagementNumber: customer.controlManagementNumber,
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: context.colors.background,
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -348,10 +338,9 @@ class UserZoneInfoState extends State<UserZoneInfoScreen>
 
 /// 사용자 정보 추가 모달
 class _AddUserModal extends StatefulWidget {
-  final CustomerDetail customerDetail;
+  final String controlManagementNumber;
 
-  const _AddUserModal({Key? key, required this.customerDetail})
-    : super(key: key);
+  const _AddUserModal({required this.controlManagementNumber});
 
   @override
   State<_AddUserModal> createState() => _AddUserModalState();
@@ -380,12 +369,7 @@ class _AddUserModalState extends State<_AddUserModal> {
     final userName = _userNameController.text.trim();
 
     if (userName.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('userName을 입력해주세요.'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      showToast(context, message: '사용자 이름을 입력해주세요.');
       return;
     }
 
@@ -422,22 +406,8 @@ class _AddUserModalState extends State<_AddUserModal> {
 
       if (success) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('사용자 정보가 등록되었습니다.'),
-              backgroundColor: Colors.green,
-            ),
-          );
+          showToast(context, message: '사용자 정보가 등록되었습니다.');
           Navigator.of(context).pop(); // 모달 닫기
-        }
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('사용자 정보 등록에 실패했습니다.'),
-              backgroundColor: Colors.red,
-            ),
-          );
         }
       }
     } catch (e) {
@@ -446,12 +416,7 @@ class _AddUserModalState extends State<_AddUserModal> {
 
       print('사용자 정보 등록 오류: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('사용자 정보 등록 중 오류가 발생했습니다: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        showToast(context, message: '사용자 정보 등록 중 오류가 발생했습니다: $e');
       }
     }
   }
@@ -472,7 +437,7 @@ class _AddUserModalState extends State<_AddUserModal> {
   Widget build(BuildContext context) {
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      backgroundColor: Colors.white,
+      backgroundColor: context.colors.cardBackground,
       child: Container(
         width: 500,
         padding: const EdgeInsets.all(24),
@@ -485,10 +450,10 @@ class _AddUserModalState extends State<_AddUserModal> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
+                  Text(
                     '사용자 정보 입력',
                     style: TextStyle(
-                      color: Color(0xFF252525),
+                      color: context.colors.textPrimary,
                       fontSize: 18,
                       fontFamily: 'Inter',
                       fontWeight: FontWeight.w600,
@@ -524,71 +489,41 @@ class _AddUserModalState extends State<_AddUserModal> {
                 spacing: 20,
                 runSpacing: 12,
                 children: [
-                  buildCheckbox(
+                  BuildCheckbox(
                     label: '무단허용',
                     value: _unauthorized,
-                    readOnly: true,
                     onChanged: (val) {
-                      setState(() => _unauthorized = val ?? false);
+                      setState(() => _unauthorized = val);
                     },
                   ),
-                  buildCheckbox(
+                  BuildCheckbox(
                     label: 'SMS',
                     value: _sms,
-                    readOnly: true,
                     onChanged: (val) {
-                      setState(() => _sms = val ?? false);
+                      setState(() => _sms = val);
                     },
                   ),
-                  buildCheckbox(
+                  BuildCheckbox(
                     label: '요원',
                     value: _agent,
-                    readOnly: true,
                     onChanged: (val) {
-                      setState(() => _agent = val ?? false);
+                      setState(() => _agent = val);
                     },
                   ),
-                  buildCheckbox(
+                  BuildCheckbox(
                     label: 'APP',
                     value: _app,
-                    readOnly: true,
                     onChanged: (val) {
-                      setState(() => _app = val ?? false);
+                      setState(() => _app = val);
                     },
                   ),
-                  buildCheckbox(
+                  BuildCheckbox(
                     label: '예비',
                     value: _preparation,
-                    readOnly: true,
                     onChanged: (val) {
-                      setState(() => _preparation = val ?? false);
+                      setState(() => _preparation = val);
                     },
                   ),
-                  // buildCheckbox('무단허용', _unauthorized, (value) {
-                  //   setState(() {
-                  //     _unauthorized = value ?? false;
-                  //   });
-                  // }),
-                  // buildCheckbox('SMS', _sms, (value) {
-                  //   setState(() {
-                  //     _sms = value ?? false;
-                  //   });
-                  // }),
-                  // buildCheckbox('요원', _agent, (value) {
-                  //   setState(() {
-                  //     _agent = value ?? false;
-                  //   });
-                  // }),
-                  // buildCheckbox('APP', _app, (value) {
-                  //   setState(() {
-                  //     _app = value ?? false;
-                  //   });
-                  // }),
-                  // buildCheckbox('예비', _preparation, (value) {
-                  //   setState(() {
-                  //     _preparation = value ?? false;
-                  //   });
-                  // }),
                 ],
               ),
               const SizedBox(height: 24),
@@ -604,7 +539,7 @@ class _AddUserModalState extends State<_AddUserModal> {
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF007AFF),
-                          foregroundColor: Colors.white,
+                          foregroundColor: context.colors.white,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
@@ -630,7 +565,7 @@ class _AddUserModalState extends State<_AddUserModal> {
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF6C6C6C),
-                          foregroundColor: Colors.white,
+                          foregroundColor: context.colors.white,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
@@ -658,10 +593,9 @@ class _AddUserModalState extends State<_AddUserModal> {
 
 /// 존정보 추가 모달
 class _AddZoneModal extends StatefulWidget {
-  final CustomerDetail customerDetail;
+  final String controlManagementNumber;
 
-  const _AddZoneModal({Key? key, required this.customerDetail})
-    : super(key: key);
+  const _AddZoneModal({required this.controlManagementNumber});
 
   @override
   State<_AddZoneModal> createState() => _AddZoneModalState();
@@ -682,12 +616,7 @@ class _AddZoneModalState extends State<_AddZoneModal> {
     final zoneInfo = _zoneInfoController.text.trim();
 
     if (zoneInfo.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('존정보를 입력해주세요.'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      showToast(context, message: '존정보를 입력해주세요.');
       return;
     }
 
@@ -716,22 +645,8 @@ class _AddZoneModalState extends State<_AddZoneModal> {
 
       if (success) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('존정보가 등록되었습니다.'),
-              backgroundColor: Colors.green,
-            ),
-          );
+          showToast(context, message: '존정보가 등록되었습니다.');
           Navigator.of(context).pop(); // 모달 닫기
-        }
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('존정보 등록에 실패했습니다.'),
-              backgroundColor: Colors.red,
-            ),
-          );
         }
       }
     } catch (e) {
@@ -740,12 +655,7 @@ class _AddZoneModalState extends State<_AddZoneModal> {
 
       print('존정보 등록 오류: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('존정보 등록 중 오류가 발생했습니다: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        showToast(context, message: '존정보 등록 중 오류가 발생했습니다: $e');
       }
     }
   }
@@ -763,6 +673,7 @@ class _AddZoneModalState extends State<_AddZoneModal> {
   Widget build(BuildContext context) {
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      backgroundColor: context.colors.cardBackground,
       child: Container(
         width: 400,
         padding: const EdgeInsets.all(24),
@@ -774,10 +685,10 @@ class _AddZoneModalState extends State<_AddZoneModal> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
+                Text(
                   '존정보 입력',
                   style: TextStyle(
-                    color: Color(0xFF252525),
+                    color: context.colors.textPrimary,
                     fontSize: 18,
                     fontFamily: 'Inter',
                     fontWeight: FontWeight.w600,
@@ -816,8 +727,8 @@ class _AddZoneModalState extends State<_AddZoneModal> {
                         await _registerZone(context);
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF007AFF),
-                        foregroundColor: Colors.white,
+                        backgroundColor: context.colors.selectedColor,
+                        foregroundColor: context.colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
@@ -842,8 +753,8 @@ class _AddZoneModalState extends State<_AddZoneModal> {
                         Navigator.of(context).pop();
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF6C6C6C),
-                        foregroundColor: Colors.white,
+                        backgroundColor: context.colors.gray30,
+                        foregroundColor: context.colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),

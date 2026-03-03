@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/search_panel.dart';
 import '../models/customer_detail.dart';
 import '../functions.dart';
+import '../theme.dart';
 import '../widgets/common_table.dart';
 
 /// 테이블 화면의 공통 기능을 제공하는 추상 클래스
@@ -268,7 +269,7 @@ abstract class BaseTableScreenState<T, W extends BaseTableScreen<T>>
     super.build(context);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
+      backgroundColor: context.colors.background,
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(

@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../services/api_service.dart';
-import '../functions.dart';
 import '../style.dart';
-import '../theme.dart';
 import '../widgets/common_table.dart';
-
 import '../widgets/base_add_modal.dart';
 import 'base_table_screen.dart';
 
@@ -125,9 +122,8 @@ class MaintenanceInspectionHistoryState
   void onAddButtonPressed() {
     final customer = customerService.selectedCustomer;
     if (customer == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('고객을 먼저 선택해주세요.')));
+      showToast(context, message: '고객을 먼저 선택해주세요.');
+
       return;
     }
 
@@ -213,12 +209,12 @@ class _AddModalState extends BaseAddModalState<_AddModal> {
   Future<bool> validateAndSave() async {
     // 검증
     if (_inspectionMonthController.text.isEmpty) {
-      showErrorSnackBar('점검기준월을 입력해주세요.');
+      showToast(context, message: '점검기준월을 입력해주세요.');
       return false;
     }
 
     if (_processDateController.text.isEmpty) {
-      showErrorSnackBar('처리일자를 입력해주세요.');
+      showToast(context, message: '처리일자를 입력해주세요.');
       return false;
     }
 
@@ -270,27 +266,64 @@ class _AddModalState extends BaseAddModalState<_AddModal> {
           maxLines: 3,
         ),
         const SizedBox(height: 16),
-        Wrap(
+        Row(
+          mainAxisAlignment: MainAxisAlignment.start,
           spacing: 16,
-          runSpacing: 8,
           children: [
-            buildCheckbox(label: '존점검결과', value: _zoneCheck),
-            buildCheckbox(label: '도면점검', value: _mapCheck),
-            buildCheckbox(label: '고객카드', value: _customerCard),
-            buildCheckbox(label: '예탁키테스트', value: _depositKeyTest),
+            BuildCheckbox(
+              label: '존점검결과',
+              value: _zoneCheck,
+              onChanged: (val) {
+                setState(() {
+                  _zoneCheck = val;
+                });
+              },
+            ),
+            BuildCheckbox(
+              label: '도면점검',
+              value: _mapCheck,
+              onChanged: (val) {
+                setState(() {
+                  _mapCheck = val;
+                });
+              },
+            ),
+            BuildCheckbox(
+              label: '고객카드',
+              value: _customerCard,
+              onChanged: (val) {
+                setState(() {
+                  _customerCard = val;
+                });
+              },
+            ),
+            BuildCheckbox(
+              label: '예탁키테스트',
+              value: _depositKeyTest,
+              onChanged: (val) {
+                setState(() {
+                  _depositKeyTest = val;
+                });
+              },
+            ),
           ],
         ),
         const SizedBox(height: 16),
-        SizedBox(
-          width: 200,
-          child: SizedBox(
-            width: 100,
-            child: CommonTextField(
-              label: '키예탁수량',
-              controller: _keyQuantityController,
-              keyboardType: TextInputType.number,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: 200,
+              child: SizedBox(
+                width: 100,
+                child: CommonTextField(
+                  label: '키예탁수량',
+                  controller: _keyQuantityController,
+                  keyboardType: TextInputType.number,
+                ),
+              ),
             ),
-          ),
+          ],
         ),
       ],
     );

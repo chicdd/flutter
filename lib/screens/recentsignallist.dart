@@ -4,7 +4,6 @@ import '../models/search_panel.dart';
 import '../models/customer_detail.dart';
 import '../models/recentsignalinfo.dart';
 import '../services/api_service.dart';
-import '../functions.dart';
 import '../theme.dart';
 import '../style.dart';
 
@@ -25,11 +24,15 @@ class RecentSignalListState
   final TextEditingController _startDateController = TextEditingController();
   final TextEditingController _endDateController = TextEditingController();
 
-  // 필터 설정
+  // 필터 설정 (UI 상태)
   String _selectedSignalFilter = '전체신호';
   DateTime _startDate = DateTime.now().subtract(const Duration(days: 7));
   DateTime _endDate = DateTime.now();
   bool _isAscending = false;
+
+  // 현재 검색 중인 필터 상태 (페이징에서 사용)
+  String _currentSignalFilter = '전체신호';
+  bool _currentAscending = false;
 
   // 페이징 상태
   int _currentSkip = 0;
@@ -182,12 +185,13 @@ class RecentSignalListState
 
     try {
       final nextSkip = _currentSkip + 100;
+      // 페이징 시에는 검색 시작 시의 필터 상태 사용
       final result = await DatabaseService.getRecentSignals(
         managementNumber: customer.controlManagementNumber,
         startDate: _startDate,
         endDate: _endDate,
-        signalFilter: _selectedSignalFilter,
-        ascending: _isAscending,
+        signalFilter: _currentSignalFilter,
+        ascending: _currentAscending,
         skip: nextSkip,
         take: 100,
       );
@@ -210,7 +214,7 @@ class RecentSignalListState
       }
 
       print(
-        '추가 신호 데이터 로드 완료: ${signals.length}건 (표시: ${dataList.length}/${_totalCount}건)',
+        '추가 신호 데이터 로드 완료: ${signals.length}건 (표시: ${dataList.length}/$_totalCount건)',
       );
     } catch (e) {
       print('추가 신호 데이터 로드 오류: $e');
@@ -240,6 +244,9 @@ class RecentSignalListState
       _hasMore = true;
       _totalCount = 0;
       dataList.clear();
+      // 검색 시작 시 현재 UI 상태를 검색 상태로 고정
+      _currentSignalFilter = _selectedSignalFilter;
+      _currentAscending = _isAscending;
     });
 
     try {
@@ -247,8 +254,8 @@ class RecentSignalListState
         managementNumber: managementNumber,
         startDate: _startDate,
         endDate: _endDate,
-        signalFilter: _selectedSignalFilter,
-        ascending: _isAscending,
+        signalFilter: _currentSignalFilter,
+        ascending: _currentAscending,
         skip: 0,
         take: 100,
       );
@@ -265,7 +272,7 @@ class RecentSignalListState
         });
       }
 
-      print('최근 신호 데이터 로드 완료: ${signals.length}건 / 전체: ${totalCount}건');
+      print('최근 신호 데이터 로드 완료: ${signals.length}건 / 전체: $totalCount건');
     } catch (e) {
       print('최근 신호 데이터 로드 오류: $e');
       if (mounted) {
@@ -303,16 +310,94 @@ class RecentSignalListState
         }
       });
       // 날짜 변경 시 데이터 다시 로드
-      final customer = customerService.selectedCustomer;
-      if (customer != null) {
-        await _loadSignalData(customer.controlManagementNumber);
+      // final customer = customerService.selectedCustomer;
+      // if (customer != null) {
+      //   await _loadSignalData(customer.controlManagementNumber);
+      // }
+    }
+  }
+
+  /// 텍스트 입력으로 날짜 변경
+  Future<void> _handleDateTextInput(bool isStartDate) async {
+    final controller = isStartDate ? _startDateController : _endDateController;
+    final text = controller.text.trim();
+
+    print('=== _handleDateTextInput 호출됨 ===');
+    print('isStartDate: $isStartDate, text: "$text"');
+
+    // 비어있으면 무시
+    if (text.isEmpty) {
+      print('텍스트가 비어있어 무시');
+      return;
+    }
+
+    try {
+      DateTime parsedDate;
+
+      // 다양한 형식 지원
+      if (text.contains('-')) {
+        parsedDate = DateFormat('yyyy-MM-dd').parse(text);
+      } else if (text.contains('/')) {
+        parsedDate = DateFormat('yyyy/MM/dd').parse(text);
+      } else if (text.contains('.')) {
+        parsedDate = DateFormat('yyyy.MM.dd').parse(text);
+      } else if (text.length == 8 && RegExp(r'^\d{8}$').hasMatch(text)) {
+        // yyyyMMdd 형식 (8자리 숫자) - 직접 파싱
+
+        final year = int.parse(text.substring(0, 4));
+        final month = int.parse(text.substring(4, 6));
+        final day = int.parse(text.substring(6, 8));
+        parsedDate = DateTime(year, month, day);
+      } else {
+        throw FormatException('지원하지 않는 날짜 형식입니다.');
+      }
+      // 파싱 성공 시 날짜 업데이트
+      setState(() {
+        if (isStartDate) {
+          _startDate = parsedDate;
+          _startDateController.text = DateFormat(
+            'yyyy-MM-dd',
+          ).format(parsedDate);
+        } else {
+          _endDate = parsedDate;
+          _endDateController.text = DateFormat('yyyy-MM-dd').format(parsedDate);
+        }
+      });
+
+      // 데이터 다시 로드
+      // final customer = customerService.selectedCustomer;
+      // if (customer != null) {
+      //   print('데이터 로드 시작');
+      //   await _loadSignalData(customer.controlManagementNumber);
+      // }
+    } catch (e, stackTrace) {
+      print('날짜 파싱 실패: $e');
+      print('스택 트레이스: $stackTrace');
+
+      // 파싱 실패 시 기존 날짜로 되돌리기
+      setState(() {
+        if (isStartDate) {
+          _startDateController.text = DateFormat(
+            'yyyy-MM-dd',
+          ).format(_startDate);
+        } else {
+          _endDateController.text = DateFormat('yyyy-MM-dd').format(_endDate);
+        }
+      });
+
+      // 에러 메시지 표시 (선택사항)
+      if (mounted) {
+        showToast(
+          context,
+          message: '올바른 날짜 형식이 아닙니다. (예: yyyy-MM-dd, yyyyMMdd)',
+        );
       }
     }
   }
 
   @override
   List<Widget> buildHeaderWidgets() {
-    return [_buildFilterSection(), const SizedBox(height: 24)];
+    return [_buildFilterSection(context), const SizedBox(height: 24)];
   }
 
   @override
@@ -320,7 +405,7 @@ class RecentSignalListState
     super.build(context);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
+      backgroundColor: context.colors.background,
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -347,21 +432,21 @@ class RecentSignalListState
   }
 
   /// 필터 영역 구성
-  Widget _buildFilterSection() {
+  Widget _buildFilterSection(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.colors.cardBackground,
         borderRadius: BorderRadius.circular(12),
         boxShadow: AppTheme.cardShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             '검색 필터',
             style: TextStyle(
-              color: Color(0xFF252525),
+              color: context.colors.textPrimary,
               fontSize: 16,
               fontWeight: FontWeight.w600,
             ),
@@ -375,21 +460,27 @@ class RecentSignalListState
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       '신호 필터',
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
-                        color: Color(0xFF252525),
+                        color: context.colors.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 8),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
                       decoration: BoxDecoration(
-                        border: Border.all(color: const Color(0xFFE0E0E0)),
+                        color: context.colors.secondBackground,
+                        border: Border.all(color: context.colors.dividerColor),
                         borderRadius: BorderRadius.circular(8),
                       ),
+
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      // decoration: BoxDecoration(
+                      //   border: Border.all(color: const Color(0xFFE0E0E0)),
+                      //   borderRadius: BorderRadius.circular(8),
+                      // ),
                       child: DropdownButtonHideUnderline(
                         child: DropdownButton<String>(
                           value: _selectedSignalFilter,
@@ -422,20 +513,7 @@ class RecentSignalListState
                 label: '검색 시작일자',
                 controller: _startDateController,
                 onCalendarPressed: _selectDate,
-                onSubmitted: () => DateParsingHelper.openDatePicker(
-                  context: context,
-                  isStartDate: true,
-                  startDate: _startDate,
-                  endDate: _endDate,
-                  startController: _startDateController,
-                  endController: _endDateController,
-                  onConfirm: (newStart, newEnd) async {
-                    setState(() {
-                      _startDate = newStart;
-                      _endDate = newEnd;
-                    });
-                  },
-                ),
+                onSubmitted: () => _handleDateTextInput(true),
               ),
               const SizedBox(width: 16),
 
@@ -444,20 +522,7 @@ class RecentSignalListState
                 label: '검색 종료일자',
                 controller: _endDateController,
                 onCalendarPressed: _selectDate,
-                onSubmitted: () => DateParsingHelper.openDatePicker(
-                  context: context,
-                  isStartDate: false,
-                  startDate: _startDate,
-                  endDate: _endDate,
-                  startController: _startDateController,
-                  endController: _endDateController,
-                  onConfirm: (newStart, newEnd) async {
-                    setState(() {
-                      _startDate = newStart;
-                      _endDate = newEnd;
-                    });
-                  },
-                ),
+                onSubmitted: () => _handleDateTextInput(false),
               ),
               const SizedBox(width: 16),
 
@@ -465,29 +530,22 @@ class RecentSignalListState
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     '정렬 옵션',
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
-                      color: Color(0xFF252525),
+                      color: context.colors.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 8),
-                  buildCheckbox(
-                    label: '무선센서 설치고객',
+                  BuildCheckbox(
+                    label: '오름차순 정렬',
                     value: _isAscending,
-                    readOnly: true,
-                    onChanged: (val) {
-                      setState(() => _isAscending = val ?? false);
+                    onChanged: (val) async {
+                      setState(() => _isAscending = val);
                     },
                   ),
-
-                  // buildCheckbox('오름차순 정렬', _isAscending, (value) {
-                  //   setState(() {
-                  //     _isAscending = value ?? false;
-                  //   });
-                  // }),
                 ],
               ),
               const SizedBox(width: 16),
@@ -500,8 +558,8 @@ class RecentSignalListState
                   ElevatedButton(
                     onPressed: _refreshSignalData,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF007AFF),
-                      foregroundColor: Colors.white,
+                      backgroundColor: context.colors.selectedColor,
+                      foregroundColor: context.colors.white,
                       padding: const EdgeInsets.symmetric(
                         horizontal: 20,
                         vertical: 20,
@@ -515,11 +573,11 @@ class RecentSignalListState
                       mainAxisSize: MainAxisSize.min,
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Text(
+                        Text(
                           '관제신호 새로고침',
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                            color: Colors.white,
+                            color: context.colors.white,
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
                           ),

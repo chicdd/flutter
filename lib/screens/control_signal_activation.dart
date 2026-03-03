@@ -1,16 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'base_table_screen.dart';
-import '../models/search_panel.dart';
-import '../models/customer_detail.dart';
 import '../services/api_service.dart';
-import '../functions.dart';
 import '../style.dart';
 import '../widgets/common_table.dart';
-
 import '../widgets/base_add_modal.dart';
-import 'base_table_screen.dart';
 
 /// 관제신호 개통처리 화면
 class ControlSignalActivation extends BaseTableScreen<Map<String, dynamic>> {
@@ -127,9 +121,7 @@ class ControlSignalActivationState
   void onAddButtonPressed() {
     final customer = customerService.selectedCustomer;
     if (customer == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('고객을 먼저 선택해주세요.')));
+      showToast(context, message: '고객을 먼저 선택해주세요.');
       return;
     }
 
@@ -213,7 +205,7 @@ class _AddModalState extends BaseAddModalState<_AddModal> {
   Future<bool> validateAndSave() async {
     // 검증
     if (_openDateController.text.isEmpty) {
-      showErrorSnackBar('경비개시일자를 입력해주세요.');
+      showToast(context, message: '경비개시일자를 입력해주세요.');
       return false;
     }
 
@@ -241,22 +233,52 @@ class _AddModalState extends BaseAddModalState<_AddModal> {
   Widget buildFormFields() {
     return Column(
       children: [
-        DateTextField(
-          label: '경비개시일자',
-          controller: _openDateController,
-          onCalendarPressed: _selectDate,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            DateTextField(
+              label: '경비개시일자',
+              controller: _openDateController,
+              onCalendarPressed: _selectDate,
+            ),
+          ],
         ),
         const SizedBox(height: 16),
-        CommonTextField(label: '개시처리자', controller: _openProcessorController),
-        const SizedBox(height: 16),
-        CommonTextField(
-          label: '관제확인자',
-          controller: _securityConfirmerController,
+        Row(
+          children: [
+            Expanded(
+              child: CommonTextField(
+                label: '개시처리자',
+                controller: _openProcessorController,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: CommonTextField(
+                label: '관제확인자',
+                controller: _securityConfirmerController,
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 16),
-        CommonTextField(label: '설치공사자', controller: _installerController),
-        const SizedBox(height: 16),
-        CommonTextField(label: '키인수자', controller: _keyReceiverController),
+        Row(
+          children: [
+            Expanded(
+              child: CommonTextField(
+                label: '설치공사자',
+                controller: _installerController,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: CommonTextField(
+                label: '키인수자',
+                controller: _keyReceiverController,
+              ),
+            ),
+          ],
+        ),
         const SizedBox(height: 16),
         CommonTextField(
           label: '비고',
@@ -264,24 +286,61 @@ class _AddModalState extends BaseAddModalState<_AddModal> {
           maxLines: 3,
         ),
         const SizedBox(height: 16),
-        Wrap(
+        Row(
+          mainAxisAlignment: MainAxisAlignment.start,
           spacing: 16,
-          runSpacing: 8,
           children: [
-            buildCheckbox(label: '존점검결과', value: _zoneCheck),
-            buildCheckbox(label: '도면점검', value: _mapCheck),
-            buildCheckbox(label: '고객카드', value: _customerCard),
-            buildCheckbox(label: '예탁키테스트', value: _depositKeyTest),
+            BuildCheckbox(
+              label: '존점검결과',
+              value: _zoneCheck,
+              onChanged: (val) {
+                setState(() {
+                  _zoneCheck = val;
+                });
+              },
+            ),
+            BuildCheckbox(
+              label: '도면점검',
+              value: _mapCheck,
+              onChanged: (val) {
+                setState(() {
+                  _mapCheck = val;
+                });
+              },
+            ),
+            BuildCheckbox(
+              label: '고객카드',
+              value: _customerCard,
+              onChanged: (val) {
+                setState(() {
+                  _customerCard = val;
+                });
+              },
+            ),
+            BuildCheckbox(
+              label: '예탁키테스트',
+              value: _depositKeyTest,
+              onChanged: (val) {
+                setState(() {
+                  _depositKeyTest = val;
+                });
+              },
+            ),
           ],
         ),
         const SizedBox(height: 16),
-        SizedBox(
-          width: 200,
-          child: CommonTextField(
-            label: '키예탁수량',
-            controller: _keyQuantityController,
-            keyboardType: TextInputType.number,
-          ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: 200,
+              child: CommonTextField(
+                label: '키예탁수량',
+                controller: _keyQuantityController,
+                keyboardType: TextInputType.number,
+              ),
+            ),
+          ],
         ),
       ],
     );

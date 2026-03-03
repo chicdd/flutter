@@ -1,10 +1,9 @@
 import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:securityindex/screens/main_layout.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:flutter_acrylic/flutter_acrylic.dart';
+import 'package:toastification/toastification.dart';
 import 'theme.dart';
 import 'screens/login_screen.dart';
 import 'services/theme_service.dart';
@@ -37,7 +36,6 @@ void main() async {
     // Windows 10: acrylic 사용
     await Window.setEffect(
       effect: WindowEffect.acrylic, // 가장 범용적인 블러 효과완전 투명
-      dark: false,
     );
     print('✅ Window effect 적용 성공');
   } catch (e) {
@@ -66,6 +64,12 @@ class _SecurityIndexAppState extends State<SecurityIndexApp> {
   void initState() {
     super.initState();
     _themeService.addListener(_onThemeChanged);
+    // 저장된 테마 설정 불러오기
+    _loadTheme();
+  }
+
+  Future<void> _loadTheme() async {
+    await _themeService.loadTheme();
   }
 
   @override
@@ -80,22 +84,24 @@ class _SecurityIndexAppState extends State<SecurityIndexApp> {
 
   @override
   Widget build(BuildContext context) {
-    return BackdropFilter(
-      filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
-      child: MaterialApp(
-        title: '보안관제 시스템',
-        theme: AppTheme.lightTheme,
-        darkTheme: AppTheme.darkTheme,
-        themeMode: _themeService.isDarkMode ? ThemeMode.dark : ThemeMode.light,
-        debugShowCheckedModeBanner: false,
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
-        supportedLocales: const [Locale('ko', 'KR'), Locale('en', 'US')],
-        locale: const Locale('ko', 'KR'),
-        home: const LoginScreen(),
+    return ToastificationWrapper(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+        child: MaterialApp(
+          title: '보안관제 시스템',
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: _themeService.isDarkMode ? ThemeMode.dark : ThemeMode.light,
+          debugShowCheckedModeBanner: false,
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [Locale('ko', 'KR'), Locale('en', 'US')],
+          locale: const Locale('ko', 'KR'),
+          home: const LoginScreen(),
+        ),
       ),
     );
   }

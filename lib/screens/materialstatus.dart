@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import '../models/search_panel.dart';
-import '../models/customer_detail.dart';
 import '../widgets/common_table.dart';
 import 'base_table_screen.dart';
 

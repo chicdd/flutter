@@ -9,6 +9,8 @@ namespace securityindexAPI.Models
     [Table("DVR연동마스터")]
     public class DVR연동마스터
     {
+        public int 일련번호 { get; set; }
+
         [Key]
         public string? 관제관리번호 { get; set; }
         public bool? 접속방식 { get; set; }

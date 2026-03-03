@@ -3,7 +3,6 @@ import '../models/search_panel.dart';
 import '../models/customer_detail.dart';
 import '../models/payment_history.dart';
 import '../services/api_service.dart';
-import '../functions.dart';
 import '../style.dart';
 import '../widgets/common_table.dart';
 import 'base_table_screen.dart';
@@ -53,7 +52,7 @@ class PaymentHistoryTableState
       TableColumnConfig(
         header: '매출년월',
         width: columnWidths[0],
-        valueBuilder: (data) => (data as PaymentHistory).meachulformatted ?? '',
+        valueBuilder: (data) => (data as PaymentHistory).meachulformatted,
       ),
       TableColumnConfig(
         header: '청구금액',
@@ -75,7 +74,7 @@ class PaymentHistoryTableState
         header: '입금일자',
         width: columnWidths[4],
         valueBuilder: (data) =>
-            dateParsing((data as PaymentHistory).paymentDate) ?? '-',
+            dateParsing((data as PaymentHistory).paymentDate),
       ),
       TableColumnConfig(
         header: '수금상태',

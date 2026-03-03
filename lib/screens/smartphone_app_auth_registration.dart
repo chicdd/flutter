@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
-import '../models/AuthRegist.dart';
+import '../models/authRegist.dart';
 import '../models/customer_detail.dart';
 import '../services/api_service.dart';
-import '../functions.dart';
 import '../style.dart';
-import '../theme.dart';
-
 import '../widgets/common_table.dart';
 import '../widgets/base_add_modal.dart';
 import 'base_table_screen.dart';
@@ -79,27 +76,28 @@ class SmartphoneAppAuthRegistrationState
   }
 
   @override
-  void onAddButtonPressed() {
-    final detail = customerService.customerDetail;
-    if (detail == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('고객 정보를 불러올 수 없습니다.'),
-          backgroundColor: Colors.red,
+  Future<void> onAddButtonPressed() async {
+    var detail = customerService.customerDetail;
+    if (mounted) {
+      // 상세 정보가 없으면 로드 시도
+      if (detail == null) {
+        await customerService.loadCustomerDetail();
+        detail = customerService.customerDetail;
+        if (mounted) {
+          showToast(context, message: '고객 정보를 불러올 수 없습니다.');
+        }
+        return;
+      }
+      showDialog(
+        context: context,
+        builder: (context) => _AddAuthModal(
+          customerDetail: detail!,
+          onSaved: () {
+            refreshData();
+          },
         ),
       );
-      return;
     }
-
-    showDialog(
-      context: context,
-      builder: (context) => _AddAuthModal(
-        customerDetail: detail,
-        onSaved: () {
-          refreshData();
-        },
-      ),
-    );
   }
 }
 
@@ -107,11 +105,7 @@ class SmartphoneAppAuthRegistrationState
 class _AddAuthModal extends BaseAddModal {
   final CustomerDetail customerDetail;
 
-  const _AddAuthModal({
-    super.key,
-    required this.customerDetail,
-    required super.onSaved,
-  });
+  const _AddAuthModal({required this.customerDetail, required super.onSaved});
 
   @override
   State<_AddAuthModal> createState() => _AddAuthModalState();
@@ -146,7 +140,7 @@ class _AddAuthModalState extends BaseAddModalState<_AddAuthModal> {
     // CustomerDetail의 값을 컨트롤러에 설정
     _companyController.text = widget.customerDetail.controlBusinessName ?? '';
     _managementNumberController.text =
-        widget.customerDetail.controlManagementNumber ?? '';
+        widget.customerDetail.controlManagementNumber;
     _businessNumberController.text = widget.customerDetail.erpCusNumber ?? '';
   }
 
@@ -157,20 +151,19 @@ class _AddAuthModalState extends BaseAddModalState<_AddAuthModal> {
     final userName = _userNameController.text.trim();
 
     if (phoneNumber.isEmpty) {
-      showErrorSnackBar('휴대폰번호를 입력해주세요.');
+      showToast(context, message: '휴대폰번호를 입력해주세요.');
       return false;
     }
 
     if (userName.isEmpty) {
-      showErrorSnackBar('사용자 이름을 입력해주세요.');
+      showToast(context, message: '사용자 이름을 입력해주세요.');
       return false;
     }
 
     // API 호출
-    return await CodeDataCache.insertAuth(
+    return await DatabaseService.insertAuth(
       phoneNumber: phoneNumber,
-      controlManagementNumber:
-          widget.customerDetail.controlManagementNumber ?? '',
+      controlManagementNumber: widget.customerDetail.controlManagementNumber,
       erpCusNumber: widget.customerDetail.erpCusNumber ?? '',
       businessName: widget.customerDetail.controlBusinessName ?? '',
       userName: userName,
@@ -223,31 +216,31 @@ class _AddAuthModalState extends BaseAddModalState<_AddAuthModal> {
         const SizedBox(height: 16),
         Row(
           children: [
-            // buildCheckbox('원격경계허용', _remoteGuardAllowed, (value) {
+            // BuildCheckbox('원격경계허용', _remoteGuardAllowed, (value) {
             //   setState(() {
             //     _remoteGuardAllowed = value ?? false;
             //   });
             // }),
-            buildCheckbox(
+            BuildCheckbox(
               label: '원격경계허용',
               value: _remoteGuardAllowed,
               readOnly: true,
               onChanged: (val) {
-                setState(() => _remoteGuardAllowed = val ?? false);
+                setState(() => _remoteGuardAllowed = val);
               },
             ),
             const SizedBox(width: 20),
-            // buildCheckbox('원격해제허용', _remoteReleaseAllowed, (value) {
+            // BuildCheckbox('원격해제허용', _remoteReleaseAllowed, (value) {
             //   setState(() {
             //     _remoteReleaseAllowed = value ?? false;
             //   });
             // }),
-            buildCheckbox(
+            BuildCheckbox(
               label: '원격해제허용',
               value: _remoteReleaseAllowed,
               readOnly: true,
               onChanged: (val) {
-                setState(() => _remoteReleaseAllowed = val ?? false);
+                setState(() => _remoteReleaseAllowed = val);
               },
             ),
           ],

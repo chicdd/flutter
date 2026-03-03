@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../style.dart';
 import '../theme.dart';
 
 /// 추가 모달의 공통 기능을 제공하는 추상 클래스
@@ -109,24 +110,6 @@ abstract class BaseAddModalState<W extends BaseAddModal> extends State<W> {
   // 공통 헬퍼 메서드
   // ========================================
 
-  /// 에러 스낵바 표시
-  void showErrorSnackBar(String message) {
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message), backgroundColor: Colors.red),
-      );
-    }
-  }
-
-  /// 성공 스낵바 표시
-  void showSuccessSnackBar([String? message]) {
-    if (mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(message ?? successMessage)));
-    }
-  }
-
   // ========================================
   // 공통 저장 로직
   // ========================================
@@ -147,18 +130,18 @@ abstract class BaseAddModalState<W extends BaseAddModal> extends State<W> {
 
       if (mounted) {
         if (success) {
-          showSuccessSnackBar();
+          showToast(context, message: '저장되었습니다.');
           await onAfterSave(true);
           Navigator.of(context).pop();
           widget.onSaved();
         } else {
-          showErrorSnackBar(failureMessage);
+          showToast(context, message: failureMessage);
           await onAfterSave(false);
         }
       }
     } catch (e) {
       if (mounted) {
-        showErrorSnackBar('오류 발생: $e');
+        showToast(context, message: '오류 발생: $e');
         await onAfterSave(false);
       }
     } finally {
@@ -183,7 +166,7 @@ abstract class BaseAddModalState<W extends BaseAddModal> extends State<W> {
   Widget build(BuildContext context) {
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      backgroundColor: Colors.white,
+      backgroundColor: context.colors.cardBackground,
       child: Container(
         width: modalWidth,
         padding: const EdgeInsets.all(24),
@@ -221,24 +204,32 @@ abstract class BaseAddModalState<W extends BaseAddModal> extends State<W> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
-        TextButton(
+        ElevatedButton(
           onPressed: _isSaving ? null : _handleCancel,
+          style: TextButton.styleFrom(
+            backgroundColor: context.colors.gray30,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8.0), // 원하는 둥글기 정도 설정
+            ),
+          ),
           child: const Text('취소'),
         ),
         const SizedBox(width: 12),
         ElevatedButton(
           onPressed: _isSaving ? null : _handleSave,
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppTheme.selectedColor,
-            foregroundColor: Colors.white,
+            backgroundColor: context.colors.selectedColor,
+            foregroundColor: context.colors.white,
           ),
           child: _isSaving
-              ? const SizedBox(
+              ? SizedBox(
                   width: 16,
                   height: 16,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      context.colors.white,
+                    ),
                   ),
                 )
               : Text(saveButtonLabel),

@@ -28,8 +28,6 @@ class CustomerInfoHistoryState
   DateTime _startDate = DateTime.now().subtract(const Duration(days: 365));
   DateTime _endDate = DateTime.now();
 
-  int _totalCount = 0;
-
   @override
   String get tableTitle => '고객정보 변동이력';
 
@@ -127,17 +125,15 @@ class CustomerInfoHistoryState
         setState(() {
           dataList.clear();
           dataList.addAll(history);
-          _totalCount = totalCount;
         });
       }
 
-      print('변동이력 데이터 로드 완료: ${history.length}건 / 전체: ${totalCount}건');
+      print('변동이력 데이터 로드 완료: ${history.length}건 / 전체: $totalCount건');
     } catch (e) {
       print('변동이력 데이터 로드 오류: $e');
       if (mounted) {
         setState(() {
           dataList.clear();
-          _totalCount = 0;
         });
       }
     }
@@ -186,17 +182,17 @@ class CustomerInfoHistoryState
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.colors.cardBackground,
         borderRadius: BorderRadius.circular(12),
         boxShadow: AppTheme.cardShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             '검색 필터',
             style: TextStyle(
-              color: Color(0xFF252525),
+              color: context.colors.textPrimary,
               fontSize: 16,
               fontWeight: FontWeight.w600,
             ),
@@ -256,8 +252,8 @@ class CustomerInfoHistoryState
                   ElevatedButton(
                     onPressed: _refreshHistoryData,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF007AFF),
-                      foregroundColor: Colors.white,
+                      backgroundColor: context.colors.selectedColor,
+                      foregroundColor: context.colors.white,
                       padding: const EdgeInsets.symmetric(
                         horizontal: 20,
                         vertical: 20,
@@ -267,7 +263,7 @@ class CustomerInfoHistoryState
                       ),
                       elevation: 0,
                     ),
-                    child: const Row(
+                    child: Row(
                       mainAxisSize: MainAxisSize.min,
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -275,7 +271,7 @@ class CustomerInfoHistoryState
                           '조회',
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                            color: Colors.white,
+                            color: context.colors.white,
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
                           ),
