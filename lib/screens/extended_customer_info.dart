@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
+import '../component/additionalServiceSection.dart';
+import '../component/companyBranchSection.dart';
+import '../component/gpsSection.dart';
+import '../component/customerMemoExtendedSection.dart';
+import '../component/dedicatedLineSection.dart';
+import '../component/dvrSection.dart';
+import '../component/securitySettingSection.dart';
+import '../component/weeklyHolidaySection.dart';
+import '../models/customer_form_data.dart';
 import '../theme.dart';
 import '../models/search_panel.dart';
 import '../models/customer_detail.dart';
-import '../models/additional_service.dart';
-import '../models/dvr_info.dart';
 import '../services/api_service.dart';
 import '../services/selected_customer_service.dart';
-import '../widgets/time_picker_modal.dart';
-import '../widgets/base_add_modal.dart';
 import '../style.dart';
-import '../widgets/common_table.dart';
 import '../widgets/content_area.dart';
 import '../functions.dart';
 
@@ -33,38 +37,8 @@ class ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
   bool _hasChanges = false;
   Map<String, dynamic> _originalData = {};
 
-  // 경계약정 및 무단해제 설정 - 평일
-  int? _weekdayGuardStartHour;
-  int? _weekdayGuardStartMinute;
-  int? _weekdayGuardEndHour;
-  int? _weekdayGuardEndMinute;
-  int? _weekdayUnauthorizedStartHour;
-  int? _weekdayUnauthorizedStartMinute;
-  int? _weekdayUnauthorizedEndHour;
-  int? _weekdayUnauthorizedEndMinute;
-  bool _isWeekdayUsed = false;
-
-  // 경계약정 및 무단해제 설정 - 주말
-  int? _weekendGuardStartHour;
-  int? _weekendGuardStartMinute;
-  int? _weekendGuardEndHour;
-  int? _weekendGuardEndMinute;
-  int? _weekendUnauthorizedStartHour;
-  int? _weekendUnauthorizedStartMinute;
-  int? _weekendUnauthorizedEndHour;
-  int? _weekendUnauthorizedEndMinute;
-  bool _isWeekendUsed = false;
-
-  // 경계약정 및 무단해제 설정 - 휴일
-  int? _holidayGuardStartHour;
-  int? _holidayGuardStartMinute;
-  int? _holidayGuardEndHour;
-  int? _holidayGuardEndMinute;
-  int? _holidayUnauthorizedStartHour;
-  int? _holidayUnauthorizedStartMinute;
-  int? _holidayUnauthorizedEndHour;
-  int? _holidayUnauthorizedEndMinute;
-  bool _isHolidayUsed = false;
+  // 경계약정 및 무단해제 설정 데이터
+  final _securityData = CustomerFormData();
 
   // 주간 휴일설정 - 5주 x 7일
   final List<List<bool>> _weeklyHolidays = List.generate(
@@ -74,8 +48,6 @@ class ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
 
   // 내보내기 드롭다운
   bool _isExportDropdownOpen = false;
-
-  bool _isloading = true;
 
   // 검색 관련
 
@@ -94,101 +66,9 @@ class ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
   String? companyType; // 회사구분
   String? branchType; // 지사구분
 
-  // 부가서비스 데이터 목록
-  List<AdditionalService> _additionalServicesList = [];
-
-  // DVR 연동 데이터 목록
-  List<DVRInfo> _dvrInfoList = [];
-
   // 드롭다운 데이터 목록
   List<CodeData> _companyTypeList = [];
   List<CodeData> _branchTypeList = [];
-  List<CodeData> _addServiceTypeList = [];
-  List<CodeData> _addServiceEtcList = [];
-  List<CodeData> _dvrTypeList = [];
-
-  final Map<int, double> _serviceColumnWidths = {
-    0: 200.0, // 서비스명
-    1: 150.0, // 제공구분
-    2: 150.0, // 제공일자
-    3: 250.0, // 메모
-  };
-  late final List<TableColumnConfig> // 부가서비스 테이블 컬럼 설정
-  _serviceColumns = [
-    TableColumnConfig(
-      header: '서비스명',
-      width: _serviceColumnWidths[0],
-      valueBuilder: (data) => data.serviceName ?? '-',
-    ),
-    TableColumnConfig(
-      header: '제공구분',
-      width: _serviceColumnWidths[1],
-      valueBuilder: (data) => data.provisionType ?? '-',
-    ),
-    TableColumnConfig(
-      header: '제공일자',
-      width: _serviceColumnWidths[2],
-      valueBuilder: (data) => data.provisionDate ?? '-',
-    ),
-    TableColumnConfig(
-      header: '메모',
-      width: _serviceColumnWidths[3],
-      valueBuilder: (data) => data.memo ?? '-',
-    ),
-  ];
-
-  final Map<int, double> _dvrColumnWidths = {
-    0: 120.0, // 접속방식
-    1: 130.0, // DVR종류코드
-    2: 120.0, // 종류
-    3: 200.0, // 접속주소
-    4: 100.0, // 접속포트
-    5: 120.0, // 접속ID
-    6: 120.0, // 접속암호
-    7: 120.0, // 추가일자
-  };
-  late final List<TableColumnConfig> _dvrColumns = [
-    TableColumnConfig(
-      header: '접속방식',
-      width: _dvrColumnWidths[0],
-      valueBuilder: (data) => data.connectionMethodText,
-    ),
-    TableColumnConfig(
-      header: 'DVR종류코드',
-      width: _dvrColumnWidths[1],
-      valueBuilder: (data) => data.dvrTypeCode ?? '-',
-    ),
-    TableColumnConfig(
-      header: '종류',
-      width: _dvrColumnWidths[2],
-      valueBuilder: (data) => data.dvrTypeName ?? '-',
-    ),
-    TableColumnConfig(
-      header: '접속주소',
-      width: _dvrColumnWidths[3],
-      valueBuilder: (data) => data.connectionAddress ?? '-',
-    ),
-    TableColumnConfig(
-      header: '접속포트',
-      width: _dvrColumnWidths[4],
-      valueBuilder: (data) => data.connectionPort ?? '-',
-    ),
-    TableColumnConfig(
-      header: '접속ID',
-      width: _dvrColumnWidths[5],
-      valueBuilder: (data) => data.connectionId ?? '-',
-    ),
-    TableColumnConfig(
-      header: '접속암호',
-      width: _dvrColumnWidths[6],
-      valueBuilder: (data) => data.connectionPassword ?? '-',
-    ),
-    TableColumnConfig(
-      header: '추가일자',
-      width: _dvrColumnWidths[7],
-      valueBuilder: (data) => data.addedDate ?? '-',
-    ),
-  ];
   @override
   void dispose() {
     _customerService.removeListener(_onCustomerServiceChanged);
@@ -230,42 +110,34 @@ class ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
           }
         }
 
-        // 부가서비스 및 DVR 목록 초기화
-        _additionalServicesList = [];
-        _dvrInfoList = [];
-
-        // 경계/해제 시간 초기화 - 평일
-        _weekdayGuardStartHour = null;
-        _weekdayGuardStartMinute = null;
-        _weekdayGuardEndHour = null;
-        _weekdayGuardEndMinute = null;
-        _weekdayUnauthorizedStartHour = null;
-        _weekdayUnauthorizedStartMinute = null;
-        _weekdayUnauthorizedEndHour = null;
-        _weekdayUnauthorizedEndMinute = null;
-        _isWeekdayUsed = false;
-
-        // 경계/해제 시간 초기화- 주말
-        _weekendGuardStartHour = null;
-        _weekendGuardStartMinute = null;
-        _weekendGuardEndHour = null;
-        _weekendGuardEndMinute = null;
-        _weekendUnauthorizedStartHour = null;
-        _weekendUnauthorizedStartMinute = null;
-        _weekendUnauthorizedEndHour = null;
-        _weekendUnauthorizedEndMinute = null;
-        _isWeekendUsed = false;
-
-        // 경계/해제 시간 초기화 - 휴일
-        _holidayGuardStartHour = null;
-        _holidayGuardStartMinute = null;
-        _holidayGuardEndHour = null;
-        _holidayGuardEndMinute = null;
-        _holidayUnauthorizedStartHour = null;
-        _holidayUnauthorizedStartMinute = null;
-        _holidayUnauthorizedEndHour = null;
-        _holidayUnauthorizedEndMinute = null;
-        _isHolidayUsed = false;
+        // 경계/해제 시간 초기화
+        _securityData.weekdayGuardStartHour = null;
+        _securityData.weekdayGuardStartMinute = null;
+        _securityData.weekdayGuardEndHour = null;
+        _securityData.weekdayGuardEndMinute = null;
+        _securityData.weekdayUnauthorizedStartHour = null;
+        _securityData.weekdayUnauthorizedStartMinute = null;
+        _securityData.weekdayUnauthorizedEndHour = null;
+        _securityData.weekdayUnauthorizedEndMinute = null;
+        _securityData.isWeekdayUsed = false;
+        _securityData.weekendGuardStartHour = null;
+        _securityData.weekendGuardStartMinute = null;
+        _securityData.weekendGuardEndHour = null;
+        _securityData.weekendGuardEndMinute = null;
+        _securityData.weekendUnauthorizedStartHour = null;
+        _securityData.weekendUnauthorizedStartMinute = null;
+        _securityData.weekendUnauthorizedEndHour = null;
+        _securityData.weekendUnauthorizedEndMinute = null;
+        _securityData.isWeekendUsed = false;
+        _securityData.holidayGuardStartHour = null;
+        _securityData.holidayGuardStartMinute = null;
+        _securityData.holidayGuardEndHour = null;
+        _securityData.holidayGuardEndMinute = null;
+        _securityData.holidayUnauthorizedStartHour = null;
+        _securityData.holidayUnauthorizedStartMinute = null;
+        _securityData.holidayUnauthorizedEndHour = null;
+        _securityData.holidayUnauthorizedEndMinute = null;
+        _securityData.isHolidayUsed = false;
       });
     }
   }
@@ -311,9 +183,9 @@ class ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
     _parseUnauthorizedRange(detail.holidayUnauthorizedRange, isHoliday: true);
 
     // 무단 사용 체크박스 설정
-    _isWeekdayUsed = detail.weekdayUnauthorizedUse ?? false;
-    _isWeekendUsed = detail.weekendUnauthorizedUse ?? false;
-    _isHolidayUsed = detail.holidayUnauthorizedUse ?? false;
+    _securityData.isWeekdayUsed = detail.weekdayUnauthorizedUse ?? false;
+    _securityData.isWeekendUsed = detail.weekendUnauthorizedUse ?? false;
+    _securityData.isHolidayUsed = detail.holidayUnauthorizedUse ?? false;
   }
 
   @override
@@ -332,9 +204,8 @@ class ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
     // 1. 드롭다운 데이터 먼저 로드
     _companyTypeList = await loadDropdownData('companytype');
     _branchTypeList = await loadDropdownData('branchtype');
-    _addServiceTypeList = await loadDropdownData('addservicetype');
-    _addServiceEtcList = await loadDropdownData('addserviceetc');
-    _dvrTypeList = await loadDropdownData('dvrtype');
+    _formData.companyTypeList = _companyTypeList;
+    _formData.branchTypeList = _branchTypeList;
 
     // 2. 확장고객정보 화면에서는 고객 상세 정보를 로드
     if (_customerService.selectedCustomer != null) {
@@ -346,6 +217,9 @@ class ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
     // 3. 고객 데이터 로드
     await _updateUIFromService();
   }
+
+  // 공유 폼 데이터
+  final _formData = CustomerFormData();
 
   // 페이지 내 검색
   String _pageSearchQuery = '';
@@ -387,12 +261,10 @@ class ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
     if (detail != null) {
       setState(() {});
 
-      // 휴일주간, 부가서비스, DVR 데이터 로드
+      // 휴일주간 데이터 로드
       if (selectedCustomer != null) {
         _updateFieldsFromDetail(detail);
         _loadHolidayData(selectedCustomer.controlManagementNumber);
-        _loadAdditionalServices(selectedCustomer.controlManagementNumber);
-        _loadDVRInfo(selectedCustomer.controlManagementNumber);
       }
     } else {
       _clearAllFields();
@@ -454,46 +326,6 @@ class ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
     }
   }
 
-  /// 부가서비스 데이터 로드
-  Future<void> _loadAdditionalServices(String managementNumber) async {
-    try {
-      final services = await DatabaseService.getAdditionalServices(
-        managementNumber,
-      );
-      _isloading = true;
-      if (mounted) {
-        setState(() {
-          _additionalServicesList = services;
-          _isloading = false;
-        });
-      }
-
-      print('부가서비스 데이터 로드 완료: ${services.length}개');
-    } catch (e) {
-      print('부가서비스 데이터 로드 오류: $e');
-      _isloading = false;
-    }
-  }
-
-  /// DVR 연동 정보 로드
-  Future<void> _loadDVRInfo(String managementNumber) async {
-    try {
-      final dvrList = await DatabaseService.getDVRInfo(managementNumber);
-      _isloading = true;
-      if (mounted) {
-        setState(() {
-          _dvrInfoList = dvrList;
-          _isloading = false;
-        });
-      }
-
-      print('DVR 정보 로드 완료: ${dvrList.length}개');
-    } catch (e) {
-      print('DVR 정보 로드 오류: $e');
-      _isloading = false;
-    }
-  }
-
   /// 시간 파싱 헬퍼 메서드 (HH:MM 형식)
   void _parseGuardTime(
     String? timeString, {
@@ -513,27 +345,27 @@ class ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
 
       if (isWeekday) {
         if (isGuard) {
-          _weekdayGuardStartHour = hour;
-          _weekdayGuardStartMinute = minute;
+          _securityData.weekdayGuardStartHour = hour;
+          _securityData.weekdayGuardStartMinute = minute;
         } else {
-          _weekdayGuardEndHour = hour;
-          _weekdayGuardEndMinute = minute;
+          _securityData.weekdayGuardEndHour = hour;
+          _securityData.weekdayGuardEndMinute = minute;
         }
       } else if (isWeekend) {
         if (isGuard) {
-          _weekendGuardStartHour = hour;
-          _weekendGuardStartMinute = minute;
+          _securityData.weekendGuardStartHour = hour;
+          _securityData.weekendGuardStartMinute = minute;
         } else {
-          _weekendGuardEndHour = hour;
-          _weekendGuardEndMinute = minute;
+          _securityData.weekendGuardEndHour = hour;
+          _securityData.weekendGuardEndMinute = minute;
         }
       } else if (isHoliday) {
         if (isGuard) {
-          _holidayGuardStartHour = hour;
-          _holidayGuardStartMinute = minute;
+          _securityData.holidayGuardStartHour = hour;
+          _securityData.holidayGuardStartMinute = minute;
         } else {
-          _holidayGuardEndHour = hour;
-          _holidayGuardEndMinute = minute;
+          _securityData.holidayGuardEndHour = hour;
+          _securityData.holidayGuardEndMinute = minute;
         }
       }
     } catch (e) {
@@ -562,14 +394,14 @@ class ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
         int startMinute = int.parse(startParts[1]);
 
         if (isWeekday) {
-          _weekdayUnauthorizedStartHour = startHour;
-          _weekdayUnauthorizedStartMinute = startMinute;
+          _securityData.weekdayUnauthorizedStartHour = startHour;
+          _securityData.weekdayUnauthorizedStartMinute = startMinute;
         } else if (isWeekend) {
-          _weekendUnauthorizedStartHour = startHour;
-          _weekendUnauthorizedStartMinute = startMinute;
+          _securityData.weekendUnauthorizedStartHour = startHour;
+          _securityData.weekendUnauthorizedStartMinute = startMinute;
         } else if (isHoliday) {
-          _holidayUnauthorizedStartHour = startHour;
-          _holidayUnauthorizedStartMinute = startMinute;
+          _securityData.holidayUnauthorizedStartHour = startHour;
+          _securityData.holidayUnauthorizedStartMinute = startMinute;
         }
       }
 
@@ -581,14 +413,14 @@ class ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
         int endMinute = int.parse(endParts[1]);
 
         if (isWeekday) {
-          _weekdayUnauthorizedEndHour = endHour;
-          _weekdayUnauthorizedEndMinute = endMinute;
+          _securityData.weekdayUnauthorizedEndHour = endHour;
+          _securityData.weekdayUnauthorizedEndMinute = endMinute;
         } else if (isWeekend) {
-          _weekendUnauthorizedEndHour = endHour;
-          _weekendUnauthorizedEndMinute = endMinute;
+          _securityData.weekendUnauthorizedEndHour = endHour;
+          _securityData.weekendUnauthorizedEndMinute = endMinute;
         } else if (isHoliday) {
-          _holidayUnauthorizedEndHour = endHour;
-          _holidayUnauthorizedEndMinute = endMinute;
+          _securityData.holidayUnauthorizedEndHour = endHour;
+          _securityData.holidayUnauthorizedEndMinute = endMinute;
         }
       }
     } catch (e) {
@@ -657,33 +489,33 @@ class ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
       '전용자메모': _dedicatedMemoController.text,
       '회사구분코드': companyType,
       '지사구분코드': branchType,
-      '평일경계시작시': _weekdayGuardStartHour,
-      '평일경계시작분': _weekdayGuardStartMinute,
-      '평일경계종료시': _weekdayGuardEndHour,
-      '평일경계종료분': _weekdayGuardEndMinute,
-      '평일무단시작시': _weekdayUnauthorizedStartHour,
-      '평일무단시작분': _weekdayUnauthorizedStartMinute,
-      '평일무단종료시': _weekdayUnauthorizedEndHour,
-      '평일무단종료분': _weekdayUnauthorizedEndMinute,
-      '평일무단사용': _isWeekdayUsed,
-      '주말경계시작시': _weekendGuardStartHour,
-      '주말경계시작분': _weekendGuardStartMinute,
-      '주말경계종료시': _weekendGuardEndHour,
-      '주말경계종료분': _weekendGuardEndMinute,
-      '주말무단시작시': _weekendUnauthorizedStartHour,
-      '주말무단시작분': _weekendUnauthorizedStartMinute,
-      '주말무단종료시': _weekendUnauthorizedEndHour,
-      '주말무단종료분': _weekendUnauthorizedEndMinute,
-      '주말무단사용': _isWeekendUsed,
-      '휴일경계시작시': _holidayGuardStartHour,
-      '휴일경계시작분': _holidayGuardStartMinute,
-      '휴일경계종료시': _holidayGuardEndHour,
-      '휴일경계종료분': _holidayGuardEndMinute,
-      '휴일무단시작시': _holidayUnauthorizedStartHour,
-      '휴일무단시작분': _holidayUnauthorizedStartMinute,
-      '휴일무단종료시': _holidayUnauthorizedEndHour,
-      '휴일무단종료분': _holidayUnauthorizedEndMinute,
-      '휴일무단사용': _isHolidayUsed,
+      '평일경계시작시': _securityData.weekdayGuardStartHour,
+      '평일경계시작분': _securityData.weekdayGuardStartMinute,
+      '평일경계종료시': _securityData.weekdayGuardEndHour,
+      '평일경계종료분': _securityData.weekdayGuardEndMinute,
+      '평일무단시작시': _securityData.weekdayUnauthorizedStartHour,
+      '평일무단시작분': _securityData.weekdayUnauthorizedStartMinute,
+      '평일무단종료시': _securityData.weekdayUnauthorizedEndHour,
+      '평일무단종료분': _securityData.weekdayUnauthorizedEndMinute,
+      '평일무단사용': _securityData.isWeekdayUsed,
+      '주말경계시작시': _securityData.weekendGuardStartHour,
+      '주말경계시작분': _securityData.weekendGuardStartMinute,
+      '주말경계종료시': _securityData.weekendGuardEndHour,
+      '주말경계종료분': _securityData.weekendGuardEndMinute,
+      '주말무단시작시': _securityData.weekendUnauthorizedStartHour,
+      '주말무단시작분': _securityData.weekendUnauthorizedStartMinute,
+      '주말무단종료시': _securityData.weekendUnauthorizedEndHour,
+      '주말무단종료분': _securityData.weekendUnauthorizedEndMinute,
+      '주말무단사용': _securityData.isWeekendUsed,
+      '휴일경계시작시': _securityData.holidayGuardStartHour,
+      '휴일경계시작분': _securityData.holidayGuardStartMinute,
+      '휴일경계종료시': _securityData.holidayGuardEndHour,
+      '휴일경계종료분': _securityData.holidayGuardEndMinute,
+      '휴일무단시작시': _securityData.holidayUnauthorizedStartHour,
+      '휴일무단시작분': _securityData.holidayUnauthorizedStartMinute,
+      '휴일무단종료시': _securityData.holidayUnauthorizedEndHour,
+      '휴일무단종료분': _securityData.holidayUnauthorizedEndMinute,
+      '휴일무단사용': _securityData.isHolidayUsed,
       '주간휴일설정': List.generate(5, (i) => List.from(_weeklyHolidays[i])),
     };
   }
@@ -748,33 +580,51 @@ class ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
           '전용자메모': _dedicatedMemoController.text, //전용회선메모
           '회사구분코드': companyType,
           '지사구분코드': branchType,
-          '평일경계': formatTime(_weekdayGuardStartHour, _weekdayGuardStartMinute),
-          '평일해제': formatTime(_weekdayGuardEndHour, _weekdayGuardEndMinute),
+          '평일경계': formatTime(
+            _securityData.weekdayGuardStartHour,
+            _securityData.weekdayGuardStartMinute,
+          ),
+          '평일해제': formatTime(
+            _securityData.weekdayGuardEndHour,
+            _securityData.weekdayGuardEndMinute,
+          ),
           '평일무단범위': formatUnauthorizedRange(
-            _weekdayUnauthorizedStartHour,
-            _weekdayUnauthorizedStartMinute,
-            _weekdayUnauthorizedEndHour,
-            _weekdayUnauthorizedEndMinute,
+            _securityData.weekdayUnauthorizedStartHour,
+            _securityData.weekdayUnauthorizedStartMinute,
+            _securityData.weekdayUnauthorizedEndHour,
+            _securityData.weekdayUnauthorizedEndMinute,
           ),
-          '평일무단사용': _isWeekdayUsed ? 1 : 0,
-          '주말경계': formatTime(_weekendGuardStartHour, _weekendGuardStartMinute),
-          '주말해제': formatTime(_weekendGuardEndHour, _weekendGuardEndMinute),
+          '평일무단사용': _securityData.isWeekdayUsed ? 1 : 0,
+          '주말경계': formatTime(
+            _securityData.weekendGuardStartHour,
+            _securityData.weekendGuardStartMinute,
+          ),
+          '주말해제': formatTime(
+            _securityData.weekendGuardEndHour,
+            _securityData.weekendGuardEndMinute,
+          ),
           '주말무단범위': formatUnauthorizedRange(
-            _weekendUnauthorizedStartHour,
-            _weekendUnauthorizedStartMinute,
-            _weekendUnauthorizedEndHour,
-            _weekendUnauthorizedEndMinute,
+            _securityData.weekendUnauthorizedStartHour,
+            _securityData.weekendUnauthorizedStartMinute,
+            _securityData.weekendUnauthorizedEndHour,
+            _securityData.weekendUnauthorizedEndMinute,
           ),
-          '주말무단사용': _isWeekendUsed ? 1 : 0,
-          '휴일경계': formatTime(_holidayGuardStartHour, _holidayGuardStartMinute),
-          '휴일해제': formatTime(_holidayGuardEndHour, _holidayGuardEndMinute),
+          '주말무단사용': _securityData.isWeekendUsed ? 1 : 0,
+          '휴일경계': formatTime(
+            _securityData.holidayGuardStartHour,
+            _securityData.holidayGuardStartMinute,
+          ),
+          '휴일해제': formatTime(
+            _securityData.holidayGuardEndHour,
+            _securityData.holidayGuardEndMinute,
+          ),
           '휴일무단범위': formatUnauthorizedRange(
-            _holidayUnauthorizedStartHour,
-            _holidayUnauthorizedStartMinute,
-            _holidayUnauthorizedEndHour,
-            _holidayUnauthorizedEndMinute,
+            _securityData.holidayUnauthorizedStartHour,
+            _securityData.holidayUnauthorizedStartMinute,
+            _securityData.holidayUnauthorizedEndHour,
+            _securityData.holidayUnauthorizedEndMinute,
           ),
-          '휴일무단사용': _isHolidayUsed ? 1 : 0,
+          '휴일무단사용': _securityData.isHolidayUsed ? 1 : 0,
         },
       );
 
@@ -960,33 +810,33 @@ class ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
     _dedicatedMemoController.text = _originalData['전용자메모'] ?? '';
     companyType = _originalData['회사구분코드'];
     branchType = _originalData['회사구분코드'];
-    _weekdayGuardStartHour = _originalData['평일경계시작시'];
-    _weekdayGuardStartMinute = _originalData['평일경계시작분'];
-    _weekdayGuardEndHour = _originalData['평일경계종료시'];
-    _weekdayGuardEndMinute = _originalData['평일경계종료분'];
-    _weekdayUnauthorizedStartHour = _originalData['평일무단시작시'];
-    _weekdayUnauthorizedStartMinute = _originalData['평일무단시작분'];
-    _weekdayUnauthorizedEndHour = _originalData['평일무단종료시'];
-    _weekdayUnauthorizedEndMinute = _originalData['평일무단종료분'];
-    _isWeekdayUsed = _originalData['평일무단사용'] ?? false;
-    _weekendGuardStartHour = _originalData['주말경계시작시'];
-    _weekendGuardStartMinute = _originalData['주말경계시작분'];
-    _weekendGuardEndHour = _originalData['주말경계종료시'];
-    _weekendGuardEndMinute = _originalData['주말경계종료분'];
-    _weekendUnauthorizedStartHour = _originalData['주말무단시작시'];
-    _weekendUnauthorizedStartMinute = _originalData['주말무단시작분'];
-    _weekendUnauthorizedEndHour = _originalData['주말무단종료시'];
-    _weekendUnauthorizedEndMinute = _originalData['주말무단종료분'];
-    _isWeekendUsed = _originalData['주말무단사용'] ?? false;
-    _holidayGuardStartHour = _originalData['휴일경계시작시'];
-    _holidayGuardStartMinute = _originalData['휴일경계시작분'];
-    _holidayGuardEndHour = _originalData['휴일경계종료시'];
-    _holidayGuardEndMinute = _originalData['휴일경계종료분'];
-    _holidayUnauthorizedStartHour = _originalData['휴일무단시작시'];
-    _holidayUnauthorizedStartMinute = _originalData['휴일무단시작분'];
-    _holidayUnauthorizedEndHour = _originalData['휴일무단종료시'];
-    _holidayUnauthorizedEndMinute = _originalData['휴일무단종료분'];
-    _isHolidayUsed = _originalData['휴일무단사용'] ?? false;
+    _securityData.weekdayGuardStartHour = _originalData['평일경계시작시'];
+    _securityData.weekdayGuardStartMinute = _originalData['평일경계시작분'];
+    _securityData.weekdayGuardEndHour = _originalData['평일경계종료시'];
+    _securityData.weekdayGuardEndMinute = _originalData['평일경계종료분'];
+    _securityData.weekdayUnauthorizedStartHour = _originalData['평일무단시작시'];
+    _securityData.weekdayUnauthorizedStartMinute = _originalData['평일무단시작분'];
+    _securityData.weekdayUnauthorizedEndHour = _originalData['평일무단종료시'];
+    _securityData.weekdayUnauthorizedEndMinute = _originalData['평일무단종료분'];
+    _securityData.isWeekdayUsed = _originalData['평일무단사용'] ?? false;
+    _securityData.weekendGuardStartHour = _originalData['주말경계시작시'];
+    _securityData.weekendGuardStartMinute = _originalData['주말경계시작분'];
+    _securityData.weekendGuardEndHour = _originalData['주말경계종료시'];
+    _securityData.weekendGuardEndMinute = _originalData['주말경계종료분'];
+    _securityData.weekendUnauthorizedStartHour = _originalData['주말무단시작시'];
+    _securityData.weekendUnauthorizedStartMinute = _originalData['주말무단시작분'];
+    _securityData.weekendUnauthorizedEndHour = _originalData['주말무단종료시'];
+    _securityData.weekendUnauthorizedEndMinute = _originalData['주말무단종료분'];
+    _securityData.isWeekendUsed = _originalData['주말무단사용'] ?? false;
+    _securityData.holidayGuardStartHour = _originalData['휴일경계시작시'];
+    _securityData.holidayGuardStartMinute = _originalData['휴일경계시작분'];
+    _securityData.holidayGuardEndHour = _originalData['휴일경계종료시'];
+    _securityData.holidayGuardEndMinute = _originalData['휴일경계종료분'];
+    _securityData.holidayUnauthorizedStartHour = _originalData['휴일무단시작시'];
+    _securityData.holidayUnauthorizedStartMinute = _originalData['휴일무단시작분'];
+    _securityData.holidayUnauthorizedEndHour = _originalData['휴일무단종료시'];
+    _securityData.holidayUnauthorizedEndMinute = _originalData['휴일무단종료분'];
+    _securityData.isHolidayUsed = _originalData['휴일무단사용'] ?? false;
 
     // 주간 휴일설정 복원
     if (_originalData['주간휴일설정'] != null) {
@@ -1015,142 +865,254 @@ class ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
         backgroundColor: context.colors.background,
         body: LayoutBuilder(
           builder: (context, constraints) {
-            final isExtraWideScreen = constraints.maxWidth >= 1500;
-            final isWideScreen = constraints.maxWidth >= 900;
-
+            final isWideScreen = constraints.maxWidth >= 1700;
             return SingleChildScrollView(
               padding: const EdgeInsets.all(24),
-              child: isExtraWideScreen
+              child: isWideScreen
                   ? Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              flex: 2,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [_buildSecuritySettingsSection()],
+                        // 상단 4열 레이아웃
+                        IntrinsicHeight(
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              // 1열: 보안설정
+                              Expanded(
+                                flex: 4,
+                                child: SecuritySettingsSection(
+                                  data: _securityData,
+                                  rebuildParent: setState,
+                                  isEditMode: isEditMode,
+                                  onChanged: _trackChanges,
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              flex: 1,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  _buildCustomerMemoSection(),
-                                  const SizedBox(height: 16),
-                                  _buildCompanyBranchSection(),
-                                ],
+                              const SizedBox(width: 16),
+                              // 2열: 고객메모 (위) + 회사지점 (아래)
+                              Expanded(
+                                flex: 2,
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    CustomerExtendMemoSection(
+                                      openingDateController:
+                                          _openingDateController,
+                                      openingPhoneController:
+                                          _openingPhoneController,
+                                      modemSerialController:
+                                          _modemSerialController,
+                                      additionalMemoController:
+                                          _additionalMemoController,
+                                      isEditMode: isEditMode,
+                                      searchQuery: _pageSearchQuery,
+                                      onChanged: _trackChanges,
+                                    ),
+                                    const SizedBox(height: 16),
+                                    CompanyBranchSection(
+                                      data: _formData,
+                                      rebuildParent: setState,
+                                      isEditMode: isEditMode,
+                                      searchQuery: _pageSearchQuery,
+                                      onCompanyChanged: (v) =>
+                                          setState(() => companyType = v),
+                                      onBranchChanged: (v) =>
+                                          setState(() => branchType = v),
+                                      onChanged: _trackChanges,
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              flex: 1,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  _buildGPSSection(),
-                                  const SizedBox(height: 16),
-                                  _buildDedicatedLineSection(),
-                                ],
+                              const SizedBox(width: 16),
+                              // 3열: GPS (위) + 전용선 (아래)
+                              Expanded(
+                                flex: 2,
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    GPSSection(
+                                      gpsX1Controller: _gpsX1Controller,
+                                      gpsY1Controller: _gpsY1Controller,
+                                      gpsX2Controller: _gpsX2Controller,
+                                      gpsY2Controller: _gpsY2Controller,
+                                      isEditMode: isEditMode,
+                                      onChanged: _trackChanges,
+                                    ),
+                                    const SizedBox(height: 16),
+                                    DedicatedLineSection(
+                                      dedicatedNumberController:
+                                          _dedicatedNumberController,
+                                      dedicatedMemoController:
+                                          _dedicatedMemoController,
+                                      isEditMode: isEditMode,
+                                      onChanged: _trackChanges,
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              flex: 1,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [_buildWeeklyHolidaySettings()],
+                              const SizedBox(width: 16),
+                              // 4열: 주간휴일설정
+                              Expanded(
+                                flex: 2,
+                                child: WeeklyHolidaySection(
+                                  weeklyHolidays: _weeklyHolidays,
+                                  isEditMode: isEditMode,
+                                  onChanged: (weekIndex, dayIndex, value) {
+                                    setState(() {
+                                      _weeklyHolidays[weekIndex][dayIndex] =
+                                          value;
+                                    });
+                                    _trackChanges();
+                                  },
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        // 부가서비스
+                        SizedBox(
+                          height: 400,
+                          child: AdditionalServiceSection(
+                            controlManagementNumber: _customerService
+                                .selectedCustomer
+                                ?.controlManagementNumber,
+                            isEditMode: isEditMode,
+                            searchQuery: _pageSearchQuery,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        // DVR 상태
+                        SizedBox(
+                          height: 400,
+                          child: DVRSection(
+                            controlManagementNumber: _customerService
+                                .selectedCustomer
+                                ?.controlManagementNumber,
+                            isEditMode: isEditMode,
+                            searchQuery: _pageSearchQuery,
+                          ),
+                        ),
+                      ],
+                    )
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        IntrinsicHeight(
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Expanded(
+                                flex: 2,
+                                child: SecuritySettingsSection(
+                                  data: _securityData,
+                                  rebuildParent: setState,
+                                  isEditMode: isEditMode,
+                                  onChanged: _trackChanges,
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                flex: 1,
+                                child: CustomerExtendMemoSection(
+                                  openingDateController: _openingDateController,
+                                  openingPhoneController:
+                                      _openingPhoneController,
+                                  modemSerialController: _modemSerialController,
+                                  additionalMemoController:
+                                      _additionalMemoController,
+                                  isEditMode: isEditMode,
+                                  searchQuery: _pageSearchQuery,
+                                  onChanged: _trackChanges,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        IntrinsicHeight(
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Expanded(
+                                flex: 3,
+                                child: WeeklyHolidaySection(
+                                  weeklyHolidays: _weeklyHolidays,
+                                  isEditMode: isEditMode,
+                                  onChanged: (weekIndex, dayIndex, value) {
+                                    setState(() {
+                                      _weeklyHolidays[weekIndex][dayIndex] =
+                                          value;
+                                    });
+                                    _trackChanges();
+                                  },
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                flex: 2,
+                                child: GPSSection(
+                                  gpsX1Controller: _gpsX1Controller,
+                                  gpsY1Controller: _gpsY1Controller,
+                                  gpsX2Controller: _gpsX2Controller,
+                                  gpsY2Controller: _gpsY2Controller,
+                                  isEditMode: isEditMode,
+                                  onChanged: _trackChanges,
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                flex: 2,
+                                child: CompanyBranchSection(
+                                  data: _formData,
+                                  rebuildParent: setState,
+                                  isEditMode: isEditMode,
+                                  searchQuery: _pageSearchQuery,
+                                  onCompanyChanged: (v) =>
+                                      setState(() => companyType = v),
+                                  onBranchChanged: (v) =>
+                                      setState(() => branchType = v),
+                                  onChanged: _trackChanges,
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                flex: 2,
+                                child: DedicatedLineSection(
+                                  dedicatedNumberController:
+                                      _dedicatedNumberController,
+                                  dedicatedMemoController:
+                                      _dedicatedMemoController,
+                                  isEditMode: isEditMode,
+                                  onChanged: _trackChanges,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                         const SizedBox(height: 24),
                         SizedBox(
                           height: 400,
-                          child: SizedBox(height: 400, child: _buildService()),
+                          child: AdditionalServiceSection(
+                            controlManagementNumber: _customerService
+                                .selectedCustomer
+                                ?.controlManagementNumber,
+                            isEditMode: isEditMode,
+                            searchQuery: _pageSearchQuery,
+                          ),
                         ),
                         const SizedBox(height: 24),
-                        SizedBox(height: 400, child: _buildDVR()),
-                      ],
-                    )
-                  : isWideScreen
-                  ? Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              flex: 2,
-                              child: _buildSecuritySettingsSection(),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              flex: 1,
-                              child: _buildCustomerMemoSection(),
-                            ),
-                          ],
+                        SizedBox(
+                          height: 400,
+                          child: DVRSection(
+                            controlManagementNumber: _customerService
+                                .selectedCustomer
+                                ?.controlManagementNumber,
+                            isEditMode: isEditMode,
+                            searchQuery: _pageSearchQuery,
+                          ),
                         ),
-                        const SizedBox(height: 24),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              flex: 3,
-                              child: _buildWeeklyHolidaySettings(),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(flex: 2, child: _buildGPSSection()),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              flex: 2,
-                              child: _buildCompanyBranchSection(),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              flex: 2,
-                              child: _buildDedicatedLineSection(),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 24),
-                        SizedBox(height: 400, child: _buildService()),
-                        const SizedBox(height: 24),
-                        SizedBox(height: 400, child: _buildDVR()),
-                      ],
-                    )
-                  : Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildSecuritySettingsSection(),
-                        const SizedBox(height: 24),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(child: _buildCustomerMemoSection()),
-                            const SizedBox(width: 16),
-                            Expanded(child: _buildGPSSection()),
-                          ],
-                        ),
-                        const SizedBox(height: 24),
-                        _buildWeeklyHolidaySettings(),
-                        const SizedBox(height: 24),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(child: _buildCompanyBranchSection()),
-                            const SizedBox(width: 16),
-                            Expanded(child: _buildDedicatedLineSection()),
-                          ],
-                        ),
-                        const SizedBox(height: 24),
-                        SizedBox(height: 400, child: _buildService()),
-                        const SizedBox(height: 24),
-                        SizedBox(height: 400, child: _buildDVR()),
                       ],
                     ),
             );
@@ -1175,1244 +1137,138 @@ class ExtendedCustomerInfoState extends State<ExtendedCustomerInfo> {
     );
   }
 
-  _buildService() {
-    return buildTable(
-      context: context,
-      title: '부가서비스 제공',
-      dataList: _additionalServicesList,
-      columns: _serviceColumns,
-      columnWidths: _serviceColumnWidths,
-      onColumnResize: (columnIndex, newWidth) {
-        setState(() {
-          _serviceColumnWidths[columnIndex] = newWidth;
-        });
-      },
-      searchQuery: _pageSearchQuery,
-      isLoading: _isloading,
-      onAdd: isEditMode
-          ? () {
-              _showAddServiceModal();
-            }
-          : null,
-      onDelete: isEditMode
-          ? (service) {
-              _showDeleteServiceConfirmDialog(service as AdditionalService);
-            }
-          : null,
-      isEditable: isEditMode,
-    );
-  }
+  // Widget buildExportDropdown() {
+  //   return Stack(
+  //     clipBehavior: Clip.none,
+  //     children: [
+  //       GestureDetector(
+  //         onTap: () {
+  //           setState(() {
+  //             _isExportDropdownOpen = !_isExportDropdownOpen;
+  //           });
+  //         },
+  //         child: Container(
+  //           width: 114,
+  //           height: 35,
+  //           decoration: ShapeDecoration(
+  //             color: const Color(0xFFD8A68A),
+  //             shape: RoundedRectangleBorder(
+  //               borderRadius: BorderRadius.circular(30),
+  //             ),
+  //           ),
+  //           child: Row(
+  //             mainAxisAlignment: MainAxisAlignment.center,
+  //             children: [
+  //               const Text(
+  //                 '내보내기',
+  //                 textAlign: TextAlign.center,
+  //                 style: TextStyle(
+  //                   color: Colors.white,
+  //                   fontSize: 16,
+  //                   fontFamily: 'Inter',
+  //                   fontWeight: FontWeight.w700,
+  //                 ),
+  //               ),
+  //               const SizedBox(width: 4),
+  //               Icon(
+  //                 _isExportDropdownOpen
+  //                     ? Icons.arrow_drop_up
+  //                     : Icons.arrow_drop_down,
+  //                 color: Colors.white,
+  //               ),
+  //             ],
+  //           ),
+  //         ),
+  //       ),
+  //       if (_isExportDropdownOpen)
+  //         Positioned(
+  //           top: 45,
+  //           left: 0,
+  //           child: AnimatedContainer(
+  //             duration: const Duration(milliseconds: 200),
+  //             curve: Curves.easeOut,
+  //             width: 200,
+  //             decoration: BoxDecoration(
+  //               color: Colors.white,
+  //               borderRadius: BorderRadius.circular(12),
+  //               boxShadow: [
+  //                 BoxShadow(
+  //                   color: Colors.black.withOpacity(0.1),
+  //                   blurRadius: 8,
+  //                   offset: const Offset(0, 4),
+  //                 ),
+  //               ],
+  //             ),
+  //             child: Column(
+  //               mainAxisSize: MainAxisSize.min,
+  //               children: [
+  //                 _buildDropdownItem('철거요청서 출력'),
+  //                 _buildDropdownItem('고객정보시트 출력'),
+  //                 _buildDropdownItem('감지기/존내역 출력'),
+  //                 _buildDropdownItem('무선 정보 엑셀 저장'),
+  //               ],
+  //             ),
+  //           ),
+  //         ),
+  //     ],
+  //   );
+  // }
 
-  _buildDVR() {
-    return buildTable(
-      context: context,
-      title: 'DVR 설치현황',
-      dataList: _dvrInfoList,
-      columns: _dvrColumns,
-      columnWidths: _dvrColumnWidths,
-      onColumnResize: (columnIndex, newWidth) {
-        setState(() {
-          _dvrColumnWidths[columnIndex] = newWidth;
-        });
-      },
-      searchQuery: _pageSearchQuery,
-      isLoading: _isloading,
-      onAdd: isEditMode
-          ? () {
-              _showAddDVRModal();
-            }
-          : null,
-      onDelete: isEditMode
-          ? (dvr) {
-              _showDeleteDVRConfirmDialog(dvr as DVRInfo);
-            }
-          : null,
-      isEditable: isEditMode,
-    );
-  }
+  // Widget _buildDropdownItem(String label) {
+  //   return InkWell(
+  //     onTap: () {
+  //       setState(() {
+  //         _isExportDropdownOpen = false;
+  //       });
+  //       // TODO: 각 항목별 동작 구현
+  //     },
+  //     child: Container(
+  //       width: double.infinity,
+  //       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+  //       decoration: const BoxDecoration(
+  //         border: Border(
+  //           bottom: BorderSide(color: Color(0xFFE5E5E5), width: 0.5),
+  //         ),
+  //       ),
+  //       child: Text(
+  //         label,
+  //         style: const TextStyle(
+  //           fontSize: 14,
+  //           color: Color(0xFF252525),
+  //           fontWeight: FontWeight.w500,
+  //         ),
+  //       ),
+  //     ),
+  //   );
+  // }
 
-  Widget buildExportDropdown() {
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        GestureDetector(
-          onTap: () {
-            setState(() {
-              _isExportDropdownOpen = !_isExportDropdownOpen;
-            });
-          },
-          child: Container(
-            width: 114,
-            height: 35,
-            decoration: ShapeDecoration(
-              color: const Color(0xFFD8A68A),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30),
-              ),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text(
-                  '내보내기',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(width: 4),
-                Icon(
-                  _isExportDropdownOpen
-                      ? Icons.arrow_drop_up
-                      : Icons.arrow_drop_down,
-                  color: Colors.white,
-                ),
-              ],
-            ),
-          ),
-        ),
-        if (_isExportDropdownOpen)
-          Positioned(
-            top: 45,
-            left: 0,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              curve: Curves.easeOut,
-              width: 200,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _buildDropdownItem('철거요청서 출력'),
-                  _buildDropdownItem('고객정보시트 출력'),
-                  _buildDropdownItem('감지기/존내역 출력'),
-                  _buildDropdownItem('무선 정보 엑셀 저장'),
-                ],
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-
-  Widget _buildDropdownItem(String label) {
-    return InkWell(
-      onTap: () {
-        setState(() {
-          _isExportDropdownOpen = false;
-        });
-        // TODO: 각 항목별 동작 구현
-      },
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: const BoxDecoration(
-          border: Border(
-            bottom: BorderSide(color: Color(0xFFE5E5E5), width: 0.5),
-          ),
-        ),
-        child: Text(
-          label,
-          style: const TextStyle(
-            fontSize: 14,
-            color: Color(0xFF252525),
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget buildTopButton(String label, Color color) {
-    return GestureDetector(
-      onTap: () {
-        // TODO: 버튼 동작 구현
-      },
-      child: Container(
-        height: 35,
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        decoration: ShapeDecoration(
-          color: color,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30),
-          ),
-        ),
-        child: Center(
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontFamily: 'Inter',
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSecuritySettingsSection() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: context.colors.cardBackground,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: AppTheme.cardShadow,
-        border: isEditMode
-            ? Border.all(color: context.colors.selectedColor, width: 1)
-            : null,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          buildSectionTitle('경계약정 및 무단해제 설정'),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(child: _buildTimeSettingCard('평일', true)),
-              const SizedBox(width: 16),
-              Expanded(child: _buildTimeSettingCard('주말', false)),
-              const SizedBox(width: 16),
-              Expanded(child: _buildTimeSettingCard('휴일', null)),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTimeSettingCard(String title, bool? isWeekday) {
-    int? guardStartHour, guardStartMinute, guardEndHour, guardEndMinute;
-    int? unauthStartHour, unauthStartMinute, unauthEndHour, unauthEndMinute;
-    bool isUsed;
-
-    if (isWeekday == true) {
-      guardStartHour = _weekdayGuardStartHour;
-      guardStartMinute = _weekdayGuardStartMinute;
-      guardEndHour = _weekdayGuardEndHour;
-      guardEndMinute = _weekdayGuardEndMinute;
-      unauthStartHour = _weekdayUnauthorizedStartHour;
-      unauthStartMinute = _weekdayUnauthorizedStartMinute;
-      unauthEndHour = _weekdayUnauthorizedEndHour;
-      unauthEndMinute = _weekdayUnauthorizedEndMinute;
-      isUsed = _isWeekdayUsed;
-    } else if (isWeekday == false) {
-      guardStartHour = _weekendGuardStartHour;
-      guardStartMinute = _weekendGuardStartMinute;
-      guardEndHour = _weekendGuardEndHour;
-      guardEndMinute = _weekendGuardEndMinute;
-      unauthStartHour = _weekendUnauthorizedStartHour;
-      unauthStartMinute = _weekendUnauthorizedStartMinute;
-      unauthEndHour = _weekendUnauthorizedEndHour;
-      unauthEndMinute = _weekendUnauthorizedEndMinute;
-      isUsed = _isWeekendUsed;
-    } else {
-      guardStartHour = _holidayGuardStartHour;
-      guardStartMinute = _holidayGuardStartMinute;
-      guardEndHour = _holidayGuardEndHour;
-      guardEndMinute = _holidayGuardEndMinute;
-      unauthStartHour = _holidayUnauthorizedStartHour;
-      unauthStartMinute = _holidayUnauthorizedStartMinute;
-      unauthEndHour = _holidayUnauthorizedEndHour;
-      unauthEndMinute = _holidayUnauthorizedEndMinute;
-      isUsed = _isHolidayUsed;
-    }
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: context.colors.background,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: context.colors.cardBackground,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Column(
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    color: context.colors.textPrimary,
-                    fontSize: 17,
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Divider(color: context.colors.dividerColor),
-                const SizedBox(height: 12),
-                TimePickerButton(
-                  label: '경계',
-                  hour: guardStartHour,
-                  minute: guardStartMinute,
-                  allowNull: true,
-                  enabled: isEditMode,
-                  onTimeChanged: (hour, minute) {
-                    setState(() {
-                      if (isWeekday == true) {
-                        _weekdayGuardStartHour = hour;
-                        _weekdayGuardStartMinute = minute;
-                      } else if (isWeekday == false) {
-                        _weekendGuardStartHour = hour;
-                        _weekendGuardStartMinute = minute;
-                      } else {
-                        _holidayGuardStartHour = hour;
-                        _holidayGuardStartMinute = minute;
-                      }
-                    });
-                    _trackChanges();
-                  },
-                ),
-                const SizedBox(height: 12),
-                Divider(color: context.colors.dividerColor),
-                const SizedBox(height: 12),
-                TimePickerButton(
-                  label: '해제',
-                  hour: guardEndHour,
-                  minute: guardEndMinute,
-                  allowNull: true,
-                  enabled: isEditMode,
-                  onTimeChanged: (hour, minute) {
-                    setState(() {
-                      if (isWeekday == true) {
-                        _weekdayGuardEndHour = hour;
-                        _weekdayGuardEndMinute = minute;
-                      } else if (isWeekday == false) {
-                        _weekendGuardEndHour = hour;
-                        _weekendGuardEndMinute = minute;
-                      } else {
-                        _holidayGuardEndHour = hour;
-                        _holidayGuardEndMinute = minute;
-                      }
-                    });
-                    _trackChanges();
-                  },
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: context.colors.cardBackground,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      '무단',
-                      style: TextStyle(
-                        color: context.colors.textPrimary,
-                        fontSize: 15,
-                        fontFamily: 'Inter',
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
-                    const Spacer(),
-
-                    BuildCheckbox(
-                      label: '사용',
-                      value: isUsed,
-                      readOnly: !isEditMode,
-                      onChanged: (val) {
-                        setState(() {
-                          if (isWeekday == true) {
-                            _isWeekdayUsed = val;
-                          } else if (isWeekday == false) {
-                            _isWeekendUsed = val;
-                          } else {
-                            _isHolidayUsed = val;
-                          }
-                        });
-                        _trackChanges();
-                      },
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Divider(color: context.colors.dividerColor),
-                const SizedBox(height: 12),
-                TimePickerButton(
-                  label: '경계',
-                  hour: unauthStartHour,
-                  minute: unauthStartMinute,
-                  enabled: isUsed && isEditMode,
-                  showXXForZero: true,
-                  allowNull: true,
-                  onTimeChanged: (hour, minute) {
-                    setState(() {
-                      if (isWeekday == true) {
-                        _weekdayUnauthorizedStartHour = hour;
-                        _weekdayUnauthorizedStartMinute = minute;
-                      } else if (isWeekday == false) {
-                        _weekendUnauthorizedStartHour = hour;
-                        _weekendUnauthorizedStartMinute = minute;
-                      } else {
-                        _holidayUnauthorizedStartHour = hour;
-                        _holidayUnauthorizedStartMinute = minute;
-                      }
-                    });
-                    _trackChanges();
-                  },
-                ),
-                const SizedBox(height: 12),
-                Divider(color: context.colors.dividerColor),
-                const SizedBox(height: 12),
-                TimePickerButton(
-                  label: '해제',
-                  hour: unauthEndHour,
-                  minute: unauthEndMinute,
-                  enabled: isUsed && isEditMode,
-                  showXXForZero: true,
-                  allowNull: true,
-                  onTimeChanged: (hour, minute) {
-                    setState(() {
-                      if (isWeekday == true) {
-                        _weekdayUnauthorizedEndHour = hour;
-                        _weekdayUnauthorizedEndMinute = minute;
-                      } else if (isWeekday == false) {
-                        _weekendUnauthorizedEndHour = hour;
-                        _weekendUnauthorizedEndMinute = minute;
-                      } else {
-                        _holidayUnauthorizedEndHour = hour;
-                        _holidayUnauthorizedEndMinute = minute;
-                      }
-                    });
-                    _trackChanges();
-                  },
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildWeeklyHolidaySettings() {
-    final days = ['일', '월', '화', '수', '목', '금', '토'];
-
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: context.colors.cardBackground,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: AppTheme.cardShadow,
-        border: isEditMode
-            ? Border.all(color: context.colors.selectedColor, width: 1)
-            : null,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          buildSectionTitle('주간 휴일설정'),
-          const SizedBox(height: 12),
-          // 요일 헤더
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const SizedBox(width: 27), // 주차 번호 공간
-              ...days.asMap().entries.map((entry) {
-                return Expanded(
-                  child: Center(
-                    child: Text(
-                      entry.value,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: context.colors.textPrimary,
-                        fontSize: 14,
-                        fontFamily: 'Inter',
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
-                  ),
-                );
-              }),
-            ],
-          ),
-          const SizedBox(height: 4),
-          // 5주 체크박스 그리드
-          ...List.generate(5, (weekIndex) {
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 2),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // 주차 번호
-                  Container(
-                    width: 25,
-                    height: 25,
-                    decoration: const ShapeDecoration(
-                      color: Color(0xFFF5F5F5),
-                      shape: OvalBorder(),
-                    ),
-                    child: Center(
-                      child: Text(
-                        '${weekIndex + 1}',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: Colors.black,
-                          fontSize: 13,
-                          fontFamily: 'Inter',
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  // 7일 체크박스
-                  ...List.generate(7, (dayIndex) {
-                    Color bgColor = isEditMode
-                        ? context.colors.textPrimary
-                        : context.colors.white;
-                    Color checkColor = isEditMode
-                        ? context.colors.cardBackground
-                        : context.colors.white;
-                    if (dayIndex == 0) {
-                      // 일요일
-                      bgColor = const Color(0xFFFF7070);
-                      checkColor = isEditMode
-                          ? context.colors.white
-                          : Color(0xFFFF7070);
-                    } else if (dayIndex == 6) {
-                      // 토요일
-                      bgColor = const Color(0xFF87C5FF);
-                      checkColor = isEditMode
-                          ? context.colors.white
-                          : Color(0xFF87C5FF);
-                    }
-
-                    return Expanded(
-                      child: Center(
-                        child: Transform.scale(
-                          scale: 0.85,
-                          child: Theme(
-                            data: ThemeData(
-                              checkboxTheme: CheckboxThemeData(
-                                side: BorderSide(
-                                  color: context.colors.textSecondary,
-                                  width: 1.5,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(3),
-                                ),
-                              ),
-                            ),
-                            child: Checkbox(
-                              value: _weeklyHolidays[weekIndex][dayIndex],
-                              onChanged: isEditMode
-                                  ? (value) {
-                                      setState(() {
-                                        _weeklyHolidays[weekIndex][dayIndex] =
-                                            value ?? false;
-                                      });
-                                      _trackChanges();
-                                    }
-                                  : null,
-                              activeColor: bgColor,
-                              checkColor: checkColor,
-                              side: BorderSide(
-                                color: context.colors.textSecondary,
-                                width: 1.5,
-                              ),
-                              materialTapTargetSize:
-                                  MaterialTapTargetSize.shrinkWrap,
-                              visualDensity: VisualDensity.compact,
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  }),
-                ],
-              ),
-            );
-          }),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCustomerMemoSection() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: context.colors.cardBackground,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: AppTheme.cardShadow,
-        border: isEditMode
-            ? Border.all(color: context.colors.selectedColor, width: 1)
-            : null,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          buildSectionTitle('고객 추가 메모사항'),
-          const SizedBox(height: 12),
-          CommonTextField(
-            label: '개통일자',
-            controller: _openingDateController,
-            searchQuery: _pageSearchQuery,
-            readOnly: !isEditMode,
-            onFocusLost: _trackChanges,
-          ),
-          const SizedBox(height: 12),
-          CommonTextField(
-            label: '개통전화번호',
-            controller: _openingPhoneController,
-            searchQuery: _pageSearchQuery,
-            readOnly: !isEditMode,
-            onFocusLost: _trackChanges,
-          ),
-          const SizedBox(height: 12),
-          CommonTextField(
-            label: '모뎀일련번호',
-            controller: _modemSerialController,
-            searchQuery: _pageSearchQuery,
-            readOnly: !isEditMode,
-            onFocusLost: _trackChanges,
-          ),
-          const SizedBox(height: 12),
-          CommonTextField(
-            label: '추가메모',
-            controller: _additionalMemoController,
-            searchQuery: _pageSearchQuery,
-            readOnly: !isEditMode,
-            onFocusLost: _trackChanges,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildGPSSection() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: context.colors.cardBackground,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: AppTheme.cardShadow,
-        border: isEditMode
-            ? Border.all(color: context.colors.selectedColor, width: 1)
-            : null,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          buildSectionTitle('고객 GPS 좌표'),
-          const SizedBox(height: 12),
-          CommonTextField(
-            label: 'X 좌표1',
-            controller: _gpsX1Controller,
-            readOnly: !isEditMode,
-            onFocusLost: _trackChanges,
-          ),
-          const SizedBox(height: 12),
-          CommonTextField(
-            label: 'Y 좌표1',
-            controller: _gpsY1Controller,
-            readOnly: !isEditMode,
-            onFocusLost: _trackChanges,
-          ),
-          const SizedBox(height: 12),
-          CommonTextField(
-            label: 'X 좌표2',
-            controller: _gpsX2Controller,
-            readOnly: !isEditMode,
-            onFocusLost: _trackChanges,
-          ),
-          const SizedBox(height: 12),
-          CommonTextField(
-            label: 'Y 좌표2',
-            controller: _gpsY2Controller,
-            readOnly: !isEditMode,
-            onFocusLost: _trackChanges,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCompanyBranchSection() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: context.colors.cardBackground,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: AppTheme.cardShadow,
-        border: isEditMode
-            ? Border.all(color: context.colors.selectedColor, width: 1)
-            : null,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          buildSectionTitle('회사 / 지사 구분'),
-          const SizedBox(height: 12),
-          BuildDropdownField(
-            label: '회사구분',
-            value: companyType,
-            items: _companyTypeList,
-            searchQuery: _pageSearchQuery,
-            onChanged: (String? newValue) {
-              setState(() {
-                companyType = newValue!;
-              });
-              _trackChanges();
-            },
-            onFocusLost: _trackChanges,
-            readOnly: !isEditMode,
-          ),
-          const SizedBox(height: 12),
-          BuildDropdownField(
-            label: '지사구분',
-            value: branchType,
-            items: _branchTypeList,
-            searchQuery: _pageSearchQuery,
-            onChanged: (String? newValue) {
-              setState(() {
-                branchType = newValue!;
-              });
-              _trackChanges();
-            },
-            onFocusLost: _trackChanges,
-            readOnly: !isEditMode,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDedicatedLineSection() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: context.colors.cardBackground,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: AppTheme.cardShadow,
-        border: isEditMode
-            ? Border.all(color: context.colors.selectedColor, width: 1)
-            : null,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          buildSectionTitle('전용회선 관리'),
-          const SizedBox(height: 12),
-          CommonTextField(
-            label: '전용회선 번호',
-            controller: _dedicatedNumberController,
-            readOnly: !isEditMode,
-            onFocusLost: _trackChanges,
-          ),
-          const SizedBox(height: 12),
-          CommonTextField(
-            label: '추가메모',
-            controller: _dedicatedMemoController,
-            readOnly: !isEditMode,
-            onFocusLost: _trackChanges,
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// 부가서비스 추가 모달 표시
-  void _showAddServiceModal() {
-    final managementNumber =
-        _customerService.selectedCustomer?.controlManagementNumber;
-    if (managementNumber == null) return;
-
-    showDialog(
-      context: context,
-      builder: (context) => _AddServiceModal(
-        controlManagementNumber: managementNumber,
-        serviceTypeList: _addServiceTypeList,
-        serviceEtcList: _addServiceEtcList,
-        onSaved: () async {
-          // 데이터 새로고침
-          await _loadAdditionalServices(managementNumber);
-        },
-      ),
-    );
-  }
-
-  /// DVR 추가 모달 표시
-  void _showAddDVRModal() {
-    final managementNumber =
-        _customerService.selectedCustomer?.controlManagementNumber;
-    if (managementNumber == null) return;
-
-    showDialog(
-      context: context,
-      builder: (context) => _AddDVRModal(
-        controlManagementNumber: managementNumber,
-        dvrTypeList: _dvrTypeList,
-        onSaved: () async {
-          // 데이터 새로고침
-          await _loadDVRInfo(managementNumber);
-        },
-      ),
-    );
-  }
-
-  /// 부가서비스 삭제 확인 다이얼로그
-  void _showDeleteServiceConfirmDialog(AdditionalService service) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('삭제 확인'),
-          content: Text('${service.serviceName ?? "부가서비스"}를 삭제하시겠습니까?'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              style: TextButton.styleFrom(
-                foregroundColor: context.colors.gray30,
-                backgroundColor: context.colors.secondBackground,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              child: const Text('아니오'),
-            ),
-            TextButton(
-              onPressed: () async {
-                Navigator.of(context).pop();
-                await _deleteAdditionalService(service);
-              },
-              style: TextButton.styleFrom(
-                foregroundColor: context.colors.textPrimary,
-                backgroundColor: context.colors.selectedColor,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              child: const Text('예'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  /// 부가서비스 삭제 실행
-  Future<void> _deleteAdditionalService(AdditionalService service) async {
-    if (service.managementId == null) {
-      if (mounted) {
-        showToast(context, message: '삭제할 수 없는 항목입니다.');
-      }
-      return;
-    }
-
-    try {
-      final success = await DatabaseService.deleteAdditionalService(
-        managementId: service.managementId!,
-      );
-
-      if (mounted) {
-        if (success) {
-          showToast(context, message: '부가서비스가 삭제되었습니다.');
-          // 데이터 새로고침
-          final managementNumber =
-              _customerService.selectedCustomer?.controlManagementNumber;
-          if (managementNumber != null) {
-            await _loadAdditionalServices(managementNumber);
-          }
-        } else {
-          showToast(context, message: '삭제에 실패했습니다.');
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        showToast(context, message: '오류가 발생했습니다: $e');
-      }
-    }
-  }
-
-  /// DVR 삭제 확인 다이얼로그
-  void _showDeleteDVRConfirmDialog(DVRInfo dvr) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('삭제 확인'),
-          content: Text('${dvr.dvrTypeName ?? "DVR"}을 삭제하시겠습니까?'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              style: TextButton.styleFrom(
-                foregroundColor: context.colors.textPrimary,
-                backgroundColor: context.colors.secondBackground,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              child: const Text('아니오'),
-            ),
-            TextButton(
-              onPressed: () async {
-                Navigator.of(context).pop();
-                await _deleteDVR(dvr);
-              },
-              style: TextButton.styleFrom(
-                foregroundColor: context.colors.textPrimary,
-                backgroundColor: context.colors.selectedColor,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-
-              child: const Text('예'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  /// DVR 삭제 실행
-  Future<void> _deleteDVR(DVRInfo dvr) async {
-    try {
-      final success = await DatabaseService.deleteDVR(
-        serialNumber: dvr.serialNumber,
-      );
-
-      if (mounted) {
-        if (success) {
-          showToast(context, message: 'DVR정보가 삭제되었습니다.');
-          // 데이터 새로고침
-          final managementNumber =
-              _customerService.selectedCustomer?.controlManagementNumber;
-          if (managementNumber != null) {
-            await _loadDVRInfo(managementNumber);
-          }
-        } else {
-          showToast(context, message: '삭제에 실패했습니다.');
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        showToast(context, message: '오류가 발생했습니다: $e');
-      }
-    }
-  }
-}
-
-// ========================================
-// 부가서비스 추가 모달
-// ========================================
-
-class _AddServiceModal extends BaseAddModal {
-  final String controlManagementNumber;
-  final List<CodeData> serviceTypeList;
-  final List<CodeData> serviceEtcList;
-
-  const _AddServiceModal({
-    required this.controlManagementNumber,
-    required this.serviceTypeList,
-    required this.serviceEtcList,
-    required super.onSaved,
-  });
-
-  @override
-  State<_AddServiceModal> createState() => _AddServiceModalState();
-}
-
-class _AddServiceModalState extends BaseAddModalState<_AddServiceModal> {
-  String? _selectedServiceType;
-  String? _selectedServiceEtc;
-  final TextEditingController _dateController = TextEditingController();
-  final TextEditingController _memoController = TextEditingController();
-
-  @override
-  void dispose() {
-    _dateController.dispose();
-    _memoController.dispose();
-    super.dispose();
-  }
-
-  @override
-  String get modalTitle => '부가서비스 추가';
-
-  @override
-  String get saveButtonLabel => '추가';
-
-  @override
-  Future<bool> validateAndSave() async {
-    if (_selectedServiceType == null || _selectedServiceType!.isEmpty) {
-      showToast(context, message: '부가서비스를 선택해주세요.');
-      return false;
-    }
-
-    if (_dateController.text.isEmpty) {
-      showToast(context, message: '날짜를 입력해주세요.');
-      return false;
-    }
-
-    try {
-      final success = await DatabaseService.insertAdditionalService(
-        controlManagementNumber: widget.controlManagementNumber,
-        serviceCode: _selectedServiceType!,
-        serviceEtcCode: _selectedServiceEtc,
-        serviceDate: _dateController.text,
-        memo: _memoController.text,
-      );
-
-      return success;
-    } catch (e) {
-      print('부가서비스 추가 오류: $e');
-      return false;
-    }
-  }
-
-  @override
-  Widget buildFormFields() {
-    return Column(
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            DateTextField(
-              label: '제공일자',
-              controller: _dateController,
-              onCalendarPressed: (context, isStartDate) async {
-                final selectedDate = await showDatePickerDialog(context);
-                if (selectedDate != null) {
-                  setState(() {
-                    _dateController.text = recordDateFormatted(selectedDate);
-                  });
-                }
-              },
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              child: BuildDropdownField(
-                label: '부가서비스',
-                value: _selectedServiceType,
-                items: widget.serviceTypeList,
-                searchQuery: '',
-                onChanged: (value) {
-                  setState(() {
-                    _selectedServiceType = value;
-                  });
-                },
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: BuildDropdownField(
-                label: '부가서비스제공',
-                value: _selectedServiceEtc,
-                items: widget.serviceEtcList,
-                searchQuery: '',
-                onChanged: (value) {
-                  setState(() {
-                    _selectedServiceEtc = value;
-                  });
-                },
-              ),
-            ),
-          ],
-        ),
-
-        const SizedBox(height: 16),
-        CommonTextField(label: '비고', controller: _memoController, maxLines: 3),
-      ],
-    );
-  }
-}
-
-// ========================================
-// DVR 추가 모달
-// ========================================
-
-class _AddDVRModal extends BaseAddModal {
-  final String controlManagementNumber;
-  final List<CodeData> dvrTypeList;
-
-  const _AddDVRModal({
-    required this.controlManagementNumber,
-    required this.dvrTypeList,
-    required super.onSaved,
-  });
-
-  @override
-  State<_AddDVRModal> createState() => _AddDVRModalState();
-}
-
-class _AddDVRModalState extends BaseAddModalState<_AddDVRModal> {
-  bool _isCSMethod = true; // true: CS방식, false: 웹방식
-  String? _selectedDVRType;
-  final TextEditingController _addressController = TextEditingController();
-  final TextEditingController _portController = TextEditingController();
-  final TextEditingController _idController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _serialController = TextEditingController();
-
-  @override
-  void dispose() {
-    _addressController.dispose();
-    _portController.dispose();
-    _idController.dispose();
-    _passwordController.dispose();
-    _serialController.dispose();
-    super.dispose();
-  }
-
-  @override
-  String get modalTitle => 'DVR 설치현황 추가';
-
-  @override
-  String get saveButtonLabel => '추가';
-
-  @override
-  Future<bool> validateAndSave() async {
-    if (_selectedDVRType == null || _selectedDVRType!.isEmpty) {
-      showToast(context, message: 'DVR종류를 선택해주세요.');
-      return false;
-    }
-
-    if (_addressController.text.isEmpty) {
-      showToast(context, message: 'DVR주소를 입력해주세요.');
-      return false;
-    }
-
-    try {
-      final success = await DatabaseService.insertDVR(
-        controlManagementNumber: widget.controlManagementNumber,
-        connectionMethod: _isCSMethod ? 0 : 1, // CS방식=0, 웹방식=1
-        dvrTypeCode: _selectedDVRType!,
-        connectionAddress: _addressController.text,
-        connectionPort: _portController.text,
-        connectionId: _idController.text,
-        connectionPassword: _passwordController.text,
-        serialNumber: _serialController.text,
-      );
-
-      return success;
-    } catch (e) {
-      print('DVR 추가 오류: $e');
-      return false;
-    }
-  }
-
-  @override
-  Widget buildFormFields() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // DVR 종류 (라디오버튼 + 드롭다운)
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            BuildRadioOption(
-              label: 'CS방식',
-              value: _isCSMethod,
-              onChanged: (value) {
-                setState(() {
-                  _isCSMethod = true;
-                });
-              },
-            ),
-
-            BuildRadioOption(
-              label: '웹방식',
-              value: !_isCSMethod,
-              onChanged: (value) {
-                setState(() {
-                  _isCSMethod = false;
-                });
-              },
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              flex: 1,
-              child: BuildDropdownField(
-                label: 'DVR종류',
-                value: _selectedDVRType,
-                items: widget.dvrTypeList,
-                searchQuery: '',
-                onChanged: (value) {
-                  setState(() {
-                    _selectedDVRType = value;
-                  });
-                },
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              flex: 4,
-              child: CommonTextField(
-                label: 'DVR주소',
-                controller: _addressController,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              flex: 1,
-              child: CommonTextField(
-                label: '포트',
-                controller: _portController,
-                keyboardType: TextInputType.number,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              child: CommonTextField(label: '아이디', controller: _idController),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: CommonTextField(
-                label: '패스워드',
-                controller: _passwordController,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        CommonTextField(label: 'DVR시리얼N', controller: _serialController),
-      ],
-    );
-  }
+  // Widget buildTopButton(String label, Color color) {
+  //   return GestureDetector(
+  //     onTap: () {
+  //       // TODO: 버튼 동작 구현
+  //     },
+  //     child: Container(
+  //       height: 35,
+  //       padding: const EdgeInsets.symmetric(horizontal: 20),
+  //       decoration: ShapeDecoration(
+  //         color: color,
+  //         shape: RoundedRectangleBorder(
+  //           borderRadius: BorderRadius.circular(30),
+  //         ),
+  //       ),
+  //       child: Center(
+  //         child: Text(
+  //           label,
+  //           textAlign: TextAlign.center,
+  //           style: const TextStyle(
+  //             color: Colors.white,
+  //             fontSize: 16,
+  //             fontFamily: 'Inter',
+  //             fontWeight: FontWeight.w700,
+  //           ),
+  //         ),
+  //       ),
+  //     ),
+  //   );
+  // }
 }

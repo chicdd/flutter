@@ -241,7 +241,7 @@ class DatabaseService {
 
       print('관제 고객 저장 API 호출: $uri');
 
-      final request = await httpClient.getUrl(uri);
+      final request = await httpClient.postUrl(uri);
       request.headers.set('Content-Type', 'application/json; charset=utf-8');
       request.write(json.encode(data));
       print(json.encode(data));
@@ -298,7 +298,7 @@ class DatabaseService {
     try {
       final httpClient = _createHttpClient();
       final encodedNumber = Uri.encodeComponent(managementNumber);
-      final uri = Uri.parse('$url/부가서비스조회/$encodedNumber');
+      final uri = Uri.parse('$url/api/부가서비스조회/$encodedNumber');
 
       print('부가서비스 조회 API 호출: $uri');
 

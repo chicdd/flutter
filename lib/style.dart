@@ -22,6 +22,7 @@ class CommonTextField extends StatefulWidget {
   final String? searchQuery;
   final Function(String)? onChanged;
   final VoidCallback? onFocusLost;
+  final bool hasError;
 
   const CommonTextField({
     super.key,
@@ -36,6 +37,7 @@ class CommonTextField extends StatefulWidget {
     this.searchQuery,
     this.onChanged,
     this.onFocusLost,
+    this.hasError = false,
   });
 
   @override
@@ -84,7 +86,7 @@ class _CommonTextFieldState extends State<CommonTextField> {
           widget.label,
           style: TextStyle(
             fontSize: 12,
-            color: context.colors.textPrimary,
+            color: widget.hasError ? Colors.red : context.colors.textSecondary,
             fontWeight: FontWeight.w500,
             backgroundColor:
                 hasMatch &&
@@ -126,32 +128,38 @@ class _CommonTextFieldState extends State<CommonTextField> {
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
                 borderSide: BorderSide(
-                  color: hasMatch
+                  color: widget.hasError
+                      ? Colors.red
+                      : hasMatch
                       ? context.colors.orange
                       : widget.readOnly
                       ? context.colors.cardBackground
                       : context.colors.dividerColor,
-                  width: hasMatch ? 2 : 1,
+                  width: widget.hasError || hasMatch ? 2 : 1,
                 ),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
                 borderSide: BorderSide(
-                  color: hasMatch
+                  color: widget.hasError
+                      ? Colors.red
+                      : hasMatch
                       ? context.colors.orange
                       : context.colors.dividerColor,
-                  width: hasMatch ? 2 : 1,
+                  width: widget.hasError || hasMatch ? 2 : 1,
                 ),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
                 borderSide: BorderSide(
-                  color: hasMatch
+                  color: widget.hasError
+                      ? Colors.red
+                      : hasMatch
                       ? context.colors.orange
                       : widget.readOnly
                       ? context.colors.dividerColor
                       : context.colors.selectedColor.withOpacity(0.8),
-                  width: widget.readOnly ? 1 : 2,
+                  width: widget.hasError || !widget.readOnly ? 2 : 1,
                 ),
               ),
               suffixIcon: widget.suffixIcon != null
@@ -188,6 +196,7 @@ class BuildDropdownField extends StatefulWidget {
   final String searchQuery;
   final bool readOnly;
   final VoidCallback? onFocusLost;
+  final bool hasError;
 
   const BuildDropdownField({
     super.key,
@@ -198,6 +207,7 @@ class BuildDropdownField extends StatefulWidget {
     required this.searchQuery,
     this.readOnly = false,
     this.onFocusLost,
+    this.hasError = false,
   });
   @override
   State<BuildDropdownField> createState() => _BuildDropdownFieldState();
@@ -221,8 +231,9 @@ class _BuildDropdownFieldState extends State<BuildDropdownField> {
   }
 
   void _onFocusChange() {
-    // setState를 호출하여 포커스 상태 변경을 UI에 반영
-    setState(() {});
+    // DropdownButtonFormField는 focusNode를 통해 자체적으로 UI를 갱신하므로
+    // 여기서 setState를 호출하면 드롭다운 열림/닫힘 중 rebuild가 발생해
+    // '_dropdownRoute == null' assertion 에러를 유발함 → 제거
     if (!_focusNode.hasFocus && widget.onFocusLost != null) {
       widget.onFocusLost!();
     }
@@ -318,7 +329,7 @@ class _BuildDropdownFieldState extends State<BuildDropdownField> {
           widget.label,
           style: TextStyle(
             fontSize: 12,
-            color: context.colors.textSecondary,
+            color: widget.hasError ? Colors.red : context.colors.textSecondary,
             fontWeight: FontWeight.w500,
             backgroundColor:
                 hasMatch &&
@@ -330,115 +341,113 @@ class _BuildDropdownFieldState extends State<BuildDropdownField> {
           ),
         ),
         const SizedBox(height: 6),
-        TapRegion(
-          onTapOutside: (_) {
-            // 드롭다운 외부를 클릭하면 포커스 해제
-            if (_focusNode.hasFocus) {
-              _focusNode.unfocus();
-            }
-          },
-          child: DropdownButtonFormField<String>(
-            initialValue: selectedValue,
-            focusNode: _focusNode,
-            style: TextStyle(
-              fontSize: 14,
-              color: widget.readOnly
-                  ? context.colors.textPrimary
-                  : context.colors.textEnable,
+        DropdownButtonFormField<String>(
+          initialValue: selectedValue,
+          focusNode: _focusNode,
+          style: TextStyle(
+            fontSize: 14,
+            color: widget.readOnly
+                ? context.colors.textPrimary
+                : context.colors.textEnable,
+          ),
+          decoration: InputDecoration(
+            isDense: true,
+            contentPadding: const EdgeInsets.only(
+              left: 12,
+              top: 9,
+              right: 6,
+              bottom: 9,
             ),
-            decoration: InputDecoration(
-              isDense: true,
-              contentPadding: const EdgeInsets.only(
-                left: 12,
-                top: 9,
-                right: 6,
-                bottom: 9,
-              ),
-              filled: true,
-              fillColor: widget.readOnly
-                  ? currentColor == context.colors.textReadOnly
-                        ? context.colors.textReadOnly
-                        : currentColor //
-                  : context.colors.textEnable,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(
-                  color: hasMatch
-                      ? context.colors.orange
-                      : widget.readOnly
-                      ? context.colors.dividerColor
-                      : currentColor,
-                  width: hasMatch ? 2 : 1,
-                ),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(
-                  color: hasMatch
-                      ? context.colors.orange
-                      : context.colors.dividerColor,
-                  width: hasMatch ? 2 : 1,
-                ),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(
-                  color: hasMatch
-                      ? context.colors.orange
-                      : context.colors.selectedColor.withOpacity(0.8),
-                  width: 2,
-                ),
+            filled: true,
+            fillColor: widget.readOnly
+                ? currentColor == context.colors.textReadOnly
+                      ? context.colors.textReadOnly
+                      : currentColor //
+                : context.colors.textEnable,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(
+                color: widget.hasError
+                    ? Colors.red
+                    : hasMatch
+                    ? context.colors.orange
+                    : widget.readOnly
+                    ? context.colors.dividerColor
+                    : currentColor,
+                width: widget.hasError || hasMatch ? 2 : 1,
               ),
             ),
-            icon: Icon(
-              Icons.arrow_drop_down,
-              size: 24,
-              color: widget.readOnly
-                  ? Colors.transparent
-                  : context.colors.textSecondary,
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(
+                color: widget.hasError
+                    ? Colors.red
+                    : hasMatch
+                    ? context.colors.orange
+                    : context.colors.dividerColor,
+                width: widget.hasError || hasMatch ? 2 : 1,
+              ),
             ),
-            isExpanded: true,
-            selectedItemBuilder: (BuildContext context) {
-              return widget.items.map((CodeData item) {
-                // 선택된 항목일 때만 강조 표시
-                return Container(
-                  alignment: Alignment.centerLeft,
-                  child: HighlightedText(
-                    text: '[${item.code}] ${item.name}',
-                    query: widget.searchQuery,
-                    style: TextStyle(
-                      color: widget.readOnly
-                          ? currentColor == context.colors.textReadOnly
-                                ? context.colors.textPrimary
-                                : context.colors.white
-                          : context.colors.textPrimary,
-                      fontSize: 14,
-                    ),
-                  ),
-                );
-              }).toList();
-            },
-            items: widget.items.map((CodeData item) {
-              return DropdownMenuItem<String>(
-                value: item.code,
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(
+                color: widget.hasError
+                    ? Colors.red
+                    : hasMatch
+                    ? context.colors.orange
+                    : context.colors.selectedColor.withOpacity(0.8),
+                width: 2,
+              ),
+            ),
+          ),
+          icon: Icon(
+            Icons.arrow_drop_down,
+            size: 24,
+            color: widget.readOnly
+                ? Colors.transparent
+                : context.colors.textSecondary,
+          ),
+          isExpanded: true,
+          selectedItemBuilder: (BuildContext context) {
+            return widget.items.map((CodeData item) {
+              // 선택된 항목일 때만 강조 표시
+              return Container(
+                alignment: Alignment.centerLeft,
                 child: HighlightedText(
                   text: '[${item.code}] ${item.name}',
                   query: widget.searchQuery,
                   style: TextStyle(
-                    color: context.colors.textPrimary,
+                    color: widget.readOnly
+                        ? currentColor == context.colors.textReadOnly
+                              ? context.colors.textPrimary
+                              : context.colors.white
+                        : context.colors.textPrimary,
                     fontSize: 14,
                   ),
                 ),
               );
-            }).toList(),
-            onChanged: widget.readOnly
-                ? null
-                : (value) {
-                    widget.onChanged(value);
-                    // 항목 선택 후 포커스 해제
-                    _focusNode.unfocus();
-                  },
-          ),
+            }).toList();
+          },
+          items: widget.items.map((CodeData item) {
+            return DropdownMenuItem<String>(
+              value: item.code,
+              child: HighlightedText(
+                text: '[${item.code}] ${item.name}',
+                query: widget.searchQuery,
+                style: TextStyle(
+                  color: context.colors.textPrimary,
+                  fontSize: 14,
+                ),
+              ),
+            );
+          }).toList(),
+          onChanged: widget.readOnly
+              ? null
+              : (value) {
+                  widget.onChanged(value);
+                  // 항목 선택 후 포커스 해제
+                  _focusNode.unfocus();
+                },
         ),
       ],
     );
@@ -1193,7 +1202,9 @@ class _DateTextFieldState extends State<DateTextField> {
 
   /// 포커스 변경 시 처리
   void _onFocusChange() {
-    print('DateTextField 포커스 변경: hasFocus=${_focusNode.hasFocus}, label=${widget.label}');
+    print(
+      'DateTextField 포커스 변경: hasFocus=${_focusNode.hasFocus}, label=${widget.label}',
+    );
     // 포커스를 잃을 때 (포커스가 false가 될 때)
     if (!_focusNode.hasFocus) {
       print('포커스 잃음 - onSubmitted 콜백 호출');
@@ -1216,12 +1227,12 @@ class _DateTextFieldState extends State<DateTextField> {
           Text(
             widget.label,
             style: TextStyle(
-              fontSize: 14,
+              fontSize: 12,
               fontWeight: FontWeight.w500,
-              color: context.colors.textPrimary,
+              color: context.colors.textSecondary,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           TextField(
             controller: widget.controller,
             focusNode: _focusNode,
@@ -1246,18 +1257,21 @@ class _DateTextFieldState extends State<DateTextField> {
               ),
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 12,
-                vertical: 12,
+                vertical: 10,
               ),
-              suffixIcon: IconButton(
-                icon: const Icon(Icons.calendar_today, size: 20),
-                onPressed: () {
+              suffixIconConstraints: const BoxConstraints(
+                minWidth: 30,
+                minHeight: 0,
+              ),
+              suffixIcon: GestureDetector(
+                onTap: () {
                   // label로 시작/종료 판단
                   final isStartDate = widget.label.contains('시작');
                   widget.onCalendarPressed(context, isStartDate);
                 },
+                child: const Icon(Icons.calendar_today, size: 18),
               ),
               filled: true,
-              fillColor: context.colors.secondBackground,
             ),
             style: const TextStyle(fontSize: 14),
             onSubmitted: (_) {
@@ -1403,11 +1417,18 @@ void showToast(
     context: context,
     type: type,
     style: ToastificationStyle.flat,
-    title: Text(message),
+    title: Text(
+      message,
+      style: TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.w700,
+        color: context.colors.white,
+      ),
+    ),
     autoCloseDuration: autoCloseDuration,
     backgroundColor: context.colors.selectedColor.withOpacity(0.7),
-    foregroundColor: context.colors.textPrimary,
-    primaryColor: context.colors.textPrimary,
+    foregroundColor: context.colors.background,
+    primaryColor: context.colors.background,
     borderSide: BorderSide(color: Colors.transparent, width: 1),
     showProgressBar: false,
     closeButtonShowType: CloseButtonShowType.onHover,

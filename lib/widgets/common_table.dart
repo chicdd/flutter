@@ -337,7 +337,7 @@ Widget buildTable<T>({
   required List<T> dataList,
   required List<TableColumnConfig> columns,
   required Map<int, double> columnWidths,
-  bool isEditable = false,
+  bool isEditMode = false,
   required void Function(int columnIndex, double newWidth) onColumnResize,
   String searchQuery = '',
   bool showTotalCount = false,
@@ -354,7 +354,7 @@ Widget buildTable<T>({
       color: context.colors.cardBackground,
       borderRadius: BorderRadius.circular(12),
       border: Border.all(
-        color: isEditable ? context.colors.selectedColor : Colors.transparent,
+        color: isEditMode ? context.colors.selectedColor : Colors.transparent,
         width: 1,
       ),
       boxShadow: AppTheme.cardShadow,

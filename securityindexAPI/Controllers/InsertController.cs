@@ -25,7 +25,7 @@ namespace securityindexAPI.Controllers
         /// <param name="code">추가할 코드값</param>
         /// <param name="codeName">추가할 코드명</param>
         /// <returns>추가 결과</returns>
-        [HttpPost("{codeType}")]
+        [HttpPost("code/{codeType}")]
         public async Task<ActionResult> InsertCode(string codeType, [FromBody] CodeRequest request)
         {
             try
@@ -220,7 +220,7 @@ namespace securityindexAPI.Controllers
 
                 var query = @"
                     INSERT INTO 스마트정보조회마스터
-                        (휴대폰번호, 관제관리번호, 영업관리번호, 상호명, 사용자이름, 원격경계여부, 원격해제여부, 등록일자)
+                        (휴대폰번호, 관제관리번호, 고객관리번호, 상호명, 사용자이름, 원격경계여부, 원격해제여부, 등록일자)
                     VALUES
                         (@휴대폰번호, @관제관리번호, @영업관리번호, @상호명, @사용자이름, @원격경계여부, @원격해제여부, @등록일자)";
 
@@ -284,96 +284,128 @@ namespace securityindexAPI.Controllers
         }
 
         /// <summary>
-        /// AS접수 정보 추가
+        /// 관제 고객 신규 등록
         /// </summary>
+        /// <param name="관제관리번호">관제관리번호 (URL 경로)</param>
+        /// <param name="request">고객 데이터 (동적 딕셔너리)</param>
         [HttpPost("{관제관리번호}")]
-        public async Task<ActionResult> Insert고객저장([FromBody] AS접수요청 request)
+        public async Task<ActionResult> Insert고객저장(string 관제관리번호, [FromBody] Dictionary<string, object> request)
         {
             try
             {
-                _logger.LogInformation($"관제 고객 저장  요청: 관제관리번호={request.관제관리번호}");
+                if (string.IsNullOrWhiteSpace(관제관리번호))
+                {
+                    return BadRequest(new { message = "관제관리번호는 필수입니다." });
+                }
 
-                var query = @"
-                    INSERT INTO AS접수마스터
-                        (관제관리번호, 고객이름, 고객연락처, 요청일자, 요청시간, 요청제목, 접수일자, 접수시간, 담당구역, 처리여부, 입력자, 세부내용)
-                    VALUES
-                        (@관제관리번호, @고객이름, @고객연락처, @요청일자, @요청시간, @요청제목, @접수일자, @접수시간, @담당구역, @처리여부, @입력자, @세부내용)";
+                if (request == null || request.Count == 0)
+                {
+                    return BadRequest(new { message = "저장할 데이터가 없습니다." });
+                }
+
+                _logger.LogInformation($"관제 고객 저장 요청: 관제관리번호={관제관리번호}");
 
                 var connection = _context.Database.GetDbConnection();
                 await connection.OpenAsync();
 
+                // 중복 체크
+                using (var checkCommand = connection.CreateCommand())
+                {
+                    checkCommand.CommandText = "SELECT COUNT(*) FROM 관제고객마스터 WHERE 관제관리번호 = @관제관리번호";
+                    var checkParam = checkCommand.CreateParameter();
+                    checkParam.ParameterName = "@관제관리번호";
+                    checkParam.Value = 관제관리번호;
+                    checkCommand.Parameters.Add(checkParam);
+
+                    var count = Convert.ToInt32(await checkCommand.ExecuteScalarAsync());
+                    if (count > 0)
+                    {
+                        await connection.CloseAsync();
+                        return Conflict(new { message = $"관제관리번호 '{관제관리번호}'는 이미 존재합니다." });
+                    }
+                }
+
+                // INSERT 쿼리 동적 생성
+                var columns = new List<string>();
+                var paramNames = new List<string>();
+
                 using var command = connection.CreateCommand();
-                command.CommandText = query;
 
-                var param1 = command.CreateParameter();
-                param1.ParameterName = "@관제관리번호";
-                param1.Value = request.관제관리번호 ?? (object)DBNull.Value;
-                command.Parameters.Add(param1);
+                int paramIndex = 0;
+                foreach (var kvp in request)
+                {
+                    var columnName = kvp.Key;
+                    var value = kvp.Value;
+                    var paramName = $"@param{paramIndex}";
 
-                var param2 = command.CreateParameter();
-                param2.ParameterName = "@고객이름";
-                param2.Value = request.고객이름 ?? (object)DBNull.Value;
-                command.Parameters.Add(param2);
+                    columns.Add(columnName);
+                    paramNames.Add(paramName);
 
-                var param3 = command.CreateParameter();
-                param3.ParameterName = "@고객연락처";
-                param3.Value = request.고객연락처 ?? (object)DBNull.Value;
-                command.Parameters.Add(param3);
+                    var param = command.CreateParameter();
+                    param.ParameterName = paramName;
 
-                var param4 = command.CreateParameter();
-                param4.ParameterName = "@요청일자";
-                param4.Value = request.요청일자 ?? (object)DBNull.Value;
-                command.Parameters.Add(param4);
+                    if (value == null)
+                    {
+                        param.Value = DBNull.Value;
+                    }
+                    else if (value is System.Text.Json.JsonElement jsonElement)
+                    {
+                        switch (jsonElement.ValueKind)
+                        {
+                            case System.Text.Json.JsonValueKind.Null:
+                                param.Value = DBNull.Value;
+                                break;
+                            case System.Text.Json.JsonValueKind.String:
+                                var strVal = jsonElement.GetString();
+                                param.Value = string.IsNullOrEmpty(strVal) ? DBNull.Value : (object)strVal;
+                                break;
+                            case System.Text.Json.JsonValueKind.Number:
+                                if (jsonElement.TryGetInt32(out int intValue))
+                                    param.Value = intValue;
+                                else if (jsonElement.TryGetInt64(out long longValue))
+                                    param.Value = longValue;
+                                else if (jsonElement.TryGetDouble(out double doubleValue))
+                                    param.Value = doubleValue;
+                                else
+                                    param.Value = jsonElement.ToString();
+                                break;
+                            case System.Text.Json.JsonValueKind.True:
+                                param.Value = true;
+                                break;
+                            case System.Text.Json.JsonValueKind.False:
+                                param.Value = false;
+                                break;
+                            default:
+                                param.Value = jsonElement.ToString();
+                                break;
+                        }
+                    }
+                    else
+                    {
+                        param.Value = value;
+                    }
 
-                var param5 = command.CreateParameter();
-                param5.ParameterName = "@요청시간";
-                param5.Value = request.요청시간 ?? (object)DBNull.Value;
-                command.Parameters.Add(param5);
+                    command.Parameters.Add(param);
+                    paramIndex++;
+                }
 
-                var param6 = command.CreateParameter();
-                param6.ParameterName = "@요청제목";
-                param6.Value = request.요청제목 ?? (object)DBNull.Value;
-                command.Parameters.Add(param6);
+                command.CommandText = $@"
+                    INSERT INTO 관제고객마스터
+                        ({string.Join(", ", columns)})
+                    VALUES
+                        ({string.Join(", ", paramNames)})";
 
-                var param7 = command.CreateParameter();
-                param7.ParameterName = "@접수일자";
-                param7.Value = request.접수일자 ?? (object)DBNull.Value;
-                command.Parameters.Add(param7);
-
-                var param8 = command.CreateParameter();
-                param8.ParameterName = "@접수시간";
-                param8.Value = request.접수시간 ?? (object)DBNull.Value;
-                command.Parameters.Add(param8);
-
-                var param9 = command.CreateParameter();
-                param9.ParameterName = "@담당구역";
-                param9.Value = request.담당구역 ?? (object)DBNull.Value;
-                command.Parameters.Add(param9);
-
-                var param10 = command.CreateParameter();
-                param10.ParameterName = "@처리여부";
-                param10.Value = "미처리";
-                command.Parameters.Add(param10);
-
-                var param11 = command.CreateParameter();
-                param11.ParameterName = "@입력자";
-                param11.Value = request.입력자 ?? (object)DBNull.Value;
-                command.Parameters.Add(param11);
-
-                var param12 = command.CreateParameter();
-                param12.ParameterName = "@세부내용";
-                param12.Value = request.세부내용 ?? (object)DBNull.Value;
-                command.Parameters.Add(param12);
+                _logger.LogDebug($"실행 SQL: {command.CommandText}");
 
                 await command.ExecuteNonQueryAsync();
                 await connection.CloseAsync();
 
-                _logger.LogInformation($"AS접수 정보 추가 완료: 관제관리번호={request.관제관리번호}");
-                return StatusCode(201, new { message = "AS접수 정보가 추가되었습니다." });
+                _logger.LogInformation($"관제 고객 저장 완료: 관제관리번호={관제관리번호}");
+                return Ok(new { message = "고객이 등록되었습니다." });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "AS접수 정보 추가 중 오류 발생");
+                _logger.LogError(ex, $"관제 고객 저장 중 오류 발생: 관제관리번호={관제관리번호}");
                 return StatusCode(500, new { message = "서버 오류가 발생했습니다.", error = ex.Message });
             }
         }

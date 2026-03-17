@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import '../component/customerBasicInfoSection.dart';
+import '../component/customerDetailInfoSection.dart';
+import '../component/customerMemoSection.dart';
+import '../component/customerPropertyInfoSection.dart';
 import '../functions.dart';
 import '../theme.dart';
 import '../models/search_panel.dart';
@@ -29,7 +33,7 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
   bool isEditMode = false;
   bool _hasChanges = false;
   Map<String, dynamic> _originalData = {};
-
+  //
   // 페이지 내 검색
   String _pageSearchQuery = '';
 
@@ -77,10 +81,12 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
     _formData.addressController.text = detail.propertyAddress ?? '';
     _formData.referenceController.text = detail.responsePath1 ?? '';
     _formData.representativeNameController.text = detail.representative ?? '';
-    _formData.representativePhoneController.text = detail.representativeHP ?? '';
+    _formData.representativePhoneController.text =
+        detail.representativeHP ?? '';
     _formData.emergencyContactController.text = detail.emergencyContact ?? '';
     // 관제 기본 정보
-    _formData.securityStartDateController.text = detail.securityStartDateFormatted;
+    _formData.securityStartDateController.text =
+        detail.securityStartDateFormatted;
     _formData.publicNumberController.text = detail.publicLine ?? '';
     _formData.transmissionNumberController.text = detail.dedicatedLine ?? '';
     _formData.publicTransmissionController.text = detail.internetLine ?? '';
@@ -132,13 +138,15 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
     _formData.isDvrInspection = detail.dvrChecked;
     _formData.isWirelessSensorInspection = stringToBool(detail.wirelessChecked);
 
-    _formData.mainLocationController.text = detail.unguardedClassificationName ?? '';
+    _formData.mainLocationController.text =
+        detail.unguardedClassificationName ?? '';
     _formData.selectedServiceType = isValidCode(detail.serviceTypeCode)
         ? detail.serviceTypeCode
         : null;
 
     // 메모
-    _formData.controlActionController.text = detail.controlAction ?? ''; // 관제액션비고
+    _formData.controlActionController.text =
+        detail.controlAction ?? ''; // 관제액션비고
     _formData.memo1Controller.text = detail.memo1 ?? '';
     _formData.memo2Controller.text = detail.memo2 ?? '';
   }
@@ -162,7 +170,10 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
       }
     });
 
-    // 드롭다운 데이터를 먼저 로드한 후 고객 데이터 로드
+    // // 드롭다운 데이터 로드
+    // _formData.initializeData().then((_) {
+    //   if (mounted) setState(() {});
+    // });
     _initializeData();
   }
 
@@ -208,19 +219,8 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
 
   /// 데이터 초기화 (순차 처리)
   Future<void> _initializeData() async {
-    // 1. 드롭다운 데이터 먼저 로드
-    _formData.managementAreaList = await loadDropdownData('managementarea');
-    _formData.operationAreaList = await loadDropdownData('operationarea');
-    _formData.businessTypeList = await loadDropdownData('businesstype');
-    _formData.vehicleCodeList = await loadDropdownData('vehiclecode');
-    _formData.policeStationList = await loadDropdownData('policestation');
-    _formData.policeDistrictList = await loadDropdownData('policedistrict');
-    _formData.usageLineList = await loadDropdownData('usageline');
-    _formData.serviceTypeList = await loadDropdownData('servicetype');
-    _formData.mainSystemList = await loadDropdownData('mainsystem');
-    _formData.subSystemList = await loadDropdownData('subsystem');
-    _formData.miSettingsList = await loadDropdownData('misettings');
-    _formData.customerStatusList = await loadDropdownData('customerstatus');
+    // 1. 드롭다운 데이터 로드 (CustomerFormData.initializeData에서 중앙 관리)
+    await _formData.initializeData();
 
     // 2. 기본고객정보 화면에서는 고객 상세 정보를 로드
     if (_customerService.selectedCustomer != null) {
@@ -584,127 +584,63 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
       backgroundColor: context.colors.background,
       body: LayoutBuilder(
         builder: (context, constraints) {
-          final isExtraWideScreen = constraints.maxWidth >= 1500;
-          final isWideScreen = constraints.maxWidth >= 900;
+          final isWideScreen = constraints.maxWidth >= 1500;
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(24),
-            child: isExtraWideScreen
-                ? Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+            child: isWideScreen
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // 좌측: 관제 물건 정보
-                      Expanded(
-                        flex: 1,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                      IntrinsicHeight(
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            CustomerPropertyInfoSection(
-                              data: _formData,
-                              rebuildParent: setState,
-                              isEditable: isEditMode,
-                              searchQuery: _pageSearchQuery,
-                              onChanged: _trackChanges,
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  CustomerPropertyInfoSection(
+                                    data: _formData,
+                                    rebuildParent: setState,
+                                    isEditMode: isEditMode,
+                                    searchQuery: _pageSearchQuery,
+                                    onChanged: _trackChanges,
+                                  ),
+                                  const SizedBox(height: 24),
+                                  Expanded(
+                                    child: CustomerMemoSection(
+                                      data: _formData,
+                                      isEditMode: isEditMode,
+                                      onChanged: _trackChanges,
+                                      controlActionFocusNode:
+                                          _controlActionFocusNode,
+                                      memoFocusNode: _memoFocusNode,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                            const SizedBox(height: 24),
-                            CustomerNotesSection(
-                              data: _formData,
-                              isEditable: isEditMode,
-                              onChanged: _trackChanges,
-                              controlActionFocusNode: _controlActionFocusNode,
-                              memoFocusNode: _memoFocusNode,
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: CustomerBasicInfoSection(
+                                data: _formData,
+                                rebuildParent: setState,
+                                isEditMode: isEditMode,
+                                searchQuery: _pageSearchQuery,
+                                onChanged: _trackChanges,
+                                managementNumberReadOnly: true,
+                              ),
                             ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 24),
-                      // 우측: 관제 기본 정보
-                      Expanded(
-                        flex: 1,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            CustomerDetailInfoSection(
-                              data: _formData,
-                              rebuildParent: setState,
-                              isEditable: isEditMode,
-                              searchQuery: _pageSearchQuery,
-                              onChanged: _trackChanges,
-                            ),
-                            const SizedBox(height: 24),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 24),
-                      // 우측: 관제 기본 정보
-                      Expanded(
-                        flex: 1,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            CustomerBasicInfoSection(
-                              data: _formData,
-                              rebuildParent: setState,
-                              isEditable: isEditMode,
-                              searchQuery: _pageSearchQuery,
-                              onChanged: _trackChanges,
-                              managementNumberReadOnly: true,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  )
-                : isWideScreen
-                ? Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // 좌측: 관제 물건 정보
-                      Expanded(
-                        flex: 1,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            CustomerPropertyInfoSection(
-                              data: _formData,
-                              rebuildParent: setState,
-                              isEditable: isEditMode,
-                              searchQuery: _pageSearchQuery,
-                              onChanged: _trackChanges,
-                            ),
-                            const SizedBox(height: 24),
-                            CustomerDetailInfoSection(
-                              data: _formData,
-                              rebuildParent: setState,
-                              isEditable: isEditMode,
-                              searchQuery: _pageSearchQuery,
-                              onChanged: _trackChanges,
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 24),
-                      // 우측: 관제 기본 정보
-                      Expanded(
-                        flex: 1,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            CustomerBasicInfoSection(
-                              data: _formData,
-                              rebuildParent: setState,
-                              isEditable: isEditMode,
-                              searchQuery: _pageSearchQuery,
-                              onChanged: _trackChanges,
-                              managementNumberReadOnly: true,
-                            ),
-                            const SizedBox(height: 24),
-                            CustomerNotesSection(
-                              data: _formData,
-                              isEditable: isEditMode,
-                              onChanged: _trackChanges,
-                              controlActionFocusNode: _controlActionFocusNode,
-                              memoFocusNode: _memoFocusNode,
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: CustomerDetailInfoSection(
+                                data: _formData,
+                                rebuildParent: setState,
+                                isEditMode: isEditMode,
+                                searchQuery: _pageSearchQuery,
+                                onChanged: _trackChanges,
+                              ),
                             ),
                           ],
                         ),
@@ -712,39 +648,61 @@ class BasicCustomerInfoState extends State<BasicCustomerInfo> {
                     ],
                   )
                 : Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      CustomerPropertyInfoSection(
-                        data: _formData,
-                        rebuildParent: setState,
-                        isEditable: isEditMode,
-                        searchQuery: _pageSearchQuery,
-                        onChanged: _trackChanges,
+                      IntrinsicHeight(
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Expanded(
+                              child: CustomerPropertyInfoSection(
+                                data: _formData,
+                                rebuildParent: setState,
+                                isEditMode: isEditMode,
+                                searchQuery: _pageSearchQuery,
+                                onChanged: _trackChanges,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: CustomerMemoSection(
+                                data: _formData,
+                                isEditMode: isEditMode,
+                                onChanged: _trackChanges,
+                                controlActionFocusNode: _controlActionFocusNode,
+                                memoFocusNode: _memoFocusNode,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                      const SizedBox(height: 24),
-                      CustomerDetailInfoSection(
-                        data: _formData,
-                        rebuildParent: setState,
-                        isEditable: isEditMode,
-                        searchQuery: _pageSearchQuery,
-                        onChanged: _trackChanges,
-                      ),
-                      const SizedBox(height: 24),
-                      CustomerBasicInfoSection(
-                        data: _formData,
-                        rebuildParent: setState,
-                        isEditable: isEditMode,
-                        searchQuery: _pageSearchQuery,
-                        onChanged: _trackChanges,
-                        managementNumberReadOnly: true,
-                      ),
-                      const SizedBox(height: 24),
-                      CustomerNotesSection(
-                        data: _formData,
-                        isEditable: isEditMode,
-                        onChanged: _trackChanges,
-                        controlActionFocusNode: _controlActionFocusNode,
-                        memoFocusNode: _memoFocusNode,
+
+                      const SizedBox(height: 16),
+                      IntrinsicHeight(
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Expanded(
+                              child: CustomerDetailInfoSection(
+                                data: _formData,
+                                rebuildParent: setState,
+                                isEditMode: isEditMode,
+                                searchQuery: _pageSearchQuery,
+                                onChanged: _trackChanges,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: CustomerBasicInfoSection(
+                                data: _formData,
+                                rebuildParent: setState,
+                                isEditMode: isEditMode,
+                                searchQuery: _pageSearchQuery,
+                                onChanged: _trackChanges,
+                                managementNumberReadOnly: true,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),

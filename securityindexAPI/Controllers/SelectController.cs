@@ -493,7 +493,7 @@ namespace securityindexAPI.Controllers
                     {
                         관리id = reader["관리id"] == DBNull.Value ? 0 : Convert.ToInt32(reader["관리id"]),
                         관제관리번호 = reader["관제관리번호"]?.ToString(),
-                        휴일주간코드 = reader["휴일주간코드"]?.ToString()
+                        휴일주간코드 = reader["휴일주간코드"].ToString()
                     };
 
                     휴일주간리스트.Add(holidayData);
@@ -538,7 +538,7 @@ namespace securityindexAPI.Controllers
                     FROM 부가서비스마스터 a
                     LEFT JOIN 부가서비스코드마스터 b ON a.부가서비스코드 = b.부가서비스코드
                     LEFT JOIN 부가서비스제공마스터 c ON a.부가서비스제공코드 = c.부가서비스제공코드
-                    WHERE a.관제관리번호 = @관제관리번호";
+                    WHERE a.관제관리번호 = @관제관리번호 AND 사용회선종류 != '200'";
 
                 var connection = _context.Database.GetDbConnection();
                 await connection.OpenAsync();

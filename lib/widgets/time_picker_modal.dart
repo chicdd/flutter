@@ -424,7 +424,7 @@ class TimePickerButton extends StatelessWidget {
                   }
                 : null,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
               decoration: BoxDecoration(
                 color: context.colors.textEnable,
                 borderRadius: BorderRadius.circular(6),
@@ -461,7 +461,7 @@ class TimePickerButton extends StatelessWidget {
                   }
                 : null,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
               decoration: BoxDecoration(
                 color: context.colors.textEnable,
                 borderRadius: BorderRadius.circular(6),

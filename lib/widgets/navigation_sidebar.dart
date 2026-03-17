@@ -115,18 +115,33 @@ class _NavigationSidebarState extends State<NavigationSidebar> {
     ),
     NavigationItem(title: '설정', icon: Icons.settings),
   ];
+  OverlayEntry? _overlayEntry;
 
-  /// 관제고객등록 창을 Overlay로 표시
+  /// 관제고객등록 창을 Navigator 라우트로 표시
+  /// (OverlayEntry 직접 삽입 시 DropdownButtonFormField의 드롭다운 메뉴가
+  ///  FloatingWindow 뒤에 렌더링되어 가려지는 문제를 방지)
   void _showCustomerRegistrationWindow(BuildContext context) {
-    late OverlayEntry overlayEntry;
-    overlayEntry = OverlayEntry(
-      builder: (_) => _FloatingWindow(
+    _overlayEntry = OverlayEntry(
+      builder: (context) => _FloatingWindowOverlay(
         title: '관제고객등록',
-        onClose: () => overlayEntry.remove(),
+        onClose: () {
+          _overlayEntry?.remove();
+          _overlayEntry = null;
+        },
         child: const CustomerRegistration(),
       ),
     );
-    Overlay.of(context).insert(overlayEntry);
+    Overlay.of(context).insert(_overlayEntry!);
+    // showGeneralDialog(
+    //   context: context,
+    //   barrierDismissible: false,
+    //   barrierColor: Colors.transparent, // _FloatingWindow이 자체 배경 처리
+    //   pageBuilder: (dialogContext, _, __) => _FloatingWindow(
+    //     title: '관제고객등록',
+    //     onClose: () => Navigator.of(dialogContext).pop(),
+    //     child: const CustomerRegistration(),
+    //   ),
+    // );
   }
 
   @override
@@ -312,49 +327,38 @@ class _NavigationSidebarState extends State<NavigationSidebar> {
   }
 }
 
-// ============================================================
-// 최소화 가능한 플로팅 창 위젯
-// ============================================================
-
-class _FloatingWindow extends StatefulWidget {
+class _FloatingWindowOverlay extends StatefulWidget {
   final String title;
   final VoidCallback onClose;
   final Widget child;
 
-  const _FloatingWindow({
+  const _FloatingWindowOverlay({
     required this.title,
     required this.onClose,
     required this.child,
   });
 
   @override
-  State<_FloatingWindow> createState() => _FloatingWindowState();
+  State<_FloatingWindowOverlay> createState() => _FloatingWindowOverlayState();
 }
 
-class _FloatingWindowState extends State<_FloatingWindow>
+class _FloatingWindowOverlayState extends State<_FloatingWindowOverlay>
     with SingleTickerProviderStateMixin {
   bool _isMinimized = false;
-
   late final AnimationController _controller;
   late final Animation<double> _scaleAnim;
-  late final Animation<double> _fadeAnim;
 
   @override
   void initState() {
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 280),
+      duration: const Duration(milliseconds: 250),
     );
-    // 스케일: 0.88 → 1.0, easeOutBack으로 살짝 튀는 느낌
-    _scaleAnim = Tween<double>(begin: 0.88, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutBack),
-    );
-    // 페이드: 0 → 1, easeOut
-    _fadeAnim = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
-    );
-    // 최초 열릴 때도 애니메이션
+    _scaleAnim = Tween<double>(
+      begin: 0.9,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
     _controller.forward();
   }
 
@@ -364,145 +368,124 @@ class _FloatingWindowState extends State<_FloatingWindow>
     super.dispose();
   }
 
-  void _restore() {
-    setState(() => _isMinimized = false);
-    _controller.forward(from: 0);
-  }
-
-  void _minimize() {
-    setState(() => _isMinimized = true);
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        // 창이 열려있을 때만 반투명 배경 표시 (페이드 적용)
-        if (!_isMinimized)
-          Positioned.fill(
-            child: FadeTransition(
-              opacity: _fadeAnim,
-              child: GestureDetector(
-                onTap: () {}, // 배경 터치 차단
-                child: Container(color: Colors.black.withOpacity(0.4)),
-              ),
-            ),
-          ),
-
-        // 창이 열려있을 때 전체 창 표시 (스케일 + 페이드 적용)
-        if (!_isMinimized)
-          Positioned.fill(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: FadeTransition(
-                opacity: _fadeAnim,
-                child: ScaleTransition(
-                  scale: _scaleAnim,
-                  child: Material(
-                    elevation: 16,
-                    borderRadius: BorderRadius.circular(8),
-                    clipBehavior: Clip.antiAlias,
-                    child: Column(
-                      children: [
-                        _buildTitleBar(context),
-                        Expanded(child: widget.child),
+    // 1. 전체 모드일 때
+    if (!_isMinimized) {
+      return Positioned.fill(
+        // 여기서 패딩값을 조절하여 뒤의 배경이 얼마나 보일지 결정합니다.
+        child: Padding(
+          padding: const EdgeInsets.all(20.0), // 상하좌우 40만큼 여백
+          child: ScaleTransition(
+            scale: _scaleAnim,
+            child: Material(
+              elevation: 20,
+              borderRadius: BorderRadius.circular(12),
+              clipBehavior: Clip.antiAlias,
+              child: Column(
+                children: [
+                  _buildTitleBar(context),
+                  // Overlay로 감싸서 내부 overlay scope를 생성:
+                  // DropdownButtonFormField가 이 inner Overlay에 메뉴를 삽입하므로
+                  // floating window OverlayEntry보다 위에 렌더링됨
+                  Expanded(
+                    child: Overlay(
+                      initialEntries: [
+                        OverlayEntry(builder: (context) => widget.child),
                       ],
                     ),
                   ),
-                ),
+                ],
               ),
             ),
           ),
+        ),
+      );
+    }
 
-        // 최소화 상태일 때 우측 하단에 작은 탭 표시
-        if (_isMinimized)
-          Positioned(
-            bottom: 0,
-            right: 16,
-            child: Material(
-              elevation: 8,
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(8),
-                topRight: Radius.circular(8),
-              ),
-              color: context.colors.selectedColor,
-              child: InkWell(
-                onTap: _restore,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(8),
-                  topRight: Radius.circular(8),
+    // 2. 최소화 모드일 때 (핵심: Stack 전체를 차지하지 않고 우측 하단에만 위치)
+    return Positioned(
+      bottom: 0,
+      right: 16,
+      child: Material(
+        elevation: 8,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(8),
+          topRight: Radius.circular(8),
+        ),
+        color: context.colors.selectedColor,
+        child: InkWell(
+          onTap: () => setState(() {
+            _isMinimized = false;
+            _controller.forward(from: 0);
+          }),
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(8),
+            topRight: Radius.circular(8),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.only(
+              left: 14,
+              right: 6,
+              top: 8,
+              bottom: 8,
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.assignment_outlined,
+                  size: 14,
+                  color: context.colors.white,
                 ),
-                child: Padding(
-                  padding: const EdgeInsets.only(
-                    left: 14,
-                    right: 6,
-                    top: 8,
-                    bottom: 8,
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Icons.assignment_outlined,
-                        size: 14,
-                        color: Colors.white,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        widget.title,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      InkWell(
-                        onTap: widget.onClose,
-                        borderRadius: BorderRadius.circular(12),
-                        child: const Padding(
-                          padding: EdgeInsets.all(2),
-                          child: Icon(
-                            Icons.close,
-                            size: 14,
-                            color: Colors.white70,
-                          ),
-                        ),
-                      ),
-                    ],
+                const SizedBox(width: 6),
+                Text(
+                  widget.title,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
                   ),
                 ),
-              ),
+                const SizedBox(width: 8),
+                InkWell(
+                  onTap: widget.onClose,
+                  borderRadius: BorderRadius.circular(12),
+                  child: Padding(
+                    padding: EdgeInsets.all(2),
+                    child: Icon(
+                      Icons.close,
+                      size: 14,
+                      color: context.colors.white,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-      ],
+        ),
+      ),
     );
   }
 
   Widget _buildTitleBar(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.only(left: 16, right: 8, top: 4, bottom: 4),
-      color: context.colors.gray10,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+      color: context.colors.cardBackground,
       child: Row(
         children: [
-          const Icon(Icons.assignment_outlined, size: 16),
-          const SizedBox(width: 8),
           Text(
             widget.title,
-            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+            style: const TextStyle(fontWeight: FontWeight.bold),
           ),
           const Spacer(),
           IconButton(
-            tooltip: '최소화',
-            icon: const Icon(Icons.remove, size: 18),
-            onPressed: _minimize,
-            visualDensity: VisualDensity.compact,
+            icon: const Icon(size: 18, Icons.remove),
+            onPressed: () => setState(() => _isMinimized = true),
           ),
           IconButton(
-            tooltip: '닫기',
-            icon: const Icon(Icons.close, size: 18),
+            icon: const Icon(size: 18, Icons.close),
             onPressed: widget.onClose,
-            visualDensity: VisualDensity.compact,
           ),
         ],
       ),

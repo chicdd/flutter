@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../functions.dart';
 import '../services/api_service.dart';
 
 /// 기본고객정보 / 고객등록 화면이 공유하는 폼 데이터
@@ -47,6 +48,28 @@ class CustomerFormData {
   final memo1Controller = TextEditingController(); // 메모1
   final memo2Controller = TextEditingController(); // 메모2
 
+  // ========================================
+  // 고객 추가 메모사항
+  // ========================================
+  final openingPhoneController = TextEditingController(); // 개통전화번호
+  final openingDateController = TextEditingController(); // 개통일자
+  final modemSerialController = TextEditingController(); // 모뎀일련번호
+  final additionalMemoController = TextEditingController(); // 추가메모
+
+  // ========================================
+  // 고객 GPS 좌표
+  // ========================================
+  final gpsX1Controller = TextEditingController();
+  final gpsY1Controller = TextEditingController();
+  final gpsX2Controller = TextEditingController();
+  final gpsY2Controller = TextEditingController();
+
+  // ========================================
+  // 전용회선 관리
+  // ========================================
+  final dedicatedNumberController = TextEditingController();
+  final dedicatedMemoController = TextEditingController();
+
   // ==============================
   // 드롭다운 선택값
   // ==============================
@@ -62,6 +85,21 @@ class CustomerFormData {
   String? selectedMainSystem; // 주장치종류
   String? selectedSubSystem; // 주장치분류
   String? selectedMiSettings; // 미경계설정
+  String? selectedCompanyType; // 회사구분
+  String? selectedBranchType; // 지사구분
+  String? selectedAdditionalServiceType; // 부가서비스종류
+  String? selectedAdditionalServiceETC; // 지사구분
+  String? selectedDvrType; // 지사구분
+
+  // ==============================
+  // 필수 입력 오류 플래그
+  // ==============================
+  bool errorManagementNumber = false;
+  bool errorControlType = false;
+  bool errorManagementArea = false;
+  bool errorMainSystem = false;
+  bool errorCompanyType = false;
+  bool errorBranchType = false;
 
   // ==============================
   // 드롭다운 목록
@@ -78,6 +116,74 @@ class CustomerFormData {
   List<CodeData> mainSystemList = [];
   List<CodeData> subSystemList = [];
   List<CodeData> miSettingsList = [];
+  List<CodeData> companyTypeList = [];
+  List<CodeData> branchTypeList = [];
+  List<CodeData> additionalServiceTypeList = [];
+  List<CodeData> additionalServiceETCList = [];
+  List<CodeData> dvrTypeList = [];
+
+  /// 데이터 초기화 (순차 처리)
+  Future<void> initializeData() async {
+    // 1. 드롭다운 데이터 먼저 로드
+    managementAreaList = await loadDropdownData('managementarea');
+    operationAreaList = await loadDropdownData('operationarea');
+    businessTypeList = await loadDropdownData('businesstype');
+    vehicleCodeList = await loadDropdownData('vehiclecode');
+    policeStationList = await loadDropdownData('policestation');
+    policeDistrictList = await loadDropdownData('policedistrict');
+    usageLineList = await loadDropdownData('usageline');
+    serviceTypeList = await loadDropdownData('servicetype');
+    mainSystemList = await loadDropdownData('mainsystem');
+    subSystemList = await loadDropdownData('subsystem');
+    miSettingsList = await loadDropdownData('misettings');
+    customerStatusList = await loadDropdownData('customerstatus');
+    companyTypeList = await loadDropdownData('companytype');
+    branchTypeList = await loadDropdownData('branchtype');
+    additionalServiceTypeList = await loadDropdownData('addservicetype');
+    additionalServiceETCList = await loadDropdownData('addserviceetc');
+    dvrTypeList = await loadDropdownData('dvrtype');
+  }
+
+  // ==============================
+  // 경계약정 및 무단해제 설정
+  // ==============================
+  int? weekdayGuardStartHour;
+  int? weekdayGuardStartMinute;
+  int? weekdayGuardEndHour;
+  int? weekdayGuardEndMinute;
+  int? weekdayUnauthorizedStartHour;
+  int? weekdayUnauthorizedStartMinute;
+  int? weekdayUnauthorizedEndHour;
+  int? weekdayUnauthorizedEndMinute;
+  bool isWeekdayUsed = false;
+
+  int? weekendGuardStartHour;
+  int? weekendGuardStartMinute;
+  int? weekendGuardEndHour;
+  int? weekendGuardEndMinute;
+  int? weekendUnauthorizedStartHour;
+  int? weekendUnauthorizedStartMinute;
+  int? weekendUnauthorizedEndHour;
+  int? weekendUnauthorizedEndMinute;
+  bool isWeekendUsed = false;
+
+  int? holidayGuardStartHour;
+  int? holidayGuardStartMinute;
+  int? holidayGuardEndHour;
+  int? holidayGuardEndMinute;
+  int? holidayUnauthorizedStartHour;
+  int? holidayUnauthorizedStartMinute;
+  int? holidayUnauthorizedEndHour;
+  int? holidayUnauthorizedEndMinute;
+  bool isHolidayUsed = false;
+
+  // ========================================
+  // 주간 휴일설정
+  // ========================================
+  final List<List<bool>> weeklyHolidays = List.generate(
+    5,
+    (_) => List.generate(7, (_) => false),
+  );
 
   // ==============================
   // 기타 상태
@@ -87,6 +193,28 @@ class CustomerFormData {
   bool isDvrInspection = false; // DVR여부
   bool isWirelessSensorInspection = false; // 무선센서설치여부
   List<String> linkedPhoneNumbers = []; // 연동전화번호 목록
+
+  // ========================================
+  // 부가서비스 제공
+  // ========================================
+  String? newAsServiceCode;
+  String? newAsProvisionCode;
+  final newAsDateController = TextEditingController();
+  final newAsMemoController = TextEditingController();
+  final TextEditingController dateController = TextEditingController();
+  List<Map<String, dynamic>> additionalServiceItems = [];
+  // ========================================
+  // DVR 설치현황
+  // ========================================
+  bool newDvrConnectionMethod = false; // false=CS, true=WEB
+  String? newDvrTypeCode;
+  final newDvrAddressController = TextEditingController();
+  final newDvrPortController = TextEditingController();
+  final newDvrIdController = TextEditingController();
+  final newDvrPasswordController = TextEditingController();
+  final dvrSNController = TextEditingController();
+  List<Map<String, dynamic>> dvrItems = [];
+  late TabController tabController;
 
   // ==============================
   // 모든 컨트롤러/상태 초기화
@@ -133,11 +261,55 @@ class CustomerFormData {
     selectedMainSystem = null;
     selectedSubSystem = null;
     selectedMiSettings = null;
+    selectedMiSettings = null;
+    selectedMiSettings = null;
+    selectedCompanyType = null;
+    selectedBranchType = null;
+    selectedAdditionalServiceType = null;
+    selectedAdditionalServiceETC = null;
+    selectedDvrType = null;
+
     linkedPhoneNumbers = [];
+
+    weekdayGuardStartHour = null;
+    weekdayGuardStartMinute = null;
+    weekdayGuardEndHour = null;
+    weekdayGuardEndMinute = null;
+    weekdayUnauthorizedStartHour = null;
+    weekdayUnauthorizedStartMinute = null;
+    weekdayUnauthorizedEndHour = null;
+    weekdayUnauthorizedEndMinute = null;
+    isWeekdayUsed = false;
+    weekendGuardStartHour = null;
+    weekendGuardStartMinute = null;
+    weekendGuardEndHour = null;
+    weekendGuardEndMinute = null;
+    weekendUnauthorizedStartHour = null;
+    weekendUnauthorizedStartMinute = null;
+    weekendUnauthorizedEndHour = null;
+    weekendUnauthorizedEndMinute = null;
+    isWeekendUsed = false;
+    holidayGuardStartHour = null;
+    holidayGuardStartMinute = null;
+    holidayGuardEndHour = null;
+    holidayGuardEndMinute = null;
+    holidayUnauthorizedStartHour = null;
+    holidayUnauthorizedStartMinute = null;
+    holidayUnauthorizedEndHour = null;
+    holidayUnauthorizedEndMinute = null;
+    isHolidayUsed = false;
+
     monthlyAggregation = false;
     hasKeyHolder = false;
     isDvrInspection = false;
     isWirelessSensorInspection = false;
+
+    // 휴일주간 초기화
+    for (var i = 0; i < 5; i++) {
+      for (var j = 0; j < 7; j++) {
+        weeklyHolidays[i][j] = false;
+      }
+    }
   }
 
   void dispose() {
@@ -169,5 +341,39 @@ class CustomerFormData {
     controlActionController.dispose();
     memo1Controller.dispose();
     memo2Controller.dispose();
+
+    // 관제 액션 비고
+    controlActionController.dispose();
+    memo1Controller.dispose();
+    memo2Controller.dispose();
+
+    // 고객 추가 메모사항
+    openingPhoneController.dispose();
+    openingDateController.dispose();
+    modemSerialController.dispose();
+    additionalMemoController.dispose();
+
+    // GPS 좌표
+    gpsX1Controller.dispose();
+    gpsY1Controller.dispose();
+    gpsX2Controller.dispose();
+    gpsY2Controller.dispose();
+
+    // 전용회선
+    dedicatedNumberController.dispose();
+    dedicatedMemoController.dispose();
+
+    // 부가서비스
+    newAsDateController.dispose();
+    newAsMemoController.dispose();
+
+    // DVR
+    newDvrAddressController.dispose();
+    newDvrPortController.dispose();
+    newDvrIdController.dispose();
+    newDvrPasswordController.dispose();
+    dvrSNController.dispose();
+
+    tabController.dispose();
   }
 }
