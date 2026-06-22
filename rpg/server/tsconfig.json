@@ -1,0 +1,32 @@
+{
+  "//": "Nakama JS 런타임(Goja)용 빌드. 공식 nakama-project-template 방식: tsc + outFile + es5.",
+  "//2": "rollup/ES모듈 금지 — Nakama AST 분석기는 전역 var/함수 선언만 인식한다.",
+  "files": [
+    "./types/nakama-runtime.d.ts",
+    "./src/util/types.ts",
+    "./src/util/rng.ts",
+    "./src/util/rateLimit.ts",
+    "./src/util/instanceGen.ts",
+    "./src/supabase/client.ts",
+    "./src/rpc/createInstance.ts",
+    "./src/rpc/reportKill.ts",
+    "./src/rpc/enhanceItem.ts",
+    "./src/rpc/inventory.ts",
+    "./src/rpc/market.ts",
+    "./src/match/tradeHandler.ts",
+    "./src/match/worldHandler.ts",
+    "./src/rpc/worldMatch.ts",
+    "./src/main.ts"
+  ],
+  "compilerOptions": {
+    "target": "es5",
+    "outFile": "./build/index.js",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitReturns": true,
+    "removeComments": true,
+    "lib": ["es2017"]
+  }
+}

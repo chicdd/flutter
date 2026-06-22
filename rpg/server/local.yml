@@ -1,0 +1,18 @@
+# Nakama 로컬 설정 (§10)
+# runtime.path 아래의 js_entrypoint 를 단일 번들로 로드한다.
+# docker-compose 가 ./build 를 /nakama/data/build 로 마운트한다.
+name: rpg-nakama
+runtime:
+  path: "/nakama/data/build"
+  js_entrypoint: "index.js"
+  # SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY 는 docker-compose 의 --runtime.env 로 주입한다.
+  # (여기 직접 적지 말 것: 비밀키는 .env → compose 경유)
+
+console:
+  max_message_size_bytes: 409600
+
+session:
+  token_expiry_sec: 7200
+
+logger:
+  level: "INFO"
