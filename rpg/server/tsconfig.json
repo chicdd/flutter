@@ -16,6 +16,7 @@
     "./src/match/tradeHandler.ts",
     "./src/match/worldHandler.ts",
     "./src/rpc/worldMatch.ts",
+    "./src/rpc/auth.ts",
     "./src/main.ts"
   ],
   "compilerOptions": {

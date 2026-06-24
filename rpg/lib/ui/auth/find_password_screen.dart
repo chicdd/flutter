@@ -63,6 +63,7 @@ class _FindPasswordScreenState extends State<FindPasswordScreen> {
   Future<void> _reset() async {
     final res = await AuthService.instance.resetPassword(
       id: _id.text,
+      hintAnswer: _answer.text,
       newPassword: _newPw.text,
       newPasswordConfirm: _newPw2.text,
     );
@@ -164,7 +165,7 @@ class _FindPasswordScreenState extends State<FindPasswordScreen> {
                     controller: _newPw,
                     obscureText: true,
                     decoration: const InputDecoration(
-                      labelText: '새 비밀번호 (4자 이상)',
+                      labelText: '새 비밀번호 (8자 이상)',
                       prefixIcon: Icon(Icons.lock_reset),
                       border: OutlineInputBorder(),
                     ),

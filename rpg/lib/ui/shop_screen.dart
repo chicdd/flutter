@@ -33,7 +33,6 @@ class ShopView extends StatefulWidget {
 
 class _ShopViewState extends State<ShopView> {
   static const int scrollPrice = 40;
-  static const int drawPrice = 120;
   final _rng = Random();
   String? _msg;
 
@@ -54,6 +53,9 @@ class _ShopViewState extends State<ShopView> {
   }
 
   void _upgradeGacha() {
+    if (!p.canUpgradeGacha) {
+      return _show('뽑기 레벨은 내 레벨(${p.level})을 넘을 수 없습니다. 레벨업 후 가능합니다.');
+    }
     final cost = p.gachaUpgradeCost;
     if (!p.upgradeGacha()) return _show('골드가 부족합니다. (필요 ${cost}G)');
     _show('장비 뽑기 레벨 ${p.gachaLevel} 달성!');
@@ -73,15 +75,20 @@ class _ShopViewState extends State<ShopView> {
 
   void _draw() {
     if (p.bagFull) return _show('가방이 가득 찼습니다.');
-    if (!p.spendGold(drawPrice)) return _show('골드가 부족합니다.');
+    if (!p.spendGold(p.gachaDrawCost)) return _show('골드가 부족합니다.');
     // 뽑기 레벨이 내 레벨까지 올라야 내 레벨 장비가 나온다.
     final lvl = min(p.level, p.gachaLevel);
-    final item = GearGenerator.random(level: lvl, rarity: _drawRarity(), rng: _rng);
+    final item = GearGenerator.random(
+      level: lvl,
+      rarity: _drawRarity(),
+      rng: _rng,
+    );
     p.addItem(item);
     _show('${item.rarity.label} ${item.name} (iLv ${item.itemLevel}) 획득!');
   }
 
-  String _id() => 's${DateTime.now().microsecondsSinceEpoch}_${_rng.nextInt(9999)}';
+  String _id() =>
+      's${DateTime.now().microsecondsSinceEpoch}_${_rng.nextInt(9999)}';
 
   @override
   Widget build(BuildContext context) {
@@ -90,16 +97,27 @@ class _ShopViewState extends State<ShopView> {
       builder: (context, _) => ListView(
         padding: const EdgeInsets.all(14),
         children: [
-          Row(children: [
-            const Icon(Icons.monetization_on, color: Color(0xFFFFD54F)),
-            const SizedBox(width: 6),
-            Text('보유 골드: ${p.gold}',
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFFFFD54F))),
-          ]),
+          Row(
+            children: [
+              const Icon(Icons.monetization_on, color: Color(0xFFFFD54F)),
+              const SizedBox(width: 6),
+              Text(
+                '보유 골드: ${p.gold}',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFFFFD54F),
+                ),
+              ),
+            ],
+          ),
           if (_msg != null)
             Padding(
               padding: const EdgeInsets.only(top: 8),
-              child: Text(_msg!, style: const TextStyle(color: Colors.lightGreenAccent)),
+              child: Text(
+                _msg!,
+                style: const TextStyle(color: Colors.lightGreenAccent),
+              ),
             ),
           const Divider(height: 28),
 
@@ -107,12 +125,22 @@ class _ShopViewState extends State<ShopView> {
           _box(
             ItemIcon(glyph: ItemGlyph.crystal, rarity: Rarity.epic, size: 44),
             '장비 뽑기  (뽑기 레벨 ${p.gachaLevel})',
-            '뽑기 레벨까지의 장비가 나옵니다(현재 iLv ${min(p.level, p.gachaLevel)}). 내 레벨(${p.level})에 맞추려면 레벨업하세요.',
+            '뽑기 레벨까지의 장비가 나옵니다(현재 Lv ${min(p.level, p.gachaLevel)}). 내 레벨(${p.level})에 맞추려면 레벨업하세요.',
             [
-              FilledButton.icon(onPressed: _draw, icon: const Icon(Icons.casino), label: const Text('뽑기 ${drawPrice}G')),
+              FilledButton.icon(
+                onPressed: _draw,
+                icon: const Icon(Icons.casino),
+                label: Text('뽑기 ${p.gachaDrawCost}G'),
+              ),
               const SizedBox(width: 8),
               OutlinedButton(
-                  onPressed: _upgradeGacha, child: Text('뽑기 레벨업 ${p.gachaUpgradeCost}G')),
+                onPressed: p.canUpgradeGacha ? _upgradeGacha : null,
+                child: Text(
+                  p.canUpgradeGacha
+                      ? '뽑기 레벨업 ${p.gachaUpgradeCost}G'
+                      : '레벨업 (내 레벨 도달)',
+                ),
+              ),
             ],
           ),
 
@@ -122,19 +150,35 @@ class _ShopViewState extends State<ShopView> {
             '초급 포션 (30% 회복)',
             '개당 8G',
             [
-              FilledButton(onPressed: () => _buyPotion(MiscKind.healthPotion, 8, 1), child: const Text('1개')),
+              FilledButton(
+                onPressed: () => _buyPotion(MiscKind.healthPotion, 8, 1),
+                child: const Text('1개'),
+              ),
               const SizedBox(width: 8),
-              FilledButton(onPressed: () => _buyPotion(MiscKind.healthPotion, 8, 10), child: const Text('10개')),
+              FilledButton(
+                onPressed: () => _buyPotion(MiscKind.healthPotion, 8, 10),
+                child: const Text('10개'),
+              ),
             ],
           ),
           _box(
-            ItemIcon(glyph: ItemGlyph.potion, rarity: Rarity.uncommon, size: 44),
+            ItemIcon(
+              glyph: ItemGlyph.potion,
+              rarity: Rarity.uncommon,
+              size: 44,
+            ),
             '중급 포션 (55% 회복)',
             '개당 20G',
             [
-              FilledButton(onPressed: () => _buyPotion(MiscKind.potionMedium, 20, 1), child: const Text('1개')),
+              FilledButton(
+                onPressed: () => _buyPotion(MiscKind.potionMedium, 20, 1),
+                child: const Text('1개'),
+              ),
               const SizedBox(width: 8),
-              FilledButton(onPressed: () => _buyPotion(MiscKind.potionMedium, 20, 5), child: const Text('5개')),
+              FilledButton(
+                onPressed: () => _buyPotion(MiscKind.potionMedium, 20, 5),
+                child: const Text('5개'),
+              ),
             ],
           ),
           _box(
@@ -142,9 +186,15 @@ class _ShopViewState extends State<ShopView> {
             '고급 포션 (80% 회복)',
             '개당 45G',
             [
-              FilledButton(onPressed: () => _buyPotion(MiscKind.potionLarge, 45, 1), child: const Text('1개')),
+              FilledButton(
+                onPressed: () => _buyPotion(MiscKind.potionLarge, 45, 1),
+                child: const Text('1개'),
+              ),
               const SizedBox(width: 8),
-              FilledButton(onPressed: () => _buyPotion(MiscKind.potionLarge, 45, 3), child: const Text('3개')),
+              FilledButton(
+                onPressed: () => _buyPotion(MiscKind.potionLarge, 45, 3),
+                child: const Text('3개'),
+              ),
             ],
           ),
 
@@ -154,9 +204,35 @@ class _ShopViewState extends State<ShopView> {
             '마을 귀환 주문서',
             '사용 시 마을로 즉시 귀환 (단축키 B) · 개당 ${scrollPrice}G',
             [
-              FilledButton(onPressed: () => _buyScroll(1), child: const Text('1개')),
+              FilledButton(
+                onPressed: () => _buyScroll(1),
+                child: const Text('1개'),
+              ),
               const SizedBox(width: 8),
-              FilledButton(onPressed: () => _buyScroll(5), child: const Text('5개')),
+              FilledButton(
+                onPressed: () => _buyScroll(5),
+                child: const Text('5개'),
+              ),
+            ],
+          ),
+
+          // 스킬 관리(전직 후 사용).
+          _box(
+            const Icon(Icons.undo, color: Color(0xFF9FA8DA), size: 34),
+            '스킬 되돌리기',
+            '사용(더블클릭→스킬 선택) 시 스킬 1레벨을 내리고 스킬포인트 1을 돌려받습니다. · 개당 80G',
+            [
+              FilledButton(onPressed: () => _buyPotion(MiscKind.skillRefund, 80, 1), child: const Text('1개')),
+              const SizedBox(width: 8),
+              FilledButton(onPressed: () => _buyPotion(MiscKind.skillRefund, 80, 5), child: const Text('5개')),
+            ],
+          ),
+          _box(
+            const Icon(Icons.restart_alt, color: Color(0xFFCE93D8), size: 34),
+            '스킬포인트 초기화',
+            '사용 시 모든 스킬을 0으로 되돌리고 스킬포인트를 전부 돌려받습니다. · 개당 400G',
+            [
+              FilledButton(onPressed: () => _buyPotion(MiscKind.skillReset, 400, 1), child: const Text('1개')),
             ],
           ),
 
@@ -165,19 +241,26 @@ class _ShopViewState extends State<ShopView> {
             const Icon(Icons.trending_down, color: Color(0xFFEF9A9A), size: 34),
             '약한 장비 일괄 판매',
             '장착 장비보다 약한(잠금 제외) 장비를 모두 판매',
-            [OutlinedButton.icon(
-                onPressed: () => _show('약한 장비 판매: +${p.sellWeakerThanEquipped()}G'),
+            [
+              OutlinedButton.icon(
+                onPressed: () =>
+                    _show('약한 장비 판매: +${p.sellWeakerThanEquipped()}G'),
                 icon: const Icon(Icons.sell),
-                label: const Text('판매'))],
+                label: const Text('판매'),
+              ),
+            ],
           ),
           _box(
             const Icon(Icons.delete_sweep, color: Color(0xFFEF9A9A), size: 34),
             '잡템 일괄 판매',
             '평범/고급 장비 + 재료(잠금 제외) 판매',
-            [OutlinedButton.icon(
+            [
+              OutlinedButton.icon(
                 onPressed: () => _show('잡템 판매: +${p.sellBulk()}G'),
                 icon: const Icon(Icons.sell),
-                label: const Text('판매'))],
+                label: const Text('판매'),
+              ),
+            ],
           ),
         ],
       ),
@@ -188,7 +271,10 @@ class _ShopViewState extends State<ShopView> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(color: const Color(0xFF242424), borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(
+        color: const Color(0xFF242424),
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -198,9 +284,18 @@ class _ShopViewState extends State<ShopView> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                  ),
+                ),
                 const SizedBox(height: 2),
-                Text(desc, style: const TextStyle(color: Colors.white54, fontSize: 12)),
+                Text(
+                  desc,
+                  style: const TextStyle(color: Colors.white54, fontSize: 12),
+                ),
                 const SizedBox(height: 8),
                 Wrap(spacing: 0, runSpacing: 6, children: actions),
               ],

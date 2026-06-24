@@ -72,7 +72,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: 12),
                 _field(_nick, '닉네임 (아이디 찾기에 사용)', Icons.badge),
                 const SizedBox(height: 12),
-                _field(_pw, '비밀번호 (4자 이상)', Icons.lock, obscure: true),
+                _field(_pw, '비밀번호 (8자 이상)', Icons.lock, obscure: true),
                 const SizedBox(height: 12),
                 _field(_pw2, '비밀번호 확인', Icons.lock_outline, obscure: true),
                 const Divider(height: 32),

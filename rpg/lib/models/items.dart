@@ -12,7 +12,11 @@ abstract class BagItem {
 }
 
 // 주의: 새 종류는 반드시 끝에 추가(저장 index 호환).
-enum MiscKind { healthPotion, monsterHide, magicCrystal, ancientCoin, potionMedium, potionLarge, townScroll }
+enum MiscKind {
+  healthPotion, monsterHide, magicCrystal, ancientCoin, potionMedium, potionLarge, townScroll,
+  skillReset, // 전체 스킬포인트 초기화
+  skillRefund, // 스킬 1레벨 되돌리기(포인트 1 회수)
+}
 
 extension MiscKindX on MiscKind {
   String get name => switch (this) {
@@ -23,6 +27,8 @@ extension MiscKindX on MiscKind {
         MiscKind.monsterHide => '몬스터 가죽',
         MiscKind.magicCrystal => '마력 결정',
         MiscKind.ancientCoin => '고대 주화',
+        MiscKind.skillReset => '스킬포인트 초기화',
+        MiscKind.skillRefund => '스킬 되돌리기',
       };
 
   Rarity get rarity => switch (this) {
@@ -33,6 +39,8 @@ extension MiscKindX on MiscKind {
         MiscKind.monsterHide => Rarity.common,
         MiscKind.magicCrystal => Rarity.rare,
         MiscKind.ancientCoin => Rarity.epic,
+        MiscKind.skillReset => Rarity.epic,
+        MiscKind.skillRefund => Rarity.rare,
       };
 
   int get sellUnit => switch (this) {
@@ -43,6 +51,8 @@ extension MiscKindX on MiscKind {
         MiscKind.monsterHide => 5,
         MiscKind.magicCrystal => 40,
         MiscKind.ancientCoin => 120,
+        MiscKind.skillReset => 50,
+        MiscKind.skillRefund => 10,
       };
 
   // 회복 비율(0 이면 회복 아이템 아님).
@@ -56,6 +66,9 @@ extension MiscKindX on MiscKind {
   bool get usableHeal => healPercent > 0;
   bool get isTownScroll => this == MiscKind.townScroll;
   bool get isMaterial => this == MiscKind.monsterHide || this == MiscKind.magicCrystal || this == MiscKind.ancientCoin;
+  bool get isSkillReset => this == MiscKind.skillReset;
+  bool get isSkillRefund => this == MiscKind.skillRefund;
+  bool get isSkillItem => isSkillReset || isSkillRefund;
 }
 
 class MiscItem implements BagItem {

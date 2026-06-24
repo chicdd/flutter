@@ -9,6 +9,7 @@ import '../../models/combat_stats.dart';
 import '../../models/instance.dart';
 import '../../models/monster_catalog.dart';
 import '../../world/reward_calc.dart';
+import '../net/net_sync.dart';
 import 'player.dart';
 
 class MonsterComponent extends PositionComponent {
@@ -27,9 +28,11 @@ class MonsterComponent extends PositionComponent {
   // 서버 권위 공유 몬스터 여부. true 면 AI/HP 를 서버가 소유하고 위치/HP 는 스냅샷으로 갱신.
   final bool networked;
   final int? netId;
-  final Vector2 _netTarget = Vector2.zero();
+  final NetClock? clock; // 네트워크 재생 클록(공유)
+  NetInterpolator? _interp; // 지터 버퍼 + 보간 + 추측 항법
 
   String get displayName => def.name;
+  bool get isBoss => def.boss; // 경험치 ×10
 
   static const double aggroRange = 280;
   static const double meleeRange = 38;
@@ -41,6 +44,13 @@ class MonsterComponent extends PositionComponent {
   double _attackTimer = 0;
   double _flash = 0;
   double _glow = 0;
+  double _stun = 0; // 스턴 남은 시간(초) — 이동/공격 정지
+  double _dotMult = 0; // 중독 도트 계수(능력치 대비)
+  double _dotRemaining = 0; // 도트 남은 시간(초)
+  double _dotTick = 0; // 다음 틱까지(초)
+  void Function(MonsterComponent m, double mult)? _onDotTick;
+  double _slow = 0; // 둔화 남은 시간(초)
+  double _slowFactor = 1.0; // 이동속도 배수(0.6 = 40% 둔화)
 
   MonsterComponent({
     required this.data,
@@ -51,6 +61,7 @@ class MonsterComponent extends PositionComponent {
     required this.onMelee,
     this.networked = false,
     this.netId,
+    this.clock,
   })  : def = monsterDef(data.templateId),
         stats = monsterDef(data.templateId).stats.scaled(levelScale * (elite ? 1.8 : 1.0)),
         super(anchor: Anchor.center, position: Vector2(data.x, data.y)) {
@@ -61,12 +72,12 @@ class MonsterComponent extends PositionComponent {
     _hp = _maxHp;
     _moveSpeed = def.speed * (elite ? 0.9 : 1.0);
     _attackInterval = elite ? 1.3 : 1.1;
-    _netTarget.setValues(data.x, data.y);
+    if (networked) _interp = NetInterpolator();
   }
 
-  // 서버 스냅샷 반영(위치 보간 목표 + 권위 HP).
-  void applyNet(double x, double y, int hp, int mhp) {
-    _netTarget.setValues(x, y);
+  // 서버 스냅샷 반영(틱·좌표·속도 → 지터버퍼 push, HP 는 권위).
+  void pushNet(int tick, double x, double y, double vx, double vy, int hp, int mhp) {
+    _interp?.push(tick.toDouble(), Vector2(x, y), Vector2(vx, vy));
     _hp = hp;
     _maxHp = mhp;
   }
@@ -85,17 +96,52 @@ class MonsterComponent extends PositionComponent {
     ledger.record(by, amount);
   }
 
+  // 처형 판정용 현재 체력 비율(0~1).
+  double get hpRatio => _maxHp == 0 ? 0 : (_hp / _maxHp).clamp(0.0, 1.0);
+
+  // 스턴 부여(기존보다 길면 갱신).
+  void applyStun(double sec) {
+    if (sec > _stun) _stun = sec;
+  }
+
+  // 중독 등 지속 피해 — 1초마다 onTick(this, mult) 호출(데미지 적용은 호출부=RpgGame).
+  void applyDot(double mult, double duration, void Function(MonsterComponent, double) onTick) {
+    _dotMult = mult;
+    _dotRemaining = duration;
+    _dotTick = 1.0;
+    _onDotTick = onTick;
+  }
+
+  // 이동속도 둔화(factor=0.6 → 40% 감속).
+  void applySlow(double factor, double duration) {
+    _slowFactor = factor;
+    _slow = duration;
+  }
+
   @override
   void update(double dt) {
     super.update(dt);
     if (_flash > 0) _flash -= dt;
+    if (_stun > 0) _stun -= dt;
+    if (_slow > 0) _slow -= dt;
+    // 중독 도트: 1초마다 틱(데미지는 콜백으로 RpgGame 이 적용).
+    if (_dotRemaining > 0) {
+      _dotRemaining -= dt;
+      _dotTick -= dt;
+      if (_dotTick <= 0) {
+        _dotTick += 1.0;
+        if (!isDead) _onDotTick?.call(this, _dotMult);
+      }
+    }
     _glow += dt * 3;
     if (isDead || player.isDead) return;
 
-    // 권위 모드: 위치는 서버 스냅샷으로 보간(AI 이동 없음). 근접 피해는 클라가 적용.
-    if (networked) {
-      position += (_netTarget - position) * (10 * dt).clamp(0.0, 1.0);
+    // 권위 모드: 위치는 지터버퍼 보간(서버보다 1~2틱 지연 재생, 끊기면 추측 항법).
+    if (networked && clock != null && _interp != null) {
+      position.setFrom(_interp!.sample(clock!.renderTick, clock!.dtPerTick));
     }
+
+    if (_stun > 0) return; // 스턴 중: 이동/공격 정지(위치는 networked 보간만 유지)
 
     final toPlayer = player.position - position;
     final dist = toPlayer.length;
@@ -108,7 +154,8 @@ class MonsterComponent extends PositionComponent {
       }
     } else if (!networked && dist <= aggroRange) {
       toPlayer.normalize();
-      position += toPlayer * _moveSpeed * dt;
+      final spd = _slow > 0 ? _moveSpeed * _slowFactor : _moveSpeed;
+      position += toPlayer * spd * dt;
     }
   }
 
@@ -156,14 +203,14 @@ class MonsterComponent extends PositionComponent {
     // 이름 + 레벨.
     TextPaint(
       style: TextStyle(
-        color: elite ? const Color(0xFFFFD54F) : const Color(0xFFFFFFFF),
-        fontSize: elite ? 12 : 11,
+        color: isBoss ? const Color(0xFFFF5252) : (elite ? const Color(0xFFFFD54F) : const Color(0xFFFFFFFF)),
+        fontSize: isBoss ? 13 : (elite ? 12 : 11),
         fontWeight: FontWeight.bold,
         shadows: const [Shadow(color: Color(0xFF000000), blurRadius: 2)],
       ),
     ).render(
       canvas,
-      '${elite ? '★ ' : ''}$displayName Lv.$level',
+      '${isBoss ? '☠ BOSS ' : (elite ? '★ ' : '')}$displayName Lv.$level',
       Vector2(s / 2, barY - 5),
       anchor: Anchor.bottomCenter,
     );

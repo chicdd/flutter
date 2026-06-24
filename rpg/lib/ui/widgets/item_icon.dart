@@ -43,6 +43,7 @@ ItemGlyph glyphForMisc(MiscKind k) => switch (k) {
       MiscKind.monsterHide => ItemGlyph.hide,
       MiscKind.magicCrystal => ItemGlyph.crystal,
       MiscKind.ancientCoin => ItemGlyph.coin,
+      MiscKind.skillReset || MiscKind.skillRefund => ItemGlyph.scroll,
     };
 
 class ItemIcon extends StatelessWidget {

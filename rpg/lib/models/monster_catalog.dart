@@ -37,6 +37,7 @@ class MonsterDef {
   final CombatStats stats;
   final int minLv; // 등장 최저 존 레벨
   final int maxLv; // 등장 최고 존 레벨
+  final bool boss; // 보스급(경험치 ×10)
 
   const MonsterDef({
     required this.id,
@@ -49,6 +50,7 @@ class MonsterDef {
     required this.stats,
     required this.minLv,
     required this.maxLv,
+    this.boss = false,
   });
 }
 
@@ -190,19 +192,19 @@ const List<MonsterDef> kMonsters = [
   // ── 환수/최종보스급 ──
   MonsterDef(
       id: 'chimera', name: '키메라', color: 0xFFEF6C00, sizeFactor: 1.4, speed: 90, shape: MonsterShape.chimera,
-      baseHp: 520, minLv: 32, maxLv: 46,
+      baseHp: 520, minLv: 32, maxLv: 46, boss: true,
       stats: CombatStats(attack: 54, defense: 18, armorPen: 12, critChance: 0.18, critMultiplier: 2.1, attackSpeed: 1.1)),
   MonsterDef(
       id: 'griffin', name: '그리폰', color: 0xFFC9A227, sizeFactor: 1.35, speed: 130, shape: MonsterShape.griffin,
-      baseHp: 480, minLv: 33, maxLv: 48,
+      baseHp: 480, minLv: 33, maxLv: 48, boss: true,
       stats: CombatStats(attack: 52, defense: 16, armorPen: 14, critChance: 0.20, critMultiplier: 2.0, attackSpeed: 1.4)),
   MonsterDef(
       id: 'wyvern', name: '와이번', color: 0xFF00897B, sizeFactor: 1.4, speed: 120, shape: MonsterShape.dragon,
-      baseHp: 560, minLv: 35, maxLv: 50,
+      baseHp: 560, minLv: 35, maxLv: 50, boss: true,
       stats: CombatStats(attack: 58, defense: 18, armorPen: 14, critChance: 0.18, critMultiplier: 2.1, attackSpeed: 1.2)),
   MonsterDef(
       id: 'dragon', name: '드래곤', color: 0xFFC62828, sizeFactor: 1.5, speed: 90, shape: MonsterShape.dragon,
-      baseHp: 800, minLv: 38, maxLv: 50,
+      baseHp: 800, minLv: 38, maxLv: 50, boss: true,
       stats: CombatStats(attack: 68, defense: 24, armorPen: 16, critChance: 0.20, critMultiplier: 2.2, attackSpeed: 1.1)),
 ];
 

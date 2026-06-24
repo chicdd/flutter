@@ -6,14 +6,26 @@ import 'package:flutter/material.dart';
 
 import '../models/gear.dart';
 import '../state/player_profile.dart';
+import 'widgets/gear_tooltip.dart';
 import 'widgets/item_icon.dart';
 
 class CharacterPanel extends StatelessWidget {
   final PlayerProfile profile;
   final String playerName;
   final VoidCallback? onClose;
+  final Map<EquipSlot, GlobalKey>? slotKeys; // 드래그 놓기 hit-test 용(빈 슬롯 포함)
+  final void Function(EquipSlot slot)? onUnequip; // 더블클릭=장착 해제
+  final void Function(EquipSlot slot, GearItem gear, Offset globalPos)? onSlotMenu; // 우클릭=메뉴(해제/버리기)
 
-  const CharacterPanel({super.key, required this.profile, required this.playerName, this.onClose});
+  const CharacterPanel({
+    super.key,
+    required this.profile,
+    required this.playerName,
+    this.onClose,
+    this.slotKeys,
+    this.onUnequip,
+    this.onSlotMenu,
+  });
 
   // 슬롯의 종이인형 상 위치(가로,세로 비율).
   static const Map<EquipSlot, Offset> _layout = {
@@ -161,16 +173,25 @@ class CharacterPanel extends StatelessWidget {
 
   Widget _slot(BuildContext context, EquipSlot s, double size) {
     final g = profile.equipped[s];
-    return GestureDetector(
-      onTap: g == null ? null : () => _gearDialog(context, s, g),
-      child: g == null
-          ? EmptySlotIcon(slot: s, size: size)
-          : ItemIcon(
-              glyph: g.weaponType != null ? glyphForWeapon(g.weaponType!) : glyphForKind(g.kind),
-              rarity: g.rarity,
-              size: size,
+    final Widget inner = g == null
+        ? EmptySlotIcon(slot: s, size: size)
+        // hover=정보 카드(데스크탑) / 더블클릭=장착 해제 / 우클릭=메뉴(해제·버리기) / 단일탭=상세(모바일 폴백).
+        : ItemHoverTooltip(
+            item: g,
+            child: GestureDetector(
+              onTap: () => _gearDialog(context, s, g),
+              onDoubleTap: () => onUnequip?.call(s),
+              onSecondaryTapDown:
+                  onSlotMenu != null ? (d) => onSlotMenu!(s, g, d.globalPosition) : null,
+              child: ItemIcon(
+                glyph: g.weaponType != null ? glyphForWeapon(g.weaponType!) : glyphForKind(g.kind),
+                rarity: g.rarity,
+                size: size,
+              ),
             ),
-    );
+          );
+    // 빈 슬롯도 드래그 놓기 대상이 되도록 key 부여.
+    return SizedBox(key: slotKeys?[s], width: size, height: size, child: inner);
   }
 
   Widget _statBlock() {
@@ -199,71 +220,34 @@ class CharacterPanel extends StatelessWidget {
   void _gearDialog(BuildContext context, EquipSlot slot, GearItem g) {
     showDialog<void>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1E1E1E),
-        title: Row(children: [
-          ItemIcon(
-              glyph: g.weaponType != null ? glyphForWeapon(g.weaponType!) : glyphForKind(g.kind),
-              rarity: g.rarity,
-              size: 40),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(g.displayName,
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(g.rarity.colorValue))),
-          ),
-        ]),
-        content: Column(
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        child: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('${g.rarity.label} · ${slot.label}', style: const TextStyle(color: Colors.white54)),
-            const Divider(),
-            ..._statRows(g),
+            // 강화 반영 능력치 카드(총합 + 기본/강화증가 분리).
+            GearStatsCard(gear: g, width: 290),
+            const SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                FilledButton.icon(
+                  onPressed: () {
+                    profile.unequip(slot);
+                    Navigator.pop(ctx);
+                  },
+                  icon: const Icon(Icons.remove_circle_outline),
+                  label: const Text('해제'),
+                ),
+                const SizedBox(width: 8),
+                OutlinedButton(onPressed: () => Navigator.pop(ctx), child: const Text('닫기')),
+              ],
+            ),
           ],
         ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('닫기')),
-          FilledButton.icon(
-            onPressed: () {
-              profile.unequip(slot);
-              Navigator.pop(ctx);
-            },
-            icon: const Icon(Icons.remove_circle_outline),
-            label: const Text('해제'),
-          ),
-        ],
       ),
     );
-  }
-
-  List<Widget> _statRows(GearItem g) {
-    final b = g.bonus;
-    final rows = <Widget>[];
-    void add(String label, double v, int mode) {
-      if (v == 0) return;
-      final value = switch (mode) {
-        1 => '+${(v * 100).toStringAsFixed(0)}%',
-        2 => '+${v.toStringAsFixed(2)}',
-        _ => '+${v.round()}',
-      };
-      rows.add(Padding(
-        padding: const EdgeInsets.symmetric(vertical: 2),
-        child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-          Text('• $label', style: const TextStyle(color: Colors.white70, fontSize: 13)),
-          Text(value, style: const TextStyle(color: Color(0xFF81C784), fontSize: 13)),
-        ]),
-      ));
-    }
-
-    add('공격력', b.attack, 0);
-    add('방어력', b.defense, 0);
-    add('최대 체력', b.maxHp, 0);
-    add('방어구 관통', b.armorPen, 0);
-    add('크리티컬 확률', b.critChance, 1);
-    add('크리티컬 배수', b.critMultiplier, 2);
-    add('공격 속도', b.attackSpeed, 2);
-    if (rows.isEmpty) rows.add(const Text('• 옵션 없음', style: TextStyle(color: Color(0xFF81C784), fontSize: 13)));
-    return rows;
   }
 }
 

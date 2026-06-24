@@ -41,6 +41,7 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() {
         _busy = false;
         _error = res.message;
+        print('로그인실패');
       });
     }
   }
@@ -63,11 +64,17 @@ class _LoginScreenState extends State<LoginScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Icon(Icons.shield_moon, size: 64, color: Color(0xFFFFB300)),
+                const Icon(
+                  Icons.shield_moon,
+                  size: 64,
+                  color: Color(0xFFFFB300),
+                ),
                 const SizedBox(height: 12),
-                const Text('2D 인스턴스 RPG',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                const Text(
+                  '2D 인스턴스 RPG',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                ),
                 const SizedBox(height: 28),
                 TextField(
                   controller: _id,
@@ -91,7 +98,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 if (_error != null) ...[
                   const SizedBox(height: 12),
-                  Text(_error!, style: const TextStyle(color: Colors.redAccent)),
+                  Text(
+                    _error!,
+                    style: const TextStyle(color: Colors.redAccent),
+                  ),
                 ],
                 const SizedBox(height: 20),
                 FilledButton(
@@ -100,7 +110,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     child: _busy
                         ? const SizedBox(
-                            height: 18, width: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                            height: 18,
+                            width: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
                         : const Text('로그인'),
                   ),
                 ),

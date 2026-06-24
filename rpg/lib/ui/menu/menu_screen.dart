@@ -12,6 +12,8 @@ class MenuScreen extends StatefulWidget {
   final SocialService social;
   final GameSettings settings;
   final void Function(String nickname)? onFollow;
+  final void Function(String id, String nickname)? onPartyInvite;
+  final void Function(String id, String nickname)? onWhisper;
   final int initialTab;
 
   const MenuScreen({
@@ -21,6 +23,8 @@ class MenuScreen extends StatefulWidget {
     required this.social,
     required this.settings,
     this.onFollow,
+    this.onPartyInvite,
+    this.onWhisper,
     this.initialTab = 0,
   });
 
@@ -51,7 +55,12 @@ class _MenuScreenState extends State<MenuScreen> {
         ),
         body: TabBarView(
           children: [
-            _FriendsTab(social: social, onFollow: widget.onFollow),
+            _FriendsTab(
+              social: social,
+              onFollow: widget.onFollow,
+              onPartyInvite: widget.onPartyInvite,
+              onWhisper: widget.onWhisper,
+            ),
             _RankingTab(social: social),
             _PartyTab(social: social),
             _SettingsTab(settings: widget.settings),
@@ -66,7 +75,9 @@ class _MenuScreenState extends State<MenuScreen> {
 class _FriendsTab extends StatefulWidget {
   final SocialService social;
   final void Function(String nickname)? onFollow;
-  const _FriendsTab({required this.social, this.onFollow});
+  final void Function(String id, String nickname)? onPartyInvite;
+  final void Function(String id, String nickname)? onWhisper;
+  const _FriendsTab({required this.social, this.onFollow, this.onPartyInvite, this.onWhisper});
 
   @override
   State<_FriendsTab> createState() => _FriendsTabState();
@@ -112,7 +123,7 @@ class _FriendsTabState extends State<_FriendsTab> {
     final err = await widget.social.addFriend(id);
     if (!mounted) return;
     setState(() {
-      _msg = err ?? '친구를 추가했습니다.';
+      _msg = err ?? '친구 요청을 보냈습니다. (상대가 수락하면 친구가 됩니다)';
       if (err == null) {
         _idCtrl.clear();
         _results = [];
@@ -197,9 +208,24 @@ class _FriendsTabState extends State<_FriendsTab> {
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        if (widget.onWhisper != null)
+                          IconButton(
+                            tooltip: '귓속말',
+                            visualDensity: VisualDensity.compact,
+                            icon: const Icon(Icons.mail_outline, color: Color(0xFF80CBC4)),
+                            onPressed: () => widget.onWhisper!(f.id, f.nickname),
+                          ),
+                        if (widget.onPartyInvite != null)
+                          IconButton(
+                            tooltip: '파티 초대',
+                            visualDensity: VisualDensity.compact,
+                            icon: const Icon(Icons.diversity_3, color: Color(0xFFBA68C8)),
+                            onPressed: () => widget.onPartyInvite!(f.id, f.nickname),
+                          ),
                         if (widget.onFollow != null)
                           IconButton(
                             tooltip: '따라가기',
+                            visualDensity: VisualDensity.compact,
                             icon: const Icon(Icons.my_location, color: Color(0xFF64B5F6)),
                             onPressed: () {
                               widget.onFollow!(f.nickname);
@@ -208,6 +234,7 @@ class _FriendsTabState extends State<_FriendsTab> {
                           ),
                         IconButton(
                           tooltip: '삭제',
+                          visualDensity: VisualDensity.compact,
                           icon: const Icon(Icons.person_remove, color: Colors.redAccent),
                           onPressed: () async {
                             await widget.social.removeFriend(f.id);

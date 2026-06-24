@@ -9,14 +9,36 @@ import '../models/gear.dart';
 import '../models/items.dart';
 import '../state/player_profile.dart';
 import '../util/avatar.dart';
+import 'widgets/gear_name.dart';
+import 'widgets/gear_tooltip.dart';
 import 'widgets/item_icon.dart';
 
 class InventoryPanel extends StatelessWidget {
   final PlayerProfile profile;
   final VoidCallback? onClose;
   final VoidCallback? onUseTownScroll; // 게임에서 텔레포트 처리
+  // 클릭-투-무브 드래그(데스크탑). 이 콜백들이 없으면 기존 탭=상세시트 동작(모바일).
+  final List<GlobalKey>? cellKeys; // 칸 i 의 hit-test 키
+  final void Function(int bagIndex)? onPickCell; // 단일클릭=집기
+  final void Function(GearItem gear)? onEquipItem; // 더블클릭=착용
+  final void Function(MiscItem misc)? onUseItem; // 더블클릭=사용
+  final void Function(BagItem item, Offset globalPos)? onItemMenu; // 우클릭=컨텍스트 메뉴(판매/잠금)
+  final int? hiddenIndex; // 드래그로 집어든 칸 — 비어 보이게 한다
 
-  const InventoryPanel({super.key, required this.profile, this.onClose, this.onUseTownScroll});
+  const InventoryPanel({
+    super.key,
+    required this.profile,
+    this.onClose,
+    this.onUseTownScroll,
+    this.cellKeys,
+    this.onPickCell,
+    this.onEquipItem,
+    this.onUseItem,
+    this.onItemMenu,
+    this.hiddenIndex,
+  });
+
+  bool get _dragMode => onPickCell != null;
 
   static IconData miscIcon(MiscKind k) => switch (k) {
         MiscKind.healthPotion || MiscKind.potionMedium || MiscKind.potionLarge => Icons.local_drink,
@@ -24,6 +46,8 @@ class InventoryPanel extends StatelessWidget {
         MiscKind.monsterHide => Icons.cruelty_free,
         MiscKind.magicCrystal => Icons.diamond,
         MiscKind.ancientCoin => Icons.paid,
+        MiscKind.skillReset => Icons.restart_alt,
+        MiscKind.skillRefund => Icons.undo,
       };
 
   @override
@@ -162,6 +186,22 @@ class InventoryPanel extends StatelessWidget {
           label: const Text('잡템 판매', style: TextStyle(fontSize: 12)),
         ),
       ),
+      const SizedBox(width: 8),
+      // 정렬: 클릭 또는 hover 시 가방 정렬(기본은 정렬 안 함).
+      MouseRegion(
+        onEnter: (_) => profile.sortBag(),
+        child: Tooltip(
+          message: '아이템 정렬 (등급순)',
+          child: OutlinedButton(
+            onPressed: profile.sortBag,
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              minimumSize: const Size(0, 40),
+            ),
+            child: const Icon(Icons.sort, size: 18),
+          ),
+        ),
+      ),
     ]);
   }
 
@@ -178,14 +218,19 @@ class InventoryPanel extends StatelessWidget {
       ),
       itemBuilder: (context, i) {
         final item = i < profile.bag.length ? profile.bag[i] : null;
-        return _bagCell(context, item);
+        return _bagCell(context, i, item);
       },
     );
   }
 
-  Widget _bagCell(BuildContext context, BagItem? item) {
-    if (item == null) {
+  Widget _bagCell(BuildContext context, int index, BagItem? item) {
+    final cellKey = (cellKeys != null && index < cellKeys!.length) ? cellKeys![index] : null;
+    // 드래그로 집어든 칸은 비어 보이게 한다.
+    final shown = index == hiddenIndex ? null : item;
+    if (shown == null) {
+      // 빈 칸(또는 집어든 칸)도 드래그 놓기 대상이 되도록 키를 부여.
       return DecoratedBox(
+        key: cellKey,
         decoration: BoxDecoration(
           color: const Color(0x4015181E),
           borderRadius: BorderRadius.circular(10),
@@ -193,28 +238,33 @@ class InventoryPanel extends StatelessWidget {
         ),
       );
     }
-    return GestureDetector(
-      onTap: () => _itemSheet(context, item),
-      onLongPress: () => _quickSell(context, item),
-      onSecondaryTap: () => profile.toggleLock(item), // 우클릭 잠금
-      child: Stack(children: [
-        LayoutBuilder(builder: (context, c) => ItemIcon.forItem(item, size: c.maxWidth)),
-        if (item.locked)
-          const Positioned(left: 2, top: 2, child: Icon(Icons.lock, size: 13, color: Colors.amberAccent)),
-      ]),
+    final body = Stack(children: [
+      Positioned.fill(child: LayoutBuilder(builder: (context, c) => ItemIcon.forItem(shown, size: c.maxWidth))),
+      if (shown.locked)
+        const Positioned(left: 2, top: 2, child: Icon(Icons.lock, size: 13, color: Colors.amberAccent)),
+    ]);
+    final cell = GestureDetector(
+      // 드래그 모드: 단일클릭=집기 / 더블클릭=착용·사용 / 우클릭=판매·잠금 메뉴.
+      // 일반 모드(모바일): 탭=상세시트 / 우클릭=잠금 토글.
+      onTap: _dragMode ? () => onPickCell!(index) : () => _itemSheet(context, shown),
+      onDoubleTap: _dragMode
+          ? () {
+              if (shown is GearItem) {
+                onEquipItem?.call(shown);
+              } else if (shown is MiscItem) {
+                onUseItem?.call(shown);
+              }
+            }
+          : null,
+      onSecondaryTapDown:
+          _dragMode && onItemMenu != null ? (d) => onItemMenu!(shown, d.globalPosition) : null,
+      onSecondaryTap: _dragMode ? null : () => profile.toggleLock(shown),
+      child: KeyedSubtree(key: cellKey, child: body),
     );
-  }
-
-  void _quickSell(BuildContext context, BagItem item) {
-    if (item.locked) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('잠긴 아이템은 판매할 수 없습니다.'), duration: Duration(milliseconds: 900)));
-      return;
-    }
-    final price = item is GearItem ? item.sellPrice : (item as MiscItem).sellPrice;
-    profile.sell(item);
-    ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${item.name} 판매 · +${price}G'), duration: const Duration(milliseconds: 900)));
+    // 모든 아이템 hover 시 정보 카드(데스크탑 hover / 모바일 롱프레스).
+    // 장비면 같은 종류로 장착 중인 장비를 hover 카드 왼쪽에 비교 표시.
+    final compare = shown is GearItem ? profile.equippedComparable(shown.kind) : null;
+    return ItemHoverTooltip(item: shown, compareTo: compare, child: cell);
   }
 
   void _itemSheet(BuildContext context, BagItem item) {
@@ -253,7 +303,7 @@ class InventoryPanel extends StatelessWidget {
               Row(children: [
                 ItemIcon(glyph: g.weaponType != null ? glyphForWeapon(g.weaponType!) : glyphForKind(g.kind), rarity: g.rarity, size: 44),
                 const SizedBox(width: 10),
-                Expanded(child: Text(g.displayName, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(g.rarity.colorValue)))),
+                Expanded(child: EnhancedItemName.gear(g, fontSize: 18, maxLines: 2)),
                 if (g.locked) const Icon(Icons.lock, size: 16, color: Colors.amberAccent),
                 const SizedBox(width: 4),
                 Text('iLv ${g.itemLevel}', style: const TextStyle(color: Colors.white38, fontSize: 12)),

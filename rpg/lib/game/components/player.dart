@@ -15,6 +15,7 @@ class PlayerComponent extends PositionComponent {
   final Vector2 _keyboardDir = Vector2.zero();
   final Vector2 _joystickDir = Vector2.zero();
   final Vector2 _facing = Vector2(1, 0);
+  final Vector2 _velocity = Vector2.zero(); // 현재 이동 속도(px/s) — 예측 패킷용
   double _attackAnim = 0; // 공격 모션 타이머
 
   ui.Image? avatar; // 업로드한 아바타(있으면 기본 외형 대체, 캐릭터 크기 내로 렌더)
@@ -25,6 +26,7 @@ class PlayerComponent extends PositionComponent {
 
   bool get isDead => profile.isDead;
   Vector2 get facing => _facing;
+  Vector2 get velocity => _velocity; // 클라 예측 → 서버 전송용
 
   // 이동은 화살표 키 전용(A/S/D/F/G/H 는 스킬 키로 사용).
   void setMovement(Set<LogicalKeyboardKey> keys) {
@@ -50,7 +52,10 @@ class PlayerComponent extends PositionComponent {
     if (!move.isZero()) {
       move.normalize();
       _facing.setFrom(move);
-      position += move * speed * dt;
+      position += move * speed * dt; // 클라 예측: 입력 즉시 로컬 이동
+      _velocity.setFrom(move * speed);
+    } else {
+      _velocity.setZero();
     }
   }
 

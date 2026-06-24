@@ -74,6 +74,8 @@ function InitModule(
   initializer.registerRpc('rpc_cancel_listing', rpcCancelListing);
   initializer.registerRpc('rpc_hello', rpcHello);
   initializer.registerRpc('rpc_world_match', rpcWorldMatch);
+  initializer.registerRpc('rpc_auth_verify_hint', rpcAuthVerifyHint);
+  initializer.registerRpc('rpc_auth_reset_password', rpcAuthResetPassword);
 
   // ── 실시간 거래 매치 등록 (§6.2) — 인라인 객체 리터럴 + 전역 함수 ──
   initializer.registerMatch('trade', {
